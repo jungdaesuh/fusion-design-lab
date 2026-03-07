@@ -18,4 +18,3 @@ class PhysicsEngine:
     @property
     def status(self) -> str:
         return self._status
-

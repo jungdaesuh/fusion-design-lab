@@ -6,9 +6,7 @@ from openenv.core.env_client import EnvClient
 from fusion_lab.models import StellaratorAction, StellaratorObservation, StellaratorState
 
 
-class FusionLabClient(
-    EnvClient[StellaratorAction, StellaratorObservation, StellaratorState]
-):
+class FusionLabClient(EnvClient[StellaratorAction, StellaratorObservation, StellaratorState]):
     """Thin typed client wrapper for the remote OpenEnv environment."""
 
     def _step_payload(self, action: StellaratorAction) -> dict[str, object]:
@@ -24,4 +22,3 @@ class FusionLabClient(
 
     def _parse_state(self, payload: dict[str, object]) -> StellaratorState:
         return StellaratorState(**payload)
-

@@ -49,4 +49,3 @@ class StellaratorState(BaseModel):
     budget_remaining: int = 6
     constraints_satisfied: bool = True
     history: list[str] = Field(default_factory=list)
-

@@ -32,7 +32,6 @@ fusion-design-lab/
 ├── docs/
 ├── fusion_lab/
 ├── server/
-├── tests/
 ├── training/
 ├── openenv.yaml
 ├── pyproject.toml
@@ -43,6 +42,8 @@ fusion-design-lab/
 
 1. Implement the environment contract in `server/environment.py`.
 2. Implement the VMEC-backed physics loop in `server/physics.py`.
-3. Add one stable local episode test.
-4. Run manual-playtest episodes before heavy training work.
+3. Run manual-playtest episodes before heavy training work.
 
+## Hackathon Working Note
+
+This repo is intentionally biased toward executable demos, manual playtesting, and clear environment behavior over building out test coverage during the hackathon.
