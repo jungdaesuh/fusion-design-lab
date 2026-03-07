@@ -17,4 +17,3 @@ TASK: Final[dict[str, object]] = {
 def environment_status() -> str:
     """Return a simple status string until the full environment is implemented."""
     return "scaffolded"
-

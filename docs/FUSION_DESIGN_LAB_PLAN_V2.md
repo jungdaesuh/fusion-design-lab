@@ -1,7 +1,7 @@
 # Fusion Design Lab — Plan V2
 
-**Hackathon:** OpenEnv Hackathon, March 7-8, 2026  
-**Track:** Statement 3.1 (World Modeling — Professional Tasks)  
+**Hackathon:** OpenEnv Hackathon, March 7-8, 2026
+**Track:** Statement 3.1 (World Modeling — Professional Tasks)
 **Status:** Judge-aligned rewrite of the main plan
 
 ## 1. Submission Thesis

@@ -15,4 +15,3 @@ def healthcheck() -> dict[str, str]:
 @app.get("/task")
 def task_summary() -> dict[str, object]:
     return TASK
-

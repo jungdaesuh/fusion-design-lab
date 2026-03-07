@@ -5,4 +5,3 @@ The first baseline milestone is:
 - one random agent
 - one simple heuristic agent
 - one short comparison run on the frozen task
-

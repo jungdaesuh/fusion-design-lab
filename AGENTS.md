@@ -45,6 +45,7 @@ Do not leave silent divergence.
 - Do not broaden the task family beyond the single stellarator environment unless explicitly requested.
 - Do not add broad “other sciences” claims to docs or demo copy unless there is real supporting evidence.
 - Do not narrate hypotheses as validated facts.
+- Do not add new tests during the hackathon unless the user explicitly requests them.
 - Do not add complicated reward shaping until the simpler version has been tested against actual trajectories.
 - Do not optimize notebook/training work ahead of local environment stability, remote environment stability, and baseline comparisons.
 
@@ -58,7 +59,7 @@ Any change to the environment should preserve or deliberately update:
 - terminal conditions
 - reward semantics
 
-If you change one of these, update the corresponding documentation and tests in the same task.
+If you change one of these, update the corresponding documentation in the same task.
 
 ## Reward Design Rules
 
@@ -88,7 +89,6 @@ If a human cannot act coherently from the observation, fix the environment contr
 - `baselines/`: random and heuristic baselines
 - `training/`: evaluation or training notebooks
 - `demo/`: demo assets and scripts
-- `tests/`: focused tests for environment contract and repo behavior
 - `docs/`: public-facing planning and submission docs
 
 ## Validation
@@ -99,10 +99,9 @@ Current useful commands:
 
 ```bash
 python3 -m py_compile fusion_lab/models.py fusion_lab/client.py server/environment.py server/app.py server/physics.py
-python3 -m pytest -q tests/test_repo_scaffold.py
 ```
 
-As the repo grows, add more targeted tests instead of depending only on broad end-to-end runs.
+For this hackathon repo, prefer smoke validation, manual playtesting, and runnable demos over adding test coverage.
 
 ## Git and Change Discipline
 
