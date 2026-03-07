@@ -1,0 +1,38 @@
+[project]
+name = "fusion-design-lab"
+version = "0.1.0"
+description = "OpenEnv environment for budget-constrained stellarator design"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "numpy>=2.0.0",
+  "openenv-core[core]>=0.2.1",
+  "pydantic>=2.10.0",
+  "uvicorn>=0.34.0",
+]
+
+[project.optional-dependencies]
+physics = [
+  "simsopt",
+  "vmecpp",
+]
+dev = [
+  "pytest>=8.3.0",
+  "ruff>=0.11.0",
+]
+
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["fusion_lab", "server"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
