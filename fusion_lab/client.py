@@ -7,13 +7,13 @@ from fusion_lab.models import StellaratorAction, StellaratorObservation, Stellar
 
 
 class FusionLabClient(EnvClient[StellaratorAction, StellaratorObservation, StellaratorState]):
-    """Thin typed client wrapper for the remote OpenEnv environment."""
+    """Typed client wrapper for the remote Fusion Design Lab environment."""
 
     def _step_payload(self, action: StellaratorAction) -> dict[str, object]:
         return action.model_dump(exclude_none=True)
 
     def _parse_result(self, payload: dict[str, object]) -> StepResult[StellaratorObservation]:
-        observation = StellaratorObservation(**payload)
+        observation = StellaratorObservation.model_validate(payload)
         return StepResult(
             observation=observation,
             reward=observation.reward,
@@ -21,4 +21,4 @@ class FusionLabClient(EnvClient[StellaratorAction, StellaratorObservation, Stell
         )
 
     def _parse_state(self, payload: dict[str, object]) -> StellaratorState:
-        return StellaratorState(**payload)
+        return StellaratorState.model_validate(payload)
