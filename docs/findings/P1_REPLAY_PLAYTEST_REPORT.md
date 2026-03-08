@@ -2,6 +2,16 @@
 
 Date: 2026-03-07
 
+Update: 2026-03-08
+
+This report is still useful for reward-branch coverage and low-fidelity failure
+pathologies, but its Episode 5 submit result is now historical only. The newer
+manual submit trace in `../P1_MANUAL_PLAYTEST_LOG.md` records the same
+`rotational_transform increase medium -> triangularity_scale increase medium ->
+elongation decrease small -> submit` path succeeding at high fidelity with
+score `0.296059`. Do not use this replay report as the current source of truth
+for submit viability.
+
 ## Purpose
 
 Expand reward branch coverage beyond the initial manual playtest (Episodes A-B in
@@ -148,11 +158,13 @@ Branches exercised:
 - **submit high-fidelity evaluation** (step 4)
 - **submit failure penalty** (-3.0, step 4: VMEC crash at high fidelity)
 
-Finding: **cross-fidelity gap confirmed**. The state at
+Historical finding: the state at
 `(ar=3.6, elong=1.35, rt=1.6, tri=0.60)` passes low-fidelity evaluation
 (step 3: score=0.296, constraints satisfied) but **crashes at high-fidelity
-evaluation** (step 4: VMEC failure). The low-fi repair story does not survive
-the real final check for this particular path.
+evaluation** in this replay run (step 4: VMEC failure). A newer manual submit
+trace now records the same action sequence succeeding at high fidelity, so this
+episode should be treated as a historical discrepancy rather than live evidence
+of a persistent cross-fidelity gap.
 
 ## Reward branch coverage summary
 
@@ -168,26 +180,27 @@ the real final check for this particular path.
 | Budget exhaustion done-penalty | `environment.py:264-265` | not tested | Ep 3 step 6 |
 | Recovery bonus (+1.0) | `environment.py:248-249` | not tested | Ep 1 step 6, Ep 4 step 4 |
 | Budget exhaustion done-bonus | `environment.py:258-263` | not tested | Ep 1 step 6, Ep 2 step 6, Ep 4 step 6 |
-| Submit improvement bonus | `environment.py:260-261` | not tested | not triggered (submit crashed) |
+| Submit improvement bonus | `environment.py:260-261` | not tested | historical replay did not trigger it |
 | Clamping (no physics change) | `environment.py:412-414` | not tested | Ep 3 step 1 |
 | restore_best | `environment.py:175-195` | not tested | Ep 4 step 4 |
 
-Coverage: 12 of 13 branches exercised. The only untested branch is the
-**submit improvement bonus** (submit from a state that is feasible at high
-fidelity). This requires finding a repair path that survives high-fi first.
+Coverage: 12 of 13 branches exercised in this replay. The only untested branch
+here is the **submit improvement bonus**. A newer manual submit trace now
+provides positive high-fidelity submit evidence, but that branch was not
+exercised in this historical replay artifact.
 
 ## Critical findings
 
-### 1. Cross-fidelity gap is real (Episode 5)
+### 1. Historical submit discrepancy (Episode 5)
 
 The canonical repair path from seed 0 (increase rt medium, increase tri medium,
-decrease elong small) produces a low-fi feasible state that crashes at high
-fidelity. This confirms the concern documented in `P1_MANUAL_PLAYTEST_LOG.md`
-line 53 and `FUSION_DESIGN_LAB_PLAN_V2.md` open items.
+decrease elong small) produced a low-fi feasible state that crashed at high
+fidelity in this replay run.
 
-Implication: no currently tested repair path from seed 0 has a known-good
-high-fidelity submit. The submit improvement bonus branch cannot be exercised
-until a cross-fidelity-safe path is found.
+Update: this is no longer the live repo conclusion. The newer manual submit
+trace in `../P1_MANUAL_PLAYTEST_LOG.md` records the same path succeeding at
+high fidelity. Treat Episode 5 as evidence that submit behavior needed repeated
+checking, not as proof that seed 0 lacks a viable submit path.
 
 ### 2. Elongation crash pocket (Episode 1)
 
@@ -224,13 +237,13 @@ monotonically improve the design.
 | Feasible-side shaping | not tested | confirmed legible |
 | VMEC crash handling | not tested | confirmed legible |
 | restore_best | not tested | confirmed working |
-| Submit tested | no | yes (crashed at high-fi) |
-| Cross-fidelity evidence | none | gap confirmed |
+| Submit tested | no | yes (historical replay crash) |
+| Cross-fidelity evidence | none | mixed; superseded by newer successful manual submit trace |
 
 ## Open items
 
-1. **Find a high-fi-safe repair path** to exercise the submit improvement bonus
-   (the last uncovered branch) and provide positive submit-side evidence.
+1. **Export the newer high-fidelity-safe submit trace** alongside this replay so
+   the historical Episode 5 crash is not read as the live repo conclusion.
 2. **Map the elongation crash pocket** with a targeted sweep over the elongation
    dimension at feasible parameter combinations.
 3. **Update the measured sweep report** to document the elongation crash zone.

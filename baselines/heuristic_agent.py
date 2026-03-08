@@ -7,6 +7,12 @@ import sys
 from fusion_lab.models import StellaratorAction, StellaratorObservation
 from server.environment import StellaratorEnvironment
 
+FEASIBLE_SUBMIT_ELONGATION_MAX = 7.45
+TRIANGULARITY_TARGET_MAX = -0.5
+LOW_IOTA_RESET_THRESHOLD = 0.305
+IOTA_RECOVERY_THRESHOLD = 0.3
+ASPECT_RATIO_TARGET_MAX = 4.0
+
 
 def heuristic_episode(
     env: StellaratorEnvironment, seed: int | None = None
@@ -19,6 +25,10 @@ def heuristic_episode(
             "score": obs.p1_score,
             "evaluation_fidelity": obs.evaluation_fidelity,
             "constraints_satisfied": obs.constraints_satisfied,
+            "feasibility": obs.p1_feasibility,
+            "max_elongation": obs.max_elongation,
+            "average_triangularity": obs.average_triangularity,
+            "edge_iota_over_nfp": obs.edge_iota_over_nfp,
         }
     ]
 
@@ -35,6 +45,10 @@ def heuristic_episode(
                 "score": obs.p1_score,
                 "evaluation_fidelity": obs.evaluation_fidelity,
                 "constraints_satisfied": obs.constraints_satisfied,
+                "feasibility": obs.p1_feasibility,
+                "max_elongation": obs.max_elongation,
+                "average_triangularity": obs.average_triangularity,
+                "edge_iota_over_nfp": obs.edge_iota_over_nfp,
                 "reward": obs.reward,
                 "failure": obs.evaluation_failed,
             }
@@ -44,8 +58,15 @@ def heuristic_episode(
 
 
 def _choose_action(obs: StellaratorObservation) -> StellaratorAction:
+    if obs.evaluation_failed:
+        return StellaratorAction(intent="restore_best")
+
     if obs.constraints_satisfied:
-        if obs.budget_remaining <= 2:
+        if (
+            obs.max_elongation <= FEASIBLE_SUBMIT_ELONGATION_MAX
+            or obs.budget_remaining <= 2
+            or obs.step_number >= 3
+        ):
             return StellaratorAction(intent="submit")
         return StellaratorAction(
             intent="run",
@@ -54,18 +75,22 @@ def _choose_action(obs: StellaratorObservation) -> StellaratorAction:
             magnitude="small",
         )
 
-    if obs.evaluation_failed:
-        return StellaratorAction(intent="restore_best")
-
-    if obs.average_triangularity > -0.5:
+    if obs.average_triangularity > TRIANGULARITY_TARGET_MAX:
+        if obs.step_number == 0 and obs.edge_iota_over_nfp < LOW_IOTA_RESET_THRESHOLD:
+            return StellaratorAction(
+                intent="run",
+                parameter="rotational_transform",
+                direction="increase",
+                magnitude="medium",
+            )
         return StellaratorAction(
             intent="run",
             parameter="triangularity_scale",
             direction="increase",
-            magnitude="small",
+            magnitude="medium",
         )
 
-    if obs.edge_iota_over_nfp < 0.3:
+    if obs.edge_iota_over_nfp < IOTA_RECOVERY_THRESHOLD:
         return StellaratorAction(
             intent="run",
             parameter="rotational_transform",
@@ -73,7 +98,7 @@ def _choose_action(obs: StellaratorObservation) -> StellaratorAction:
             magnitude="small",
         )
 
-    if obs.aspect_ratio > 4.0:
+    if obs.aspect_ratio > ASPECT_RATIO_TARGET_MAX:
         return StellaratorAction(
             intent="run",
             parameter="aspect_ratio",

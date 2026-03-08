@@ -46,7 +46,9 @@ Priority source:
 - [x] tiny low-fi PPO smoke run exists
   Note:
   `training/ppo_smoke.py` now runs a diagnostic-only low-fidelity PPO smoke pass and the first artifact is summarized in `docs/P1_PPO_SMOKE_NOTE.md`
-- [ ] refresh the heuristic baseline for the real verifier path
+- [x] refresh the heuristic baseline for the real verifier path
+  Note:
+  the refreshed heuristic now uses the measured `rotational_transform -> triangularity_scale -> elongation -> submit` path; a fresh `uv run python baselines/compare.py 5` rerun finished at `5/5` feasible high-fidelity finals and `5/5` wins over random
 
 ## Execution Graph
 

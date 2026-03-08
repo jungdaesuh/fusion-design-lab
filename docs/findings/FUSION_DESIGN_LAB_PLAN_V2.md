@@ -40,9 +40,7 @@ Completed:
 
 Still open:
 
-- tiny low-fidelity PPO smoke evidence
 - decision on whether reset-seed pool should change from paired checks
-- heuristic baseline refresh on the repaired real-verifier path
 - HF Space deployment evidence
 - Colab artifact wiring
 - demo and README polish after the artifacts are real
@@ -144,7 +142,7 @@ The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V
 - [ ] Decide whether the reset pool should change based on the measured sweep plus those paired checks.
 - [x] Run at least one submit-side manual trace, then expand to 5 to 10 episodes and record the first real confusion point, exploit, or reward pathology.
 - [ ] Adjust reward or penalties only if playtesting exposes a concrete problem.
-- [ ] Refresh the heuristic baseline using the repaired-family evidence.
+- [x] Refresh the heuristic baseline using the repaired-family evidence.
 - [ ] Prove a stable local episode path.
 - [ ] Deploy the same task contract to HF Space and prove one clean remote episode.
 - [ ] Wire the Colab artifact to the live environment.
@@ -226,5 +224,5 @@ If the repaired family is too easy:
 - [x] Run a tiny low-fidelity PPO smoke pass and save a few trajectories.
 - [x] Pair the tracked fixtures with high-fidelity submit checks.
 - [x] Record one submit-side manual trace.
-- [ ] Refresh the heuristic baseline from that playtest evidence.
+- [x] Refresh the heuristic baseline from that playtest evidence.
 - [ ] Verify one clean HF Space episode with the same contract.
