@@ -9,15 +9,17 @@ Use this file as rationale for the pivot, not as a fresh planning queue. Once th
 ## Current Branch Status
 
 - [x] pivot accepted
-- [x] rotating-ellipse `P1` contract is implemented
+- [x] 3-knob rotating-ellipse `P1` contract is implemented
 - [x] `constellaration` verifier path is wired
+- [x] current 3-knob family is verified as blocked on P1 triangularity
+- [ ] repaired low-dimensional family with explicit triangularity control is implemented
 - [ ] tracked fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
 
 Current caution:
 
-- the default rotating-ellipse baseline params are currently useful as an infeasible reference, not as a near-feasible anchor, so the fixture set still needs a better boundary-region map
+- the current upstream rotating-ellipse family is useful as a seed generator, but not sufficient as the full environment action family because it does not move triangularity under the real verifier path
 
 ## Decision
 
@@ -66,7 +68,7 @@ Feasibility tolerance: normalized constraint violations <= 1% (0.01).
 
 ### Parameter Space
 
-The rotating-ellipse generator takes 3 continuous parameters + 1 discrete:
+The upstream rotating-ellipse generator takes 3 continuous parameters + 1 discrete:
 
 | Parameter | Role | Typical range |
 |---|---|---|
@@ -77,9 +79,17 @@ The rotating-ellipse generator takes 3 continuous parameters + 1 discrete:
 
 These map to `constellaration.initial_guess.generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` which returns a `SurfaceRZFourier` boundary in ~4ms.
 
+Verified blocker:
+
+- on the real low-fidelity verifier path, sampled 3-knob points kept `average_triangularity` at roughly `+0.004975`
+- sampled `p1_feasibility` stayed at roughly `1.00995`
+- no sampled point was feasible
+
+So the hackathon environment now needs a custom low-dimensional boundary family on top of the rotating-ellipse seed, with an explicit triangularity control knob or equivalent mechanism.
+
 ### Action Space
 
-Discrete perturbations on the 3 rotating-ellipse parameters:
+Original 3-knob action space:
 
 ```
 intent: "run" | "submit" | "restore_best"
@@ -87,6 +97,10 @@ operator: "aspect_ratio" | "elongation" | "rotational_transform"
 direction: "increase" | "decrease"
 magnitude: "small" | "medium" | "large"
 ```
+
+This is no longer sufficient on its own. The next contract revision should keep the same discrete structure while adding:
+
+- `triangularity_scale` or equivalent low-dimensional control
 
 Magnitude deltas (to be tuned by playtest):
 
@@ -101,7 +115,7 @@ Magnitude deltas (to be tuned by playtest):
 1. Reset: generate initial boundary from baseline rotating-ellipse parameters (+ optional seed perturbation). Run low-fi forward_model. Return initial observation.
 2. Agent chooses action.
 3. If `run`: modify parameter, regenerate boundary, run low-fi forward_model (~0.6s). Return diagnostics + reward.
-4. If `restore_best`: revert to best-known parameters. No VMEC cost, but costs a budget step.
+4. If `restore_best`: revert to best-known parameters, re-evaluate low-fidelity metrics, and charge a budget step.
 5. If `submit`: end episode. Optionally run high-fi for final score.
 6. Episode ends on `submit` or budget exhaustion.
 
@@ -117,8 +131,8 @@ max_elongation: float          # P1 objective (minimize)
 aspect_ratio: float            # constraint: <= 4.0
 average_triangularity: float   # constraint: <= -0.5
 edge_iota_over_nfp: float     # constraint: >= 0.3
-p1_score: float                # official P1 score (0 if infeasible)
-p1_feasibility: float          # max normalized constraint violation
+p1_score: float                # current step-time score
+p1_feasibility: float          # current step-time max normalized constraint violation
 constraints_satisfied: bool    # feasibility <= 0.01
 vacuum_well: float             # stability indicator
 step_number: int
@@ -126,6 +140,10 @@ budget_remaining: int
 best_score: float
 target_spec: str
 ```
+
+Follow-up requirement from the verified blocker:
+
+- once submit stays high-fidelity, the observation or diagnostics text should make the low-fi vs high-fi distinction explicit
 
 ### Reward V0
 
@@ -152,12 +170,18 @@ submit penalty (if infeasible or no improvement):
 
 This puts feasibility first. An agent that achieves feasibility then minimizes elongation gets rewarded. An agent that never reaches feasibility gets penalized.
 
+Execution note after the verified blocker:
+
+- keep reward mostly scalar and verifier-driven
+- repair parameterization before further reward tuning
+- do not add mode- or constraint-specific reward hacks to compensate for a blocked action family
+
 ### State
 
 ```
 step_count: int
-current_params: {aspect_ratio, elongation, rotational_transform}
-best_params: {aspect_ratio, elongation, rotational_transform}
+current_params: {aspect_ratio, elongation, rotational_transform, triangularity_scale}
+best_params: {aspect_ratio, elongation, rotational_transform, triangularity_scale}
 initial_score: float
 best_score: float
 best_feasibility: float
@@ -206,7 +230,7 @@ Update `fusion_lab/models.py` for new schemas.
 
 Status: open.
 
-Validate hypothesis: "6 actions is enough."
+Validate hypothesis: "6 actions is enough" only after parameterization repair.
 - Play 5-10 episodes manually
 - Log: can a human reach feasibility? Improve elongation?
 - Tune magnitude deltas if needed
@@ -242,10 +266,9 @@ If full high-fidelity `constellaration` deployment fails (Docker build, HF Space
 
 Start with 1-2 rotating-ellipse configurations for sanity checks and expand only if the implementation needs more coverage:
 
-1. **Repairable baseline anchor:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — intentionally infeasible at reset but close enough to support short repair/improvement episodes
-1. **Current default baseline reference:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — currently deeply infeasible on the real verifier path; keep as a negative or repair reference only
+1. **Current default baseline reference:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — currently deeply infeasible on the real verifier path; keep as a negative reference only until parameterization repair lands
 2. **Infeasible reference:** aspect_ratio=5.0, elongation=3.0, rotational_transform=0.2 — expected to violate constraints
-3. **Near-boundary anchor:** still needs to be found from real verifier probing before manual playtesting
+3. **Near-boundary anchor:** still needs to be found after parameterization repair and real verifier probing before manual playtesting
 
 These are for verifier/reward sanity, not a prerequisite seed-mining project.
 
@@ -255,6 +278,7 @@ These are for verifier/reward sanity, not a prerequisite seed-mining project.
 - Do not make the task "agent writes arbitrary optimization scripts."
 - Do not stream the full HF dataset at runtime.
 - Do not mix rotating-ellipse and Fourier-repair action spaces.
+- Do not pretend the upstream 3-knob family is enough for P1 after the verified triangularity blocker.
 - Do not use high-fidelity eval for interactive steps (24s is too slow).
 - Do not narrate "6 actions is enough" as validated until manually playtested.
 - Do not claim full P1 boundary space coverage. The env uses a low-dim subfamily.

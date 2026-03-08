@@ -13,12 +13,12 @@ Prove all four required conditions in the Northflank Jupyter workspace:
 
 ## Repo Entry Point
 
-Use [northflank_smoke.py](/Users/suhjungdae/code/fusion-design-lab/training/notebooks/northflank_smoke.py).
+Use [northflank_smoke.py](northflank_smoke.py).
 
 It uses the repo SSOT values from:
 
-- [server/environment.py](/Users/suhjungdae/code/fusion-design-lab/server/environment.py)
-- [server/physics.py](/Users/suhjungdae/code/fusion-design-lab/server/physics.py)
+- [server/environment.py](../../server/environment.py)
+- [server/physics.py](../../server/physics.py)
 
 ## Northflank Run
 
