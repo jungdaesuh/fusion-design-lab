@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir \
 
 COPY . /app/env
 
-ENV PYTHONPATH="/app/env:$PYTHONPATH"
+ENV PYTHONPATH="/app/env"
 ENV ENABLE_WEB_INTERFACE=true
 
 EXPOSE 8000
