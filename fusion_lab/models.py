@@ -24,6 +24,15 @@ class LowDimBoundaryParams(BaseModel):
     triangularity_scale: float
 
 
+def default_low_dim_boundary_params() -> LowDimBoundaryParams:
+    return LowDimBoundaryParams(
+        aspect_ratio=3.6,
+        elongation=1.4,
+        rotational_transform=1.5,
+        triangularity_scale=0.55,
+    )
+
+
 class StellaratorAction(Action):
     intent: ActionIntent
     parameter: ParameterName | None = None
@@ -46,43 +55,24 @@ class StellaratorObservation(Observation):
     failure_reason: str = ""
     step_number: int = 0
     budget_remaining: int = 6
-    best_score: float = 0.0
-    best_feasibility: float = float("inf")
+    best_low_fidelity_score: float = 0.0
+    best_low_fidelity_feasibility: float = float("inf")
+    best_high_fidelity_score: float | None = None
+    best_high_fidelity_feasibility: float | None = None
     constraints_satisfied: bool = True
     target_spec: str = ""
 
 
 class StellaratorState(State):
-    initial_params: LowDimBoundaryParams = Field(
-        default_factory=lambda: LowDimBoundaryParams(
-            aspect_ratio=3.6,
-            elongation=1.4,
-            rotational_transform=1.6,
-            triangularity_scale=0.55,
-        )
-    )
-    current_params: LowDimBoundaryParams = Field(
-        default_factory=lambda: LowDimBoundaryParams(
-            aspect_ratio=3.6,
-            elongation=1.4,
-            rotational_transform=1.6,
-            triangularity_scale=0.55,
-        )
-    )
-    best_params: LowDimBoundaryParams = Field(
-        default_factory=lambda: LowDimBoundaryParams(
-            aspect_ratio=3.6,
-            elongation=1.4,
-            rotational_transform=1.6,
-            triangularity_scale=0.55,
-        )
-    )
-    initial_score: float = 0.0
+    initial_params: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
+    current_params: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
+    best_params: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
+    initial_low_fidelity_score: float = 0.0
     initial_high_fidelity_score: float | None = None
-    best_score: float = 0.0
-    best_feasibility: float = float("inf")
+    best_low_fidelity_score: float = 0.0
+    best_low_fidelity_feasibility: float = float("inf")
     best_high_fidelity_score: float | None = None
-    best_high_fidelity_feasibility: float = float("inf")
+    best_high_fidelity_feasibility: float | None = None
     budget_total: int = 6
     budget_remaining: int = 6
     episode_done: bool = False

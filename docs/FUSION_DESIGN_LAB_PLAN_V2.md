@@ -244,8 +244,10 @@ The observation should expose:
 - `failure_reason`
 - `step_number`
 - `budget_remaining`
-- `best_score`
-- `best_feasibility`
+- `best_low_fidelity_score`
+- `best_low_fidelity_feasibility`
+- `best_high_fidelity_score`
+- `best_high_fidelity_feasibility`
 - `target_spec`
 - concise textual summary of the last action outcome in `diagnostics_text`
 
@@ -253,10 +255,9 @@ The observation must be interpretable by a human without additional hidden state
 
 Current runtime note:
 
-- `best_score` and `best_feasibility` are not yet fully split by fidelity in the observation schema
-- low-fidelity run observations display rollout best state
-- high-fidelity submit observations may display high-fidelity best state instead
-- keep that distinction explicit in docs and traces until the contract is simplified further
+- the live observation surface now exposes explicit low-fidelity and high-fidelity best-state fields
+- low-fi run steps and high-fi submit steps no longer overload one generic `best_score` field
+- traces and baselines should use the explicit fields instead of reconstructing a mixed best-state story
 
 ### Action Space
 
@@ -625,10 +626,11 @@ Deliverables:
 
 ### Phase 2
 
-Freeze initial fixtures and manual-playtest the environment.
+Audit observation clarity, then freeze initial fixtures and manual-playtest the environment.
 
 Deliverables:
 
+- observation semantics note covering low-fi vs high-fi reporting and best-state fields
 - one good or near-boundary fixture
 - bad fixtures
 - 5 to 10 episode logs

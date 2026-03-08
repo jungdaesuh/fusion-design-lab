@@ -20,8 +20,8 @@ Priority source:
 ## Current State
 
 - [x] `P1` strategy is locked
-- [x] shared models reflect the rotating-ellipse `P1` contract
-- [x] environment loop reflects the rotating-ellipse `P1` contract
+- [x] shared models reflect the repaired low-dimensional `P1` contract
+- [x] environment loop reflects the repaired low-dimensional `P1` contract
 - [x] API/task surface reflects `P1`
 - [x] baselines reflect the `P1` contract
 - [x] repo docs call out the low-fi/high-fi `constellaration` split honestly
@@ -74,7 +74,7 @@ flowchart TD
 
 - [x] Verify that the current 3-knob family can or cannot approach P1 feasibility
   Goal:
-  decide whether parameterization repair is a blocker before more reward work
+  resolve the historical gating question about whether parameterization repair was required before more reward work
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md),
   [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
@@ -164,12 +164,18 @@ flowchart TD
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 
+- [x] Clarify or split fidelity-dependent best-state observation fields
+  Goal:
+  replace ambiguous mixed best-state reporting with explicit low-fidelity and high-fidelity best-state fields before fixture evidence or baseline comparisons
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
+
 - [ ] Add 1-2 tracked `P1` fixtures
   Files:
   [server/data/p1/README.md](server/data/p1/README.md),
   [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
   Note:
-  add fixtures only after the parameterization repair produces a meaningful near-boundary region
+  add fixtures only after the repaired family is calibrated into a meaningful near-boundary region
 
 - [ ] Run fixture sanity checks
   Goal:

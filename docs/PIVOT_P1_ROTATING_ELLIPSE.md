@@ -147,16 +147,18 @@ evaluation_failed: bool
 failure_reason: str
 step_number: int
 budget_remaining: int
-best_score: float
-best_feasibility: float
+best_low_fidelity_score: float
+best_low_fidelity_feasibility: float
+best_high_fidelity_score: float | None
+best_high_fidelity_feasibility: float | None
 target_spec: str
 ```
 
 Current requirement:
 
 - the observation and diagnostics text should make the low-fi vs high-fi distinction explicit
-- in the current runtime, `best_score` and `best_feasibility` may reflect low-fidelity rollout state during `run` and high-fidelity best state during `submit`
-- do not narrate those fields as one fidelity-independent quantity until the contract is simplified further
+- best-state reporting should be split explicitly between low-fidelity rollout state and high-fidelity submit state
+- do not narrate low-fi and high-fi best-state fields as one combined metric
 
 ### Reward V0
 
@@ -195,9 +197,12 @@ Current execution note:
 step_count: int
 current_params: {aspect_ratio, elongation, rotational_transform, triangularity_scale}
 best_params: {aspect_ratio, elongation, rotational_transform, triangularity_scale}
-initial_score: float
-best_score: float
-best_feasibility: float
+initial_low_fidelity_score: float
+initial_high_fidelity_score: float | None
+best_low_fidelity_score: float
+best_low_fidelity_feasibility: float
+best_high_fidelity_score: float | None
+best_high_fidelity_feasibility: float | None
 history: list[str]
 ```
 

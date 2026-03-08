@@ -160,8 +160,10 @@ Keep:
 - `failure_reason`
 - `step_number`
 - `budget_remaining`
-- `best_score`
-- `best_feasibility`
+- `best_low_fidelity_score`
+- `best_low_fidelity_feasibility`
+- `best_high_fidelity_score`
+- `best_high_fidelity_feasibility`
 - `target_spec`
 - `diagnostics_text`
 
@@ -170,7 +172,7 @@ Add clarity about fidelity:
 - low-fidelity step-time metrics should be labeled as such
 - high-fidelity submit-time metrics should be labeled as such
 - do not expose them as if they are the same truth surface
-- in the current runtime, `best_score` and `best_feasibility` can switch meaning with fidelity context, so traces and baselines should not treat them as one invariant metric yet
+- the live runtime should expose separate low-fidelity and high-fidelity best-state fields instead of overloading one generic best-state metric
 
 This can be done either by:
 
@@ -182,7 +184,7 @@ The minimum requirement is that a reader can tell whether a metric came from low
 Current repo state:
 
 - the live observation surface now exposes evaluation fidelity and failure state
-- the exact naming can still be refined after playtesting, but low-fi vs high-fi is no longer implicit
+- the live observation surface now exposes separate low-fidelity and high-fidelity best-state fields
 - terminal reward/reporting is now fidelity-consistent: `submit` compares against high-fi reference state instead of low-fi rollout score state
 
 ## Reward V0
@@ -217,7 +219,7 @@ Do not use reward complexity to compensate for missing action expressivity or mi
 
 Additional fidelity rule:
 
-- do not compare a high-fidelity submit score against low-fidelity `initial_score` or `best_score` state
+- do not compare a high-fidelity submit score against low-fidelity baseline state
 - terminal reward and submit summaries should use a fidelity-consistent basis
 
 ## Reset Strategy

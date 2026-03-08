@@ -13,10 +13,19 @@ def heuristic_episode(
 ) -> tuple[float, list[dict[str, object]]]:
     obs = env.reset(seed=seed)
     total_reward = 0.0
-    trace: list[dict[str, object]] = [{"step": 0, "score": obs.p1_score}]
+    trace: list[dict[str, object]] = [
+        {
+            "step": 0,
+            "score": obs.p1_score,
+            "evaluation_fidelity": obs.evaluation_fidelity,
+            "constraints_satisfied": obs.constraints_satisfied,
+        }
+    ]
 
     while not obs.done:
-        action = _choose_action(obs)
+        action = (
+            StellaratorAction(intent="submit") if obs.budget_remaining <= 1 else _choose_action(obs)
+        )
         obs = env.step(action)
         total_reward += obs.reward or 0.0
         trace.append(
@@ -24,7 +33,8 @@ def heuristic_episode(
                 "step": len(trace),
                 "action": _action_label(action),
                 "score": obs.p1_score,
-                "best_score": obs.best_score,
+                "evaluation_fidelity": obs.evaluation_fidelity,
+                "constraints_satisfied": obs.constraints_satisfied,
                 "reward": obs.reward,
                 "failure": obs.evaluation_failed,
             }
@@ -95,7 +105,8 @@ def main(n_episodes: int = 20) -> None:
         rewards.append(total_reward)
         print(
             f"Episode {i:3d}: steps={len(trace) - 1}  "
-            f"final_score={final['score']:.6f}  best_score={final['best_score']:.6f}  "
+            f"final_score={final['score']:.6f}  fidelity={final['evaluation_fidelity']}  "
+            f"constraints={'yes' if final['constraints_satisfied'] else 'no'}  "
             f"reward={total_reward:+.4f}"
         )
 

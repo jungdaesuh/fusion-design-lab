@@ -30,8 +30,8 @@ Implementation status:
 ## Execution Status
 
 - [x] Lock the `P1` contract in code
-- [x] Rewrite shared models to the rotating-ellipse `P1` schema
-- [x] Rewrite the environment loop to the rotating-ellipse `P1` schema
+- [x] Rewrite shared models to the repaired low-dimensional `P1` schema
+- [x] Rewrite the environment loop to the repaired low-dimensional `P1` schema
 - [x] Update the API/task surface to match `P1`
 - [x] Update baseline agents to the `P1` contract
 - [x] Add a post-terminal guard so `step()` is a no-op after `done=True`
@@ -59,7 +59,7 @@ Implementation status:
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
 - Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.
-- `best_score` and `best_feasibility` are currently context-dependent in observations: run-time views reflect low-fidelity rollout state, while submit-time views can reflect high-fidelity best state. Keep that distinction explicit in docs, traces, and baseline interpretation until the contract is simplified further.
+- Observation best-state reporting is now split explicitly between low-fidelity rollout state and high-fidelity submit state; baseline traces and demo copy should use those explicit fields rather than infer a mixed best-state story.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after the repaired parameterization and manual playtesting.
 
@@ -121,12 +121,13 @@ uv sync --extra notebooks
 ## Immediate Next Steps
 
 1. Run a small measured sweep on the repaired family to choose useful ranges, deltas, and reset seeds.
-2. Add tracked `P1` fixtures under `server/data/p1`.
-3. Run manual playtest episodes and record the first real reward pathology, if any.
-4. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
-5. Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
-6. Deploy the environment to HF Space.
-7. Add the Colab notebook under `training/notebooks`.
+2. Verify that observation semantics are human-readable and that low-fi `run` versus high-fi `submit` best-state reporting is not ambiguous.
+3. Add tracked `P1` fixtures under `server/data/p1`.
+4. Run manual playtest episodes and record the first real reward pathology, if any.
+5. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
+6. Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
+7. Deploy the environment to HF Space.
+8. Add the Colab notebook under `training/notebooks`.
 
 These are implementation steps, not another planning phase.
 

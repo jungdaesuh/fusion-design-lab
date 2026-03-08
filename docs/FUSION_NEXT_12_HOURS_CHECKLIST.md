@@ -98,35 +98,40 @@ Transition rule:
 ## Hour 2-4: Verify Wiring, Then Manual Playtest
 
 1. Run a small measured sweep on the repaired family before freezing defaults.
-2. Run fixture checks:
+2. Audit observation clarity:
+   - low-fi `run` metrics are clearly labeled
+   - high-fi `submit` metrics are clearly labeled
+   - low-fidelity and high-fidelity best-state fields are explicit and human-readable
+3. Run fixture checks:
    - known-good or near-winning design
    - near-boundary designs
    - clearly bad designs
    - do not rely on the current default baseline params as the only starting point
-3. Confirm:
+4. Confirm:
    - verifier outputs are sane
    - reward ordering is sane
    - objective direction is correct
-4. Manually play 5 to 10 episodes.
-5. Log for each step:
+5. Manually play 5 to 10 episodes.
+6. Log for each step:
    - observation
    - chosen action
    - expected effect
    - returned reward
    - confusion or exploit if observed
-6. Identify at least one bad incentive or exploit.
-7. Patch reward or penalty logic immediately.
-8. Write the reward shaping story:
+7. Identify at least one bad incentive or exploit.
+8. Patch reward or penalty logic immediately.
+9. Write the reward shaping story:
    - initial reward V0
    - bad behavior
    - refinement to reward V1
    - improved behavior
-9. If no real pathology appears, record that `Reward V0` survived playtesting and move on.
+10. If no real pathology appears, record that `Reward V0` survived playtesting and move on.
 
 Exit condition: you can explain why the environment now rewards the intended behavior.
 
 Artifacts:
 - measured range and delta note
+- observation semantics note
 - fixture check note
 - manual playtest log
 - reward shaping note
