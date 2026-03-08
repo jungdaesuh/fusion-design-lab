@@ -6,15 +6,22 @@ from openenv.core import Action, Observation, State
 from pydantic import BaseModel, Field
 
 ActionIntent = Literal["run", "submit", "restore_best"]
-ParameterName = Literal["aspect_ratio", "elongation", "rotational_transform"]
+ParameterName = Literal[
+    "aspect_ratio",
+    "elongation",
+    "rotational_transform",
+    "triangularity_scale",
+]
 DirectionName = Literal["increase", "decrease"]
 MagnitudeName = Literal["small", "medium", "large"]
+EvaluationFidelityName = Literal["low", "high"]
 
 
-class RotatingEllipseParams(BaseModel):
+class LowDimBoundaryParams(BaseModel):
     aspect_ratio: float
     elongation: float
     rotational_transform: float
+    triangularity_scale: float
 
 
 class StellaratorAction(Action):
@@ -34,6 +41,9 @@ class StellaratorObservation(Observation):
     p1_score: float = 0.0
     p1_feasibility: float = 0.0
     vacuum_well: float = 0.0
+    evaluation_fidelity: EvaluationFidelityName = "low"
+    evaluation_failed: bool = False
+    failure_reason: str = ""
     step_number: int = 0
     budget_remaining: int = 6
     best_score: float = 0.0
@@ -43,18 +53,20 @@ class StellaratorObservation(Observation):
 
 
 class StellaratorState(State):
-    current_params: RotatingEllipseParams = Field(
-        default_factory=lambda: RotatingEllipseParams(
-            aspect_ratio=3.5,
-            elongation=1.5,
-            rotational_transform=0.4,
+    current_params: LowDimBoundaryParams = Field(
+        default_factory=lambda: LowDimBoundaryParams(
+            aspect_ratio=3.6,
+            elongation=1.4,
+            rotational_transform=1.6,
+            triangularity_scale=0.55,
         )
     )
-    best_params: RotatingEllipseParams = Field(
-        default_factory=lambda: RotatingEllipseParams(
-            aspect_ratio=3.5,
-            elongation=1.5,
-            rotational_transform=0.4,
+    best_params: LowDimBoundaryParams = Field(
+        default_factory=lambda: LowDimBoundaryParams(
+            aspect_ratio=3.6,
+            elongation=1.4,
+            rotational_transform=1.6,
+            triangularity_scale=0.55,
         )
     )
     initial_score: float = 0.0

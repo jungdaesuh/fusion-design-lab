@@ -28,11 +28,11 @@ Priority source:
 - [x] post-terminal guard in `step()`
 - [x] `constellaration` verifier wiring
 - [x] verify the current 3-knob family against the real low-fidelity verifier
-- [ ] repair the low-dimensional parameterization so triangularity is controllable
-- [ ] split boundary building from boundary evaluation
-- [ ] update the action schema from 3 knobs to the repaired low-dimensional family
-- [ ] add explicit VMEC failure semantics
-- [ ] label low-fi vs high-fi truth in the observation/task surface
+- [x] repair the low-dimensional parameterization so triangularity is controllable
+- [x] split boundary building from boundary evaluation
+- [x] update the action schema from 3 knobs to the repaired low-dimensional family
+- [x] add explicit VMEC failure semantics
+- [x] label low-fi vs high-fi truth in the observation/task surface
 - [ ] tracked `P1` fixtures
 - [ ] manual playtest log
 - [x] settle the non-submit terminal reward policy
@@ -108,7 +108,7 @@ flowchart TD
   [server/app.py](server/app.py),
   [README.md](README.md)
 
-- [ ] Repair the low-dimensional boundary family
+- [x] Repair the low-dimensional boundary family
   Goal:
   add an explicit triangularity control knob or equivalent low-dimensional control so the environment can actually approach P1 feasibility
   Files:
@@ -119,7 +119,7 @@ flowchart TD
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 
-- [ ] Split boundary construction from boundary evaluation
+- [x] Split boundary construction from boundary evaluation
   Goal:
   make the verifier boundary-based and keep parameterization-specific logic in the environment adapter layer
   Files:
@@ -127,7 +127,7 @@ flowchart TD
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 
-- [ ] Add explicit VMEC failure semantics
+- [x] Add explicit VMEC failure semantics
   Goal:
   failed evaluations must cost budget, return a visible failure observation, and apply a documented penalty without silent fallback
   Files:
@@ -136,7 +136,7 @@ flowchart TD
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 
-- [ ] Label low-fi vs high-fi truth in the observation/task surface
+- [x] Label low-fi vs high-fi truth in the observation/task surface
   Goal:
   make it obvious whether a metric came from a low-fidelity `run` step or a high-fidelity `submit`
   Files:

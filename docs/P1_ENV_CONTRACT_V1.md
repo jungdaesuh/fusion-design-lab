@@ -1,6 +1,6 @@
 # P1 Environment Contract V1
 
-**Status:** Technical revision plan over a partial implementation
+**Status:** Technical contract with partial implementation now landed
 **Role:** Supporting spec for the `P1` environment contract
 **SSOT relationship:** This file refines [FUSION_DESIGN_LAB_PLAN_V2.md](FUSION_DESIGN_LAB_PLAN_V2.md). If this file conflicts with the planning SSOT, update both in the same task.
 
@@ -17,7 +17,7 @@ The central change is now explicit:
 
 - the current upstream 3-knob rotating-ellipse family is blocked on P1 triangularity under the real verifier path
 - the next environment contract must repair parameterization before more reward iteration or heuristic work
-- the current repo still exposes the old 3-knob surface and needs to be revised to this 4-knob target
+- the runtime now exposes the repaired 4-knob target, but measured sweep validation and fixture calibration are still pending
 
 ## Verified Blocker
 
@@ -62,9 +62,9 @@ Keep three layers separate:
 
 Current repo state:
 
-- the live code still exposes `evaluate_params(...)`
-- boundary construction and evaluation are not yet split cleanly
-- the verifier rewrite in this file is still pending
+- the live code now exposes a boundary builder plus boundary-based evaluator
+- explicit failure results are returned when VMEC evaluation fails
+- measured sweep validation is still pending
 
 Target functions:
 
@@ -129,11 +129,11 @@ This keeps the environment human-playable and aligned with the historical low-di
 
 Current repo state:
 
-- the live action schema still exposes only:
+- the live action schema now exposes:
   - `aspect_ratio`
   - `elongation`
   - `rotational_transform`
-- the fourth low-dimensional control is still pending
+  - `triangularity_scale`
 
 ## Observation Contract
 
@@ -167,8 +167,8 @@ The minimum requirement is that a reader can tell whether a metric came from low
 
 Current repo state:
 
-- the live observation surface still presents a single `p1_score` / `p1_feasibility` view
-- the environment and `/task` surface still need an explicit low-fi vs high-fi distinction
+- the live observation surface now exposes evaluation fidelity and failure state
+- the exact naming can still be refined after playtesting, but low-fi vs high-fi is no longer implicit
 
 ## Reward V0
 

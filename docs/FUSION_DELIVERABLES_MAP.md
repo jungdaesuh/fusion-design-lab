@@ -14,9 +14,9 @@ Use this map to sequence execution, not to reopen already-locked task choices.
 - [x] Northflank smoke workflow and note are committed
 - [x] Northflank smoke test has passed on the team H100
 - [x] current 3-knob family has been verified as blocked on P1 triangularity
-- [ ] repaired low-dimensional boundary builder is implemented
-- [ ] explicit VMEC failure semantics are implemented
-- [ ] low-fi `run` truth vs high-fi `submit` truth is labeled clearly
+- [x] repaired low-dimensional boundary builder is implemented
+- [x] explicit VMEC failure semantics are implemented
+- [x] low-fi `run` truth vs high-fi `submit` truth is labeled clearly
 - [ ] tracked fixtures are checked in
 - [ ] manual playtest evidence exists
 - [ ] heuristic baseline has been refreshed for the real verifier path
