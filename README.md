@@ -10,9 +10,9 @@ The repo is organized around one clear submission thesis:
 - explicit constraints and feasibility semantics
 - a reward function that is iteratively improved through observed behavior
 
-Training is supporting evidence. The environment is the product.
+The environment is the product. A trained policy is still required as evidence that agents can learn and use the environment rather than only manual or scripted play.
 
-A trained model is optional for this repo's submission story. A public Colab notebook artifact is still required by the hackathon, and that notebook can stay evaluation-first if training evidence is weak.
+A trained model is required for this repo's submission story. A public Colab notebook artifact is also required by the hackathon, and that notebook should include a trained-policy demonstration rather than stay purely eval-first.
 
 ## Current Status
 

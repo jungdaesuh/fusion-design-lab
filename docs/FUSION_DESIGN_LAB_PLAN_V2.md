@@ -7,7 +7,7 @@
 
 ## 1. Submission Thesis
 
-Fusion Design Lab is not primarily a "trained model for fusion" submission.
+Fusion Design Lab is not only a "trained model for fusion" submission.
 
 It is a clear, reproducible environment for one constrained scientific design task:
 
@@ -17,7 +17,7 @@ It is a clear, reproducible environment for one constrained scientific design ta
 - explicit constraints and failure semantics
 - reward logic that can be explained and iterated
 
-Training is supporting evidence. The environment is the product.
+The environment is the product. A trained policy is required supporting evidence because it demonstrates that the environment is learnable in practice rather than only manually playable.
 
 ## 2. Current State
 
@@ -97,7 +97,7 @@ Compute surfaces:
 
 - Northflank is the main compute workspace for verifier-heavy work
 - HF Space is the hosted environment surface
-- Colab is the required public artifact and can stay evaluation-first if training evidence is weak
+- Colab is the required public artifact and should show trained-policy behavior against the live environment
 
 Evidence order:
 
@@ -172,8 +172,8 @@ Gate 7: submission artifacts exist
 
 If training evidence is weak:
 
-- keep the notebook evaluation-first
-- ship the environment, playtest, and baseline story anyway
+- keep claims conservative about policy quality
+- still ship a trained-policy demonstration and document its limitations plainly
 
 If HF Space deployment is delayed:
 
