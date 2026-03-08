@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import asdict, dataclass
 from typing import Final, Sequence
 
@@ -49,7 +48,50 @@ Constraint directions:
 - average_triangularity <= -0.5
 - edge_iota_over_nfp >= 0.3"""
 
-ACTION_ARRAY_PATTERN: Final[re.Pattern[str]] = re.compile(r"\[[\s\S]*\]")
+
+def _extract_json_array(text: str) -> str | None:
+    """Return the first balanced ``[...]`` substring that parses as a JSON array.
+
+    Iterates through every ``[`` in *text*, finds its balanced closing ``]``
+    (respecting nested brackets and JSON string literals), and attempts
+    ``json.loads``.  Returns the first candidate that successfully decodes as a
+    JSON list, skipping prose fragments like ``[draft]``.
+    """
+    start = text.find("[")
+    while start != -1:
+        depth = 0
+        in_string = False
+        escape = False
+        matched_end: int | None = None
+        for index in range(start, len(text)):
+            char = text[index]
+            if in_string:
+                if escape:
+                    escape = False
+                elif char == "\\":
+                    escape = True
+                elif char == '"':
+                    in_string = False
+                continue
+            if char == '"':
+                in_string = True
+            elif char == "[":
+                depth += 1
+            elif char == "]":
+                depth -= 1
+                if depth == 0:
+                    matched_end = index
+                    break
+        if matched_end is not None:
+            candidate = text[start : matched_end + 1]
+            try:
+                decoded = json.loads(candidate)
+                if isinstance(decoded, list):
+                    return candidate
+            except (json.JSONDecodeError, ValueError):
+                pass
+        start = text.find("[", start + 1)
+    return None
 
 
 @dataclass(frozen=True)
@@ -124,10 +166,7 @@ def build_prompt(observation: StellaratorObservation) -> str:
 
 
 def extract_json_plan(text: str) -> str | None:
-    match = ACTION_ARRAY_PATTERN.search(text)
-    if match is None:
-        return None
-    return match.group()
+    return _extract_json_array(text)
 
 
 def _parse_action_item(item: object) -> StellaratorAction | None:
