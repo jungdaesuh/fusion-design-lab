@@ -3,7 +3,9 @@ FROM python:3.12-slim
 WORKDIR /app/env
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git curl libgomp1 && \
+    apt-get install -y --no-install-recommends \
+    git curl libgomp1 cmake ninja-build g++ gfortran \
+    libnetcdf-dev libnetcdff-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir \
