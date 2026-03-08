@@ -18,8 +18,9 @@ Recommended split:
 - [x] Northflank smoke notebook note saved
 - [x] runnable Northflank smoke script saved
 - [x] Northflank smoke test passed on the team H100
+- [x] repository GRPO notebook saved
 - [ ] manual-playtest notebook or trace notebook saved
-- [ ] public submission notebook link saved
+- [ ] public Colab mirror or submission notebook link saved if still required
 
 Operational defaults:
 
@@ -27,6 +28,8 @@ Operational defaults:
 - keep heavy verifier and training work on Northflank
 - keep low-fidelity `run` as the training inner loop; do not put high-fidelity `submit` in every RL step
 - use high-fidelity `submit` only for sparse checkpoint evaluation, paired fixture checks, manual traces, and final evidence
+- keep the repository GRPO notebook aligned to the shared helper contract in `fusion_lab/llm_agent.py`
+- the standard notebook reward/eval path is low-fidelity-only and ignores `submit` by default
 - keep the public submission notebook focused on connecting to the deployed HF Space and exporting visible traces
 - prefer a public HF Space for the hackathon; if private, document the token setup directly in the notebook
 
@@ -46,5 +49,9 @@ Runnable repo path:
 LLM notebook helpers should use the packaged prompt/action contract in:
 
 - `fusion_lab/llm_agent.py`
+
+Current repository notebook:
+
+- `training/notebooks/fusion_design_lab_training.ipynb`
 
 The notebooks are supporting evidence for the environment, not the primary product. The required artifact is the notebook plus trained-policy evidence; a standalone checkpoint file is optional only if the notebook can still demonstrate the trained behavior.

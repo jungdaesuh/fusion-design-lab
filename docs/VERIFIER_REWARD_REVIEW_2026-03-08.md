@@ -2,6 +2,10 @@
 
 Date: 2026-03-08
 
+Historical note:
+
+This review captured repo state earlier on March 8, 2026, before the later notebook/helper alignment and low-fidelity-only LLM evaluation workflow landed. Fixtures, manual playtest notes, notebook wiring, and model-driven low-fidelity rollout tooling were added later the same day. Treat the repo-level gap callouts below as a dated snapshot; the main remaining validation gap is before/after trained-policy evidence on the current low-fidelity-only workflow.
+
 ## Scope
 
 This note reviews how well the current verifier path and reward function serve the repo's stated goal:
@@ -30,26 +34,26 @@ The verifier implementation is directionally strong and mostly correct now. The 
 
 The reward is also directionally good. `Reward V0` remains simple, mostly verifier-driven, and aligned with the repo docs.
 
-The main gap is no longer basic verifier wiring. The main gap is that the repo still lacks the validation evidence that its own docs require before calling the environment "good":
+The main gap at review time was no longer basic verifier wiring. The main gap was that the repo lacked the validation evidence its own docs required before calling the environment "good."
 
-- no tracked fixtures
-- no manual playtest log
-- no documented reward pathology/fix or explicit "Reward V0 survived playtest" note
+Later on March 8, 2026, the repo closed the fixture/manual-playtest/notebook-wiring gaps. The remaining open validation gap is still before/after trained-policy evidence on the current low-fidelity-only workflow.
 
 ## Validated Findings
 
-### 1. Missing validation artifacts are still the biggest repo-level gap
+### 1. Missing validation artifacts were the biggest repo-level gap at review time
 
-The planning docs explicitly say the environment artifact is the product, not just the code. Current repo state still lacks:
+At review time, the planning docs explicitly said the environment artifact was the product, not just the code. The repo still lacked:
 
 - tracked `P1` fixtures
 - manual playtest evidence
 - a documented `Reward V0 -> V1` change, or an explicit record that `Reward V0` survived playtesting unchanged
 
+Later updates on March 8, 2026 closed the tracked-fixture and manual-playtest parts of that gap. The live open item is still trained-policy evidence on the current low-fidelity-only workflow.
+
 Relevant references:
 
 - [FUSION_DESIGN_LAB_PLAN_V2.md](./FUSION_DESIGN_LAB_PLAN_V2.md)
-- [FUSION_DELIVERABLES_MAP.md](./FUSION_DELIVERABLES_MAP.md)
+- [archive/FUSION_DELIVERABLES_MAP.md](./archive/FUSION_DELIVERABLES_MAP.md)
 - [server/data/p1/README.md](../server/data/p1/README.md)
 
 ### 2. Observation legibility still conflicts with the official tolerance semantics

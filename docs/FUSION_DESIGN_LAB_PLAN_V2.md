@@ -37,19 +37,23 @@ Completed:
 - an initial low-fidelity manual playtest note now exists
 - paired high-fidelity fixture checks for those tracked fixtures now exist
 - one submit-side manual playtest trace exists
+- the repository GRPO notebook is checked in and aligned to the shared `fusion_lab/llm_agent.py` helper contract
+- model-driven fixed-seed low-fidelity `monitor` / `evaluate` tooling exists for LLM baselines
 
 Still open:
 
 - decision on whether reset-seed pool should change from paired checks
 - HF Space deployment evidence
-- public notebook artifact wiring
+- public Colab mirror or notebook submission link, if the submission surface still requires it
+- before/after trained-policy evidence on the current low-fidelity-only workflow
 - demo and README polish after the artifacts are real
 
 Current caution:
 
 - do not present repaired-family ranges, deltas, or budget choices as settled defaults until the measured sweep is recorded
 - do not narrate low-fidelity rollout metrics as final submission truth
-- do not move high-fidelity VMEC-backed `submit` into the normal RL inner loop; keep it for truth checks and sparse evaluation
+- the standard notebook and `training/llm_rollout.py` `monitor` / `evaluate` paths now stay on low-fidelity `run` only and ignore `submit` by default
+- reserve VMEC-backed `submit` for replay/debug work, paired fixture checks, submit-side traces, and final evidence
 
 ## 3. Locked Decisions
 
@@ -98,8 +102,9 @@ Use the docs like this:
 
 Visible artifacts:
 
-- [ ] HF Space environment
-- [ ] Public submission notebook
+- [x] HF Space environment
+- [x] Repository training notebook
+- [ ] Public Colab mirror or submission notebook link if required
 - [ ] 1-minute demo video
 - [x] Public repo and README
 
@@ -116,10 +121,12 @@ Evidence order:
 - [x] fixture checks
 - [x] manual playtest log
 - [x] tiny low-fi PPO smoke trace
+- [x] shared-helper notebook alignment
+- [x] model-driven low-fi LLM evaluation tooling
 - [ ] reward iteration note
 - [ ] stable local and remote episodes
 - [x] random and heuristic baselines
-- [ ] notebook evidence
+- [ ] before/after trained-policy evidence
 - [ ] demo and repo polish
 
 ## 7. Environment Summary
@@ -141,11 +148,14 @@ The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V
 - [x] Pair the tracked low-fidelity fixtures with high-fidelity submit checks immediately after the PPO smoke pass.
 - [ ] Decide whether the reset pool should change based on the measured sweep plus those paired checks.
 - [x] Run at least one submit-side manual trace, then expand to 5 to 10 episodes and record the first real confusion point, exploit, or reward pathology.
+- [ ] Save one fixed-seed untrained baseline with the low-fidelity-only `training/llm_rollout.py evaluate` workflow.
+- [ ] Run one short H100 GRPO pass with the repository notebook on that same low-fidelity-only workflow.
+- [ ] Re-run the same seeds after training and save one before/after artifact.
 - [ ] Adjust reward or penalties only if playtesting exposes a concrete problem.
 - [x] Refresh the heuristic baseline using the repaired-family evidence.
 - [ ] Prove a stable local episode path.
 - [ ] Deploy the same task contract to HF Space and prove one clean remote episode.
-- [ ] Wire the public notebook artifact to the live environment.
+- [ ] Publish or mirror the notebook artifact only after the live before/after path is real.
 - [ ] Record the demo around environment clarity, reward iteration, and baseline evidence.
 - [ ] Polish the public repo only after the artifacts above exist.
 
@@ -189,6 +199,12 @@ Gate 8: submission artifacts exist
 
 - the public notebook artifact, demo, and README all reflect the actual environment rather than a hypothetical future one
 
+Gate 9: trained-policy evidence is real
+
+- one fixed-seed untrained baseline exists
+- one short low-fidelity training pass exists on the same workflow
+- the repo can show a before/after comparison on the same seeds without relying on `submit`
+
 ## 10. Fallback Rules
 
 If training evidence is weak:
@@ -196,6 +212,7 @@ If training evidence is weak:
 - keep claims conservative about policy quality
 - still ship a trained-policy demonstration and document its limitations plainly
 - do not skip the paired high-fidelity checks or submit-side manual trace
+- do not swap back to submit-included reward traces and present them as the current GRPO path
 
 If HF Space deployment is delayed:
 
@@ -225,4 +242,7 @@ If the repaired family is too easy:
 - [x] Pair the tracked fixtures with high-fidelity submit checks.
 - [x] Record one submit-side manual trace.
 - [x] Refresh the heuristic baseline from that playtest evidence.
+- [ ] Save one fixed-seed untrained baseline with `training/llm_rollout.py evaluate`.
+- [ ] Run one short H100 GRPO pass with `training/notebooks/fusion_design_lab_training.ipynb`.
+- [ ] Re-run the same seeds and save a before/after artifact.
 - [ ] Verify one clean HF Space episode with the same contract.

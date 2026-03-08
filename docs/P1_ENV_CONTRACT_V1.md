@@ -1,7 +1,7 @@
 # P1 Environment Contract V1
 
 **Role:** Live technical contract SSOT for the current implementation phase
-**Planning dependency:** [`FUSION_DESIGN_LAB_PLAN_V2.md`](FUSION_DESIGN_LAB_PLAN_V2.md)
+**Planning dependency:** [`FUSION_DESIGN_LAB_PLAN_V2.md`](./FUSION_DESIGN_LAB_PLAN_V2.md)
 **Evidence dependency:** [`P1_PARAMETERIZATION_DEEPDIVE.md`](P1_PARAMETERIZATION_DEEPDIVE.md)
 
 ## 1. Scope
@@ -179,7 +179,8 @@ VMEC preset mapping:
 Training and evaluation rule:
 
 - use low-fidelity `run` as the RL inner-loop surface
-- keep higher-fidelity `submit` for terminal truth, paired fixture checks, submit-side manual traces, and sparse checkpoint evaluation
+- the standard repository notebook and `training/llm_rollout.py` `monitor` / `evaluate` workflows stay on low-fidelity `run` only and ignore `submit` by default
+- keep higher-fidelity `submit` for terminal truth, explicit replay/debug work, paired fixture checks, and submit-side manual traces
 - do not move VMEC-backed submit evaluation into every training step unless the contract is deliberately redefined
 
 ## 9. Reward V0

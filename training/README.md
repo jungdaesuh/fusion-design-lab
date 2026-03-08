@@ -11,9 +11,11 @@ Training policy:
 ## Status
 
 - [ ] Northflank notebook artifacts saved
-- [ ] Colab notebook saved
+- [x] repository GRPO notebook saved
+- [ ] Colab mirror or public notebook link saved if required by the submission surface
 - [x] tiny low-fi PPO smoke artifact saved
-- [ ] trained-policy evidence saved
+- [ ] fixed-seed untrained baseline artifact saved
+- [ ] before/after trained-policy evidence saved
 
 ## Runnable paths
 
@@ -25,6 +27,15 @@ Training policy:
   `uv run python training/llm_rollout.py monitor --completion-file <path> --seeds 0,1,2`
 - generate fresh model completions per seed and save aggregate reward/outcome metrics:
   `uv run python training/llm_rollout.py evaluate --completion-command 'python path/to/model_cli.py' --seeds 0,1,2`
+
+Use `monitor` when you already have one completion or one action plan and want a fixed replay across seeds.
+Use `evaluate` for before/after policy comparison because it generates a fresh completion per seed.
+
+## Current validation target
+
+- save one untrained fixed-seed baseline with `evaluate`
+- run one short GRPO pass on Northflank H100 with the repository notebook
+- rerun the same seeds and compare reward plus low-fidelity feasibility before versus after
 
 ## Shared LLM Contract
 

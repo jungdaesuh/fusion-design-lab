@@ -15,7 +15,7 @@ An RL environment where agents optimize stellarator fusion reactor designs by ad
 | `average_triangularity` | ≤ -0.5 |
 | `edge_iota_over_nfp` | ≥ 0.3 |
 
-The environment uses [`constellaration`](https://pypi.org/project/constellaration/) as the physics verifier — low-fidelity (~0.6s) for the RL inner loop, high-fidelity (~4s) for terminal submit. Each episode has a budget of **6 evaluations** across **26 discrete actions** (4 parameters × 2 directions × 3 magnitudes + restore_best + submit).
+The environment uses [`constellaration`](https://pypi.org/project/constellaration/) as the physics verifier — low-fidelity (~0.6s) for the RL inner loop, high-fidelity (~4s) for terminal submit. The live environment still exposes **26 discrete actions** (4 parameters × 2 directions × 3 magnitudes + restore_best + submit), but the standard GRPO notebook and `training/llm_rollout.py` `monitor` / `evaluate` workflows stay on the low-fidelity `run` surface and ignore `submit` by default.
 
 ## Architecture
 
@@ -30,8 +30,10 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - `P1` is locked as the benchmark task with `constellaration` as verifier of record
 - The repaired 4-knob low-dimensional boundary family is wired into the runtime path
 - Environment deployed to HF Spaces and verified (health, reset, step all operational)
-- GRPO training notebook created with Unsloth + TRL integration
+- GRPO training notebook is checked into the repo and aligned with the shared `fusion_lab/llm_agent.py` contract
+- LLM rollout tooling can now generate fresh model completions per seed and save fixed-seed reward/outcome summaries
 - Low-fidelity PPO smoke artifacts and paired high-fidelity fixture checks exist
+- Before/after trained-policy evidence on the current low-fidelity-only workflow is still open
 
 ## Execution Status
 
@@ -65,7 +67,7 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - The repaired family now has a first coarse measured sweep note in [docs/P1_MEASURED_SWEEP_NOTE.md](docs/P1_MEASURED_SWEEP_NOTE.md), but reset-seed changes and any budget changes should still wait for paired high-fidelity fixture checks.
 - The paired low-fi/high-fi fixture snapshots are now written into each fixture JSON and summarized in `baselines/fixture_high_fidelity_pairs.json`.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
-- High-fidelity VMEC-backed `submit` is too expensive to serve as the normal RL inner loop. Keep training rollouts on low-fidelity `run`, then use high-fidelity calls for paired fixtures, submit-side traces, sparse checkpoint evaluation, and final evidence.
+- The standard LLM training and evaluation workflow is now low-fidelity-only: the repo notebook and `training/llm_rollout.py` `monitor` / `evaluate` ignore `submit` by default. Reserve `submit` for explicit replay/debug work, paired fixture checks, submit-side traces, and final evidence.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
 - Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.
 - Observation best-state reporting is now split explicitly between low-fidelity rollout state and high-fidelity submit state; baseline traces and demo copy should use those explicit fields rather than infer a mixed best-state story.
@@ -135,7 +137,9 @@ uv sync --extra notebooks
 - [x] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks immediately after the PPO smoke run.
 - [x] Run at least one submit-side manual trace before any broader training push, then record the first real reward pathology, if any.
 - [ ] Decide whether any reset seed should move based on the measured sweep plus those paired checks.
-- [ ] Keep any checkpoint high-fidelity evaluation sparse enough that the low-fidelity inner loop stays fast.
+- [ ] Save one fixed-seed untrained baseline with `training/llm_rollout.py evaluate`.
+- [ ] Run one short H100 GRPO pass with the repository notebook on the same low-fidelity-only workflow.
+- [ ] Re-run the same seeds after training and save one before/after artifact.
 - [ ] Save one presentation-ready comparison trace from the refreshed heuristic baseline.
 - [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
 - [x] Deploy the environment to HF Space.
