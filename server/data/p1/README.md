@@ -13,8 +13,15 @@ These fixtures are for verifier and reward sanity checks.
 ## Status
 
 - [ ] known-good or near-winning fixture added
-- [ ] near-boundary fixture added
-- [ ] clearly infeasible fixture added
-- [ ] fixture sanity note written
+- [x] near-boundary fixture added
+- [x] clearly infeasible fixture added
+- [x] fixture sanity note written
+
+Current tracked files:
+
+- `boundary_default_reset.json`
+- `bad_low_iota.json`
+- `lowfi_feasible_local.json`
+- `FIXTURE_SANITY.md`
 
 Do not copy the old `ai-sci-feasible-designs` harness here. Reuse only the specific JSON artifacts needed for the fresh `P1` environment.
