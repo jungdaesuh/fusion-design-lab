@@ -17,6 +17,7 @@ Use this map to sequence execution, not to reopen already-locked task choices.
 - [x] repaired low-dimensional boundary builder is implemented
 - [x] explicit VMEC failure semantics are implemented
 - [x] low-fi `run` truth vs high-fi `submit` truth is labeled clearly
+- [x] terminal submit scoring/reporting is fidelity-consistent
 - [ ] tracked fixtures are checked in
 - [ ] manual playtest evidence exists
 - [ ] heuristic baseline has been refreshed for the real verifier path
@@ -110,13 +111,11 @@ flowchart LR
 
 Northflank compute bring-up and smoke validation are complete.
 
-1. Repair the low-dimensional parameterization so triangularity is controllable under the official verifier.
-2. Add explicit VMEC failure semantics and clear low-fi vs high-fi observation labeling.
-3. Run a small measured sweep before locking ranges, deltas, reset seeds, or budget changes.
-4. Add tracked fixtures and run fixture sanity checks.
-5. Manual-playtest the environment and record the first real pathology, if any.
-6. Refresh the heuristic baseline from that evidence.
-7. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
-8. Use the notebook to show traces and comparisons; include training only if it adds signal.
-9. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
-10. Polish the repo only after the artifacts are real.
+1. Run a small measured sweep before locking ranges, deltas, reset seeds, or budget changes.
+2. Add tracked fixtures and run fixture sanity checks.
+3. Manual-playtest the environment and record the first real pathology, if any.
+4. Refresh the heuristic baseline from that evidence.
+5. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
+6. Use the notebook to show traces and comparisons; include training only if it adds signal.
+7. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
+8. Polish the repo only after the artifacts are real.

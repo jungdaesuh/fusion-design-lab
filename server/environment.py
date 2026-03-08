@@ -89,11 +89,13 @@ class StellaratorEnvironment(
         self._state = StellaratorState(
             episode_id=episode_id,
             step_count=0,
+            initial_params=params,
             current_params=params,
             best_params=params,
             initial_score=metrics.p1_score,
             best_score=metrics.p1_score,
             best_feasibility=metrics.p1_feasibility,
+            best_high_fidelity_feasibility=float("inf"),
             budget_total=BUDGET,
             budget_remaining=BUDGET,
             episode_done=False,
@@ -170,8 +172,15 @@ class StellaratorEnvironment(
 
     def _handle_submit(self) -> StellaratorObservation:
         metrics = self._evaluate_params(self._state.current_params, fidelity="high")
-        reward = self._compute_reward(metrics, "submit", done=True)
-        summary = self._summary_submit(metrics)
+        initial_submit_metrics = self._initial_high_fidelity_metrics()
+        best_submit_metrics = self._refresh_best_high_fidelity_metrics(metrics)
+        reward = self._compute_reward(
+            metrics,
+            "submit",
+            done=True,
+            initial_reference_score=initial_submit_metrics.p1_score,
+        )
+        summary = self._summary_submit(metrics, best_submit_metrics)
         self._state.history.append(summary)
         self._state.episode_done = True
         self._last_metrics = metrics
@@ -229,6 +238,7 @@ class StellaratorEnvironment(
         metrics: EvaluationMetrics,
         intent: str,
         done: bool,
+        initial_reference_score: float | None = None,
     ) -> float:
         previous_metrics = self._reference_metrics(metrics)
         if metrics.evaluation_failed:
@@ -257,13 +267,14 @@ class StellaratorEnvironment(
             reward -= 0.1
 
         if intent == "submit" or done:
-            improved = (
-                metrics.constraints_satisfied and metrics.p1_score > self._state.initial_score
+            base_score = (
+                initial_reference_score
+                if initial_reference_score is not None
+                else self._state.initial_score
             )
+            improved = metrics.constraints_satisfied and metrics.p1_score > base_score
             if improved:
-                ratio = (metrics.p1_score - self._state.initial_score) / max(
-                    1.0 - self._state.initial_score, 1e-6
-                )
+                ratio = (metrics.p1_score - base_score) / max(1.0 - base_score, 1e-6)
                 if intent == "submit":
                     reward += 5.0 * ratio + self._state.budget_remaining / self._state.budget_total
                 else:
@@ -290,11 +301,14 @@ class StellaratorEnvironment(
             text_lines.append(f"failure_reason={metrics.failure_reason}")
         text_lines.extend(
             [
-                f"max_elongation={metrics.max_elongation:.4f}  |  best_score={self._state.best_score:.6f}",
+                f"max_elongation={metrics.max_elongation:.4f}  |  best_score={self._display_best_score(metrics):.6f}",
                 f"aspect_ratio={metrics.aspect_ratio:.4f}  (<= {ASPECT_RATIO_MAX:.1f})",
                 f"average_triangularity={metrics.average_triangularity:.4f}  (<= {AVERAGE_TRIANGULARITY_MAX:.1f})",
                 f"edge_iota_over_nfp={metrics.edge_iota_over_nfp:.4f}  (>= {EDGE_IOTA_OVER_NFP_MIN:.1f})",
-                f"feasibility={metrics.p1_feasibility:.6f}  |  best_feasibility={self._state.best_feasibility:.6f}",
+                (
+                    f"feasibility={metrics.p1_feasibility:.6f}  |  "
+                    f"best_feasibility={self._display_best_feasibility(metrics):.6f}"
+                ),
                 f"vacuum_well={metrics.vacuum_well:.4f}",
                 f"constraints={'SATISFIED' if metrics.constraints_satisfied else 'VIOLATED'}",
                 f"step={self._state.step_count}  |  budget={self._state.budget_remaining}/{self._state.budget_total}",
@@ -315,8 +329,8 @@ class StellaratorEnvironment(
             failure_reason=metrics.failure_reason,
             step_number=self._state.step_count,
             budget_remaining=self._state.budget_remaining,
-            best_score=self._state.best_score,
-            best_feasibility=self._state.best_feasibility,
+            best_score=self._display_best_score(metrics),
+            best_feasibility=self._display_best_feasibility(metrics),
             constraints_satisfied=metrics.constraints_satisfied,
             target_spec=TARGET_SPEC,
             reward=reward,
@@ -349,13 +363,17 @@ class StellaratorEnvironment(
             f"Low-fidelity evaluation. {objective_summary}"
         )
 
-    def _summary_submit(self, metrics: EvaluationMetrics) -> str:
+    def _summary_submit(
+        self,
+        metrics: EvaluationMetrics,
+        best_submit_metrics: EvaluationMetrics,
+    ) -> str:
         if metrics.evaluation_failed:
             return f"Submit failed during high-fidelity evaluation: {metrics.failure_reason}"
         return (
-            f"Submitted current_score={metrics.p1_score:.6f}, "
-            f"best_seen_score={self._state.best_score:.6f}, "
-            f"best_feasibility={self._state.best_feasibility:.6f}, "
+            f"Submitted current_high_fidelity_score={metrics.p1_score:.6f}, "
+            f"best_high_fidelity_score={best_submit_metrics.p1_score:.6f}, "
+            f"best_high_fidelity_feasibility={best_submit_metrics.p1_feasibility:.6f}, "
             f"constraints={'SATISFIED' if metrics.constraints_satisfied else 'VIOLATED'}."
         )
 
@@ -411,6 +429,41 @@ class StellaratorEnvironment(
         if self._last_successful_metrics is not None:
             return self._last_successful_metrics
         return fallback
+
+    def _initial_high_fidelity_metrics(self) -> EvaluationMetrics:
+        if self._state.initial_high_fidelity_score is not None:
+            return self._evaluate_params(self._state.initial_params, fidelity="high")
+        metrics = self._evaluate_params(self._state.initial_params, fidelity="high")
+        self._state.initial_high_fidelity_score = metrics.p1_score
+        return metrics
+
+    def _refresh_best_high_fidelity_metrics(
+        self,
+        current_submit_metrics: EvaluationMetrics,
+    ) -> EvaluationMetrics:
+        best_metrics = current_submit_metrics
+        if self._state.best_params != self._state.current_params:
+            best_metrics = self._evaluate_params(self._state.best_params, fidelity="high")
+
+        self._state.best_high_fidelity_score = best_metrics.p1_score
+        self._state.best_high_fidelity_feasibility = best_metrics.p1_feasibility
+        return best_metrics
+
+    def _display_best_score(self, metrics: EvaluationMetrics) -> float:
+        if (
+            metrics.evaluation_fidelity == "high"
+            and self._state.best_high_fidelity_score is not None
+        ):
+            return self._state.best_high_fidelity_score
+        return self._state.best_score
+
+    def _display_best_feasibility(self, metrics: EvaluationMetrics) -> float:
+        if (
+            metrics.evaluation_fidelity == "high"
+            and self._state.best_high_fidelity_score is not None
+        ):
+            return self._state.best_high_fidelity_feasibility
+        return self._state.best_feasibility
 
     def _update_best(self, params: LowDimBoundaryParams, metrics: EvaluationMetrics) -> None:
         if metrics.evaluation_failed:

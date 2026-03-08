@@ -33,6 +33,7 @@ Priority source:
 - [x] update the action schema from 3 knobs to the repaired low-dimensional family
 - [x] add explicit VMEC failure semantics
 - [x] label low-fi vs high-fi truth in the observation/task surface
+- [x] separate high-fi submit scoring/reporting from low-fi rollout score state
 - [ ] tracked `P1` fixtures
 - [ ] manual playtest log
 - [x] settle the non-submit terminal reward policy
@@ -146,6 +147,15 @@ flowchart TD
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 
+- [x] Separate high-fi submit scoring/reporting from low-fi rollout score state
+  Completed:
+  submit-time reward now uses a high-fidelity initial reference, and submit summaries / displayed best score use high-fidelity state instead of low-fidelity rollout state
+  Files:
+  [server/environment.py](server/environment.py)
+  [fusion_lab/models.py](fusion_lab/models.py)
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
+
 ## Validation and Reward
 
 - [ ] Run a small measured sweep on the repaired low-dimensional family
@@ -253,5 +263,6 @@ flowchart TD
 - [ ] Do not let notebook or demo work outrun environment evidence
 - [ ] Do not add training-first complexity before manual playtesting
 - [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
+- [x] Do not compare high-fidelity submit scores against low-fidelity best/initial score state in the final story
 - [ ] Do not describe the current baseline reset state as feasible or near-feasible
 - [ ] Do not force a `Reward V1` story if `Reward V0` survives manual playtesting

@@ -20,12 +20,14 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [x] repair the low-dimensional parameterization
 - [x] add explicit VMEC failure semantics
 - [x] label low-fi `run` truth vs high-fi `submit` truth in the task surface
+- [x] separate high-fi submit scoring/reporting from low-fi rollout score state
 - [ ] add tracked fixtures and manual playtest evidence
 - [ ] refresh the heuristic baseline after the real-verifier rerun
 
 Current caution:
 
 - do not assume the first repaired defaults are final; run a measured sweep before treating ranges, deltas, or reset seeds as stable
+- do not present submit-time score comparisons as clean unless they are grounded in the now-separated high-fi submit state
 
 ## Plan V2 Inheritance
 
@@ -95,40 +97,35 @@ Transition rule:
 
 ## Hour 2-4: Verify Wiring, Then Manual Playtest
 
-1. Repair the low-dimensional parameterization so triangularity is controllable.
-2. Add explicit VMEC failure semantics and visible failure observations.
-3. Label low-fi `run` truth vs high-fi `submit` truth clearly.
-4. Run a small measured sweep on the repaired family before freezing defaults.
-5. Run fixture checks:
+1. Run a small measured sweep on the repaired family before freezing defaults.
+2. Run fixture checks:
    - known-good or near-winning design
    - near-boundary designs
    - clearly bad designs
    - do not rely on the current default baseline params as the only starting point
-6. Confirm:
+3. Confirm:
    - verifier outputs are sane
    - reward ordering is sane
    - objective direction is correct
-7. Manually play 5 to 10 episodes.
-8. Log for each step:
+4. Manually play 5 to 10 episodes.
+5. Log for each step:
    - observation
    - chosen action
    - expected effect
    - returned reward
    - confusion or exploit if observed
-9. Identify at least one bad incentive or exploit.
-10. Patch reward or penalty logic immediately.
-11. Write the reward shaping story:
+6. Identify at least one bad incentive or exploit.
+7. Patch reward or penalty logic immediately.
+8. Write the reward shaping story:
    - initial reward V0
    - bad behavior
    - refinement to reward V1
    - improved behavior
-12. If no real pathology appears, record that `Reward V0` survived playtesting and move on.
+9. If no real pathology appears, record that `Reward V0` survived playtesting and move on.
 
 Exit condition: you can explain why the environment now rewards the intended behavior.
 
 Artifacts:
-- repaired low-dimensional boundary plan
-- explicit failure semantics note
 - measured range and delta note
 - fixture check note
 - manual playtest log

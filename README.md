@@ -45,6 +45,7 @@ Implementation status:
 - [x] Update the action contract from 3 knobs to the repaired low-dimensional family
 - [x] Add explicit VMEC failure semantics to the environment contract
 - [x] Label low-fi `run` truth vs high-fi `submit` truth in observations and task docs
+- [x] Separate high-fidelity submit scoring/reporting from low-fidelity rollout score state
 - [ ] Add tracked `P1` fixtures under `server/data/p1/`
 - [ ] Run manual playtesting and record the first reward pathology
 - [ ] Refresh the heuristic baseline for the real verifier path
@@ -57,6 +58,7 @@ Implementation status:
 - The repaired low-dimensional family still needs measured ranges and deltas. Do not narrate guessed `rotational_transform` bounds, `triangularity_scale` deltas, or a larger budget as validated facts until they are measured on the repaired environment.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
+- Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after the repaired parameterization and manual playtesting.
 
