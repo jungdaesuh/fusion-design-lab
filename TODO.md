@@ -198,6 +198,7 @@ flowchart TD
   treat this as a smoke test, not as proof that the terminal `submit` contract is already validated
   stop after a few readable trajectories or one clear failure mode
   paired high-fidelity fixture checks must happen immediately after this smoke pass
+  high-fidelity VMEC-backed `submit` should stay out of the normal RL inner loop
 
 - [ ] Manual-playtest 5-10 episodes
   Goal:
@@ -270,7 +271,7 @@ flowchart TD
   Files:
   [README.md](README.md)
 
-- [ ] Only add training evidence if it is actually persuasive
+- [ ] Only treat training evidence as submission-ready if low-fidelity gains survive sparse high-fidelity evaluation
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
@@ -283,6 +284,7 @@ flowchart TD
 - [ ] Do not port the old `ai-sci-feasible-designs` harness
 - [ ] Do not let notebook or demo work outrun environment evidence
 - [ ] Do not let tiny low-fi smoke training replace paired high-fidelity checks or submit-side manual playtesting
+- [ ] Do not move high-fidelity VMEC-backed `submit` into the normal RL inner loop
 - [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
 - [x] Do not compare high-fidelity submit scores against low-fidelity best/initial score state in the final story
 - [ ] Do not describe the current baseline reset state as feasible or near-feasible

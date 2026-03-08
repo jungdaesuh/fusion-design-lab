@@ -17,6 +17,7 @@ Current execution priority remains:
 2. tiny PPO smoke pass as a diagnostic-only check
 3. tracked fixtures with paired high-fidelity submit checks
 4. one submit-side manual trace, then broader manual playtest
-5. heuristic baseline refresh
-6. HF Space proof
-7. notebook, demo, and repo polish
+5. sparse checkpoint high-fidelity evaluation to confirm low-fidelity gains survive `submit`
+6. heuristic baseline refresh
+7. HF Space proof
+8. notebook, demo, and repo polish

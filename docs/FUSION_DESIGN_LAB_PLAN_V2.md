@@ -50,6 +50,7 @@ Current caution:
 
 - do not present repaired-family ranges, deltas, or budget choices as settled defaults until the measured sweep is recorded
 - do not narrate low-fidelity rollout metrics as final submission truth
+- do not move high-fidelity VMEC-backed `submit` into the normal RL inner loop; keep it for truth checks and sparse evaluation
 
 ## 3. Locked Decisions
 
@@ -83,6 +84,7 @@ Practical fail-fast rule:
 - stop after a few readable trajectories or one clear failure mode
 - run paired high-fidelity fixture checks and one real submit-side trace immediately after the smoke run
 - do not use low-fidelity training alone as proof that the terminal `submit` contract is trustworthy
+- keep any checkpoint high-fidelity evaluation sparse enough that it does not replace the low-fidelity inner loop
 
 ## 5. Document Roles
 
@@ -107,6 +109,7 @@ Compute surfaces:
 - Northflank is the main compute workspace for verifier-heavy work
 - HF Space is the hosted environment surface
 - Colab is the required public artifact and should show trained-policy behavior against the live environment
+- trained-policy work should still iterate on low-fidelity `run`; use high-fidelity `submit` only for sparse checkpoint evaluation and final evidence
 
 Evidence order:
 

@@ -163,6 +163,12 @@ The verifier should stay boundary-based:
 
 Do not treat parameterization-specific logic as verifier truth.
 
+Training and evaluation rule:
+
+- use low-fidelity `run` as the RL inner-loop surface
+- keep high-fidelity `submit` for terminal truth, paired fixture checks, submit-side manual traces, and sparse checkpoint evaluation
+- do not move high-fidelity VMEC-backed evaluation into every training step unless the contract is deliberately redefined
+
 ## 9. Reward V0
 
 `Reward V0` is the live reward contract until playtesting proves a concrete pathology.

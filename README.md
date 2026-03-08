@@ -62,6 +62,7 @@ Implementation status:
 - The repaired family now has a first coarse measured sweep note in [docs/P1_MEASURED_SWEEP_NOTE.md](docs/P1_MEASURED_SWEEP_NOTE.md), but reset-seed changes and any budget changes should still wait for paired high-fidelity fixture checks.
 - The tracked fixtures in `server/data/p1/` are currently low-fidelity-calibrated. Do not narrate them as fully paired low-fi/high-fi references until the submit-side spot checks land.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
+- High-fidelity VMEC-backed `submit` is too expensive to serve as the normal RL inner loop. Keep training rollouts on low-fidelity `run`, then use high-fidelity calls for paired fixtures, submit-side traces, sparse checkpoint evaluation, and final evidence.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
 - Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.
 - Observation best-state reporting is now split explicitly between low-fidelity rollout state and high-fidelity submit state; baseline traces and demo copy should use those explicit fields rather than infer a mixed best-state story.
@@ -130,6 +131,7 @@ uv sync --extra notebooks
 - [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks immediately after the PPO smoke run.
 - [ ] Decide whether any reset seed should move based on the measured sweep plus those paired checks.
 - [ ] Run at least one submit-side manual trace before any broader training push, then record the first real reward pathology, if any.
+- [ ] Keep any checkpoint high-fidelity evaluation sparse enough that the low-fidelity inner loop stays fast.
 - [ ] Refresh the heuristic baseline using measured sweep and playtest evidence, then save one comparison trace.
 - [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
 - [ ] Deploy the environment to HF Space.

@@ -25,6 +25,8 @@ Operational defaults:
 
 - use the same Python dependency set as the repo runtime
 - keep heavy verifier and training work on Northflank
+- keep low-fidelity `run` as the training inner loop; do not put high-fidelity `submit` in every RL step
+- use high-fidelity `submit` only for sparse checkpoint evaluation, paired fixture checks, manual traces, and final evidence
 - keep the Colab notebook focused on connecting to the deployed HF Space and exporting visible traces
 - prefer a public HF Space for the hackathon; if private, document the token setup directly in the notebook
 
