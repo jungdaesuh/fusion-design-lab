@@ -11,6 +11,7 @@ Recommended split:
 
 - Northflank notebook: main compute workspace on the team H100
 - Colab notebook: thin public artifact required by the hackathon
+- trained model: optional; if training evidence is weak, the required Colab notebook can stay eval-first
 
 ## Status
 
@@ -40,4 +41,4 @@ Runnable repo path:
 - note: `training/notebooks/NORTHFLANK_SMOKE_NOTE.md`
 - latest passing artifact example: `/home/jovyan/fusion-design-lab/smoke/northflank_smoke_20260308T023646Z.json`
 
-The notebooks are supporting evidence for the environment, not the primary product.
+The notebooks are supporting evidence for the environment, not the primary product. The required artifact is the notebook itself, not a trained model checkpoint.
