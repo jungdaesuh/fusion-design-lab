@@ -105,6 +105,7 @@ Required fields:
 - `failure_reason`
 - `step_number`
 - `budget_remaining`
+- `no_progress_steps`
 - `best_low_fidelity_score`
 - `best_low_fidelity_feasibility`
 - `best_high_fidelity_score`
@@ -125,7 +126,8 @@ Interpretation rules:
 - normalized constraint-violation telemetry must follow the official `P1` constraint scales
 - the dominant active constraint must be visible so a human can explain repair-phase rewards
 - reward telemetry must expose which bonuses, penalties, and shaping terms contributed to the scalar reward
-- action telemetry must expose parameter values before and after the action, including clamped and no-op moves
+- action telemetry must expose parameter values before and after the action, including clamped, no-op, and repeat-state moves
+- anti-stagnation state that can change reward must be visible in structured observation fields, not only free text
 
 ## 6. Episode Flow
 
@@ -189,23 +191,36 @@ Training and evaluation rule:
 - keep higher-fidelity `submit` for terminal truth, explicit replay/debug work, paired fixture checks, and submit-side manual traces
 - do not move VMEC-backed submit evaluation into every training step unless the contract is deliberately redefined
 
-## 9. Reward V1
+## 9. Reward V2
 
-`Reward V1` replaces `Reward V0` because the old infeasible shaping only used `Δ official_feasibility`.
-That was too coarse once the transferred P1 findings made the main pathology clear: official
-feasibility is a max over normalized constraint violations, so useful repair steps on
-non-dominant constraints could be nearly invisible to the reward.
+`Reward V2` keeps the verifier-native structure from `Reward V1` and adds a small amount of
+trajectory-aware shaping. `Reward V1` fixed the main coarse-signal pathology from `Reward V0`:
+pure `Δ official_feasibility` was too coarse because official feasibility is a max over
+normalized constraint violations, so useful repair steps on non-dominant constraints could be
+nearly invisible to the reward.
+
+The remaining `Reward V1` pathology was not verifier mismatch. It was short-horizon shaping:
+
+- the agent got no extra signal for setting a new best infeasible point
+- near-feasible progress below `0.02` had no milestone signal unless it crossed the full feasible boundary
+- feasible improvements only saw step-to-step objective deltas, not "new best feasible score" progress
+- repeated local loops or three-step stagnation had no explicit penalty beyond normal step cost
 
 Target behavior:
 
 - infeasible to feasible crossing gets a clear positive bonus
 - feasible to infeasible regression gets a clear penalty
 - when both states are infeasible, reduced official feasibility violation should still help
+- on low-fidelity `run` steps, setting a new best infeasible feasibility should help
+- entering the near-feasible corridor around `p1_feasibility <= 0.02` should get a small bounded bonus
 - when both states are infeasible, reduced normalized triangularity violation should help the most
 - when both states are infeasible, reduced normalized aspect-ratio and edge-iota violations should also help
 - when both states are feasible, lower `max_elongation` should help
+- on low-fidelity `run` steps, beating the previous best feasible score should help
 - larger `run` actions should pay a larger step cost than smaller `run` actions
 - `restore_best` should keep a flat non-submit step cost
+- repeated local revisits without improvement should pay a small penalty
+- three non-improving steps in a row should pay a small stagnation penalty
 - `submit` should be better than passive exhaustion when the design is genuinely improved
 - recovery after a failed evaluation may receive a modest bounded bonus
 

@@ -54,6 +54,13 @@ FEASIBILITY_DELTA_WEIGHT: Final[float] = 2.0
 TRIANGULARITY_REPAIR_WEIGHT: Final[float] = 2.0
 ASPECT_RATIO_REPAIR_WEIGHT: Final[float] = 1.0
 IOTA_REPAIR_WEIGHT: Final[float] = 1.0
+BEST_FEASIBILITY_BONUS_WEIGHT: Final[float] = 1.5
+BEST_SCORE_BONUS_WEIGHT: Final[float] = 0.75
+NEAR_FEASIBILITY_THRESHOLD: Final[float] = 0.02
+NEAR_FEASIBILITY_BONUS: Final[float] = 1.0
+NO_PROGRESS_STEP_THRESHOLD: Final[int] = 3
+NO_PROGRESS_PENALTY: Final[float] = -0.2
+REPEAT_STATE_PENALTY: Final[float] = -0.15
 STEP_COST_BY_MAGNITUDE: Final[dict[MagnitudeName, float]] = {
     "small": -0.05,
     "medium": -0.1,
@@ -70,6 +77,7 @@ class StellaratorEnvironment(
         self._state = StellaratorState()
         self._last_metrics: EvaluationMetrics | None = None
         self._last_successful_metrics: EvaluationMetrics | None = None
+        self._initial_high_fidelity_metrics: EvaluationMetrics | None = None
 
     def reset(
         self,
@@ -94,8 +102,10 @@ class StellaratorEnvironment(
             constraints_satisfied=metrics.constraints_satisfied,
             total_reward=0.0,
         )
+        self._state.visited_state_keys = [self._state_key(params)]
         self._last_metrics = metrics
         self._last_successful_metrics = None if metrics.evaluation_failed else metrics
+        self._initial_high_fidelity_metrics = None
         return self._build_observation(
             metrics,
             action_summary="Episode started from a frozen low-dimensional seed.",
@@ -148,17 +158,24 @@ class StellaratorEnvironment(
             direction=action.direction,
             magnitude=action.magnitude,
         )
+        repeat_state = self._is_repeat_state(params)
         action_monitor = self._build_action_monitor(
             action=action,
             params_before=params_before,
             params_after=params,
             clamped=clamped,
             no_op=no_op,
+            repeat_state=repeat_state,
         )
         metrics = self._evaluate_params(params, fidelity="low")
         self._state.current_params = params
         self._state.constraints_satisfied = metrics.constraints_satisfied
-        self._update_best(params, metrics)
+        (
+            best_low_fidelity_feasibility_before,
+            best_low_fidelity_score_before,
+            step_improved,
+            no_progress_steps,
+        ) = self._advance_low_fidelity_progress(params, metrics)
 
         done = self._state.budget_remaining <= 0
         reward_breakdown = self._compute_reward_breakdown(
@@ -166,6 +183,11 @@ class StellaratorEnvironment(
             action.intent,
             done,
             magnitude=action.magnitude,
+            best_low_fidelity_feasibility_before=best_low_fidelity_feasibility_before,
+            best_low_fidelity_score_before=best_low_fidelity_score_before,
+            step_improved=step_improved,
+            no_progress_steps=no_progress_steps,
+            repeat_state=repeat_state,
         )
         reward = reward_breakdown.total
         summary = self._summary_run(action, metrics, action_monitor)
@@ -193,13 +215,17 @@ class StellaratorEnvironment(
             params_after=self._state.current_params,
         )
         metrics = self._evaluate_params(self._state.current_params, fidelity="high")
-        initial_submit_score = self._initial_high_fidelity_score()
-        best_submit_metrics = self._refresh_best_high_fidelity_metrics(metrics)
+        initial_submit_metrics = self._initial_high_fidelity_metrics_or_evaluate()
+        best_submit_metrics = self._refresh_best_high_fidelity_metrics(
+            metrics,
+            initial_submit_metrics=initial_submit_metrics,
+        )
         reward_breakdown = self._compute_reward_breakdown(
             metrics,
             "submit",
             done=True,
-            initial_reference_score=initial_submit_score,
+            initial_reference_score=initial_submit_metrics.p1_score,
+            reference_metrics=initial_submit_metrics,
         )
         reward = reward_breakdown.total
         summary = self._summary_submit(metrics, best_submit_metrics)
@@ -223,19 +249,36 @@ class StellaratorEnvironment(
         self._state.budget_remaining -= 1
         params_before = self._state.current_params
         self._state.current_params = self._state.best_params
+        repeat_state = self._is_repeat_state(self._state.current_params)
         action = StellaratorAction(intent="restore_best")
         action_monitor = self._build_action_monitor(
             action=action,
             params_before=params_before,
             params_after=self._state.current_params,
             no_op=params_before == self._state.current_params,
+            repeat_state=repeat_state,
             used_best_params=True,
         )
         metrics = self._evaluate_params(self._state.current_params, fidelity="low")
         self._state.constraints_satisfied = metrics.constraints_satisfied
+        (
+            best_low_fidelity_feasibility_before,
+            best_low_fidelity_score_before,
+            step_improved,
+            no_progress_steps,
+        ) = self._advance_low_fidelity_progress(self._state.current_params, metrics)
 
         done = self._state.budget_remaining <= 0
-        reward_breakdown = self._compute_reward_breakdown(metrics, "restore_best", done)
+        reward_breakdown = self._compute_reward_breakdown(
+            metrics,
+            "restore_best",
+            done,
+            best_low_fidelity_feasibility_before=best_low_fidelity_feasibility_before,
+            best_low_fidelity_score_before=best_low_fidelity_score_before,
+            step_improved=step_improved,
+            no_progress_steps=no_progress_steps,
+            repeat_state=repeat_state,
+        )
         reward = reward_breakdown.total
         summary = self._summary_restore(metrics, action_monitor)
         self._state.history.append(summary)
@@ -283,9 +326,25 @@ class StellaratorEnvironment(
         done: bool,
         magnitude: MagnitudeName | None = None,
         initial_reference_score: float | None = None,
+        reference_metrics: EvaluationMetrics | None = None,
+        best_low_fidelity_feasibility_before: float | None = None,
+        best_low_fidelity_score_before: float | None = None,
+        step_improved: bool = False,
+        no_progress_steps: int = 0,
+        repeat_state: bool = False,
     ) -> RewardBreakdown:
         recovered_from_failure = self._recovered_from_failed_evaluation(metrics)
-        previous_metrics = self._reference_metrics(metrics)
+        previous_metrics = reference_metrics or self._reference_metrics(metrics)
+        best_low_fidelity_feasibility_before = (
+            self._state.best_low_fidelity_feasibility
+            if best_low_fidelity_feasibility_before is None
+            else best_low_fidelity_feasibility_before
+        )
+        best_low_fidelity_score_before = (
+            self._state.best_low_fidelity_score
+            if best_low_fidelity_score_before is None
+            else best_low_fidelity_score_before
+        )
         breakdown = RewardBreakdown(
             intent=intent,
             evaluation_failed=metrics.evaluation_failed,
@@ -296,10 +355,17 @@ class StellaratorEnvironment(
             reference_max_elongation=previous_metrics.max_elongation,
             initial_reference_score=initial_reference_score,
         )
+        self._apply_step_penalties(
+            breakdown,
+            intent=intent,
+            magnitude=magnitude,
+            no_progress_steps=no_progress_steps,
+            repeat_state=repeat_state,
+            step_improved=step_improved,
+        )
+
         if metrics.evaluation_failed:
             breakdown.failure_penalty = FAILURE_PENALTY
-            if intent != "submit":
-                breakdown.step_cost = self._step_cost(intent=intent, magnitude=magnitude)
             if intent == "submit":
                 breakdown.failure_submit_penalty = -1.0
             elif done:
@@ -312,14 +378,40 @@ class StellaratorEnvironment(
         if previous_metrics.constraints_satisfied and not metrics.constraints_satisfied:
             breakdown.feasibility_regression_penalty = -3.0
 
+        if (
+            previous_metrics.p1_feasibility > NEAR_FEASIBILITY_THRESHOLD
+            and metrics.p1_feasibility <= NEAR_FEASIBILITY_THRESHOLD
+        ):
+            breakdown.near_feasible_bonus = NEAR_FEASIBILITY_BONUS
+
         if metrics.constraints_satisfied and previous_metrics.constraints_satisfied:
             breakdown.objective_delta_reward = (
                 previous_metrics.max_elongation - metrics.max_elongation
             ) * 10.0
+            if intent != "submit" and best_low_fidelity_feasibility_before <= FEASIBILITY_TOLERANCE:
+                breakdown.best_score_bonus = (
+                    max(
+                        0.0,
+                        metrics.p1_score - best_low_fidelity_score_before,
+                    )
+                    * BEST_SCORE_BONUS_WEIGHT
+                )
         else:
             breakdown.feasibility_delta_reward = (
                 previous_metrics.p1_feasibility - metrics.p1_feasibility
             ) * FEASIBILITY_DELTA_WEIGHT
+            if (
+                intent != "submit"
+                and not metrics.constraints_satisfied
+                and best_low_fidelity_feasibility_before > FEASIBILITY_TOLERANCE
+            ):
+                breakdown.best_feasibility_bonus = (
+                    max(
+                        0.0,
+                        best_low_fidelity_feasibility_before - metrics.p1_feasibility,
+                    )
+                    * BEST_FEASIBILITY_BONUS_WEIGHT
+                )
             breakdown.triangularity_repair_reward = (
                 previous_metrics.triangularity_violation - metrics.triangularity_violation
             ) * TRIANGULARITY_REPAIR_WEIGHT
@@ -329,9 +421,6 @@ class StellaratorEnvironment(
             breakdown.iota_repair_reward = (
                 previous_metrics.iota_violation - metrics.iota_violation
             ) * IOTA_REPAIR_WEIGHT
-
-        if intent != "submit":
-            breakdown.step_cost = self._step_cost(intent=intent, magnitude=magnitude)
 
         if recovered_from_failure:
             breakdown.recovery_bonus = 1.0
@@ -402,6 +491,7 @@ class StellaratorEnvironment(
                 f"dominant_constraint={metrics.dominant_constraint}",
                 f"best_low_fidelity_score={best_low_fidelity_score:.6f}",
                 f"best_low_fidelity_feasibility={best_low_fidelity_feasibility:.6f}",
+                f"no_progress_steps={self._state.no_progress_steps}",
                 (
                     "best_high_fidelity_score="
                     f"{self._format_optional_metric(best_high_fidelity_score)}"
@@ -417,6 +507,7 @@ class StellaratorEnvironment(
                 f"reward_terms={self._reward_terms_text(reward_breakdown)}",
                 f"action_clamped={action_monitor.clamped}",
                 f"action_no_op={action_monitor.no_op}",
+                f"action_repeat_state={action_monitor.repeat_state}",
                 f"episode_total_reward={self._state.total_reward:+.4f}",
             ]
         )
@@ -439,6 +530,7 @@ class StellaratorEnvironment(
             failure_reason=metrics.failure_reason,
             step_number=self._state.step_count,
             budget_remaining=self._state.budget_remaining,
+            no_progress_steps=self._state.no_progress_steps,
             best_low_fidelity_score=best_low_fidelity_score,
             best_low_fidelity_feasibility=best_low_fidelity_feasibility,
             best_high_fidelity_score=best_high_fidelity_score,
@@ -573,6 +665,39 @@ class StellaratorEnvironment(
             return self._last_successful_metrics
         return fallback
 
+    def _best_low_fidelity_snapshot(self) -> tuple[float, float]:
+        return (
+            self._state.best_low_fidelity_feasibility,
+            self._state.best_low_fidelity_score,
+        )
+
+    def _advance_low_fidelity_progress(
+        self,
+        params: LowDimBoundaryParams,
+        metrics: EvaluationMetrics,
+    ) -> tuple[float, float, bool, int]:
+        best_low_fidelity_feasibility_before, best_low_fidelity_score_before = (
+            self._best_low_fidelity_snapshot()
+        )
+        step_improved = self._is_better_than_reference(
+            metrics,
+            self._previous_step_metrics(metrics),
+        )
+        self._update_best(params, metrics)
+        no_progress_steps = self._advance_no_progress(step_improved=step_improved)
+        self._record_visited_state(params)
+        return (
+            best_low_fidelity_feasibility_before,
+            best_low_fidelity_score_before,
+            step_improved,
+            no_progress_steps,
+        )
+
+    def _previous_step_metrics(self, fallback: EvaluationMetrics) -> EvaluationMetrics:
+        if self._last_metrics is not None:
+            return self._last_metrics
+        return fallback
+
     def _recovered_from_failed_evaluation(self, metrics: EvaluationMetrics) -> bool:
         return (
             not metrics.evaluation_failed
@@ -580,21 +705,24 @@ class StellaratorEnvironment(
             and self._last_metrics.evaluation_failed
         )
 
-    def _initial_high_fidelity_score(self) -> float:
-        if self._state.initial_high_fidelity_score is not None:
-            return self._state.initial_high_fidelity_score
+    def _initial_high_fidelity_metrics_or_evaluate(self) -> EvaluationMetrics:
+        if self._initial_high_fidelity_metrics is not None:
+            return self._initial_high_fidelity_metrics
         metrics = self._evaluate_params(self._state.initial_params, fidelity="high")
-        self._state.initial_high_fidelity_score = metrics.p1_score
-        return metrics.p1_score
+        self._initial_high_fidelity_metrics = metrics
+        return metrics
 
     def _refresh_best_high_fidelity_metrics(
         self,
         current_submit_metrics: EvaluationMetrics,
+        *,
+        initial_submit_metrics: EvaluationMetrics,
     ) -> EvaluationMetrics:
-        best_metrics = current_submit_metrics
+        candidates = [initial_submit_metrics, current_submit_metrics]
         if self._state.best_params != self._state.current_params:
-            best_metrics = self._evaluate_params(self._state.best_params, fidelity="high")
+            candidates.append(self._evaluate_params(self._state.best_params, fidelity="high"))
 
+        best_metrics = max(candidates, key=self._metrics_rank)
         self._state.best_high_fidelity_score = best_metrics.p1_score
         self._state.best_high_fidelity_feasibility = best_metrics.p1_feasibility
         return best_metrics
@@ -612,6 +740,7 @@ class StellaratorEnvironment(
         params_after: LowDimBoundaryParams,
         clamped: bool = False,
         no_op: bool = False,
+        repeat_state: bool = False,
         used_best_params: bool = False,
     ) -> ActionMonitor:
         return ActionMonitor(
@@ -623,6 +752,7 @@ class StellaratorEnvironment(
             params_after=params_after,
             clamped=clamped,
             no_op=no_op,
+            repeat_state=repeat_state,
             used_best_params=used_best_params,
         )
 
@@ -644,6 +774,24 @@ class StellaratorEnvironment(
             return "The requested move was clipped to stay inside the allowed parameter range. "
         return ""
 
+    def _apply_step_penalties(
+        self,
+        breakdown: RewardBreakdown,
+        *,
+        intent: ActionIntent,
+        magnitude: MagnitudeName | None,
+        no_progress_steps: int,
+        repeat_state: bool,
+        step_improved: bool,
+    ) -> None:
+        if intent == "submit":
+            return
+        breakdown.step_cost = self._step_cost(intent=intent, magnitude=magnitude)
+        if intent == "run" and no_progress_steps >= NO_PROGRESS_STEP_THRESHOLD:
+            breakdown.no_progress_penalty = NO_PROGRESS_PENALTY
+        if intent == "run" and repeat_state and not step_improved:
+            breakdown.repeat_state_penalty = REPEAT_STATE_PENALTY
+
     def _step_cost(self, *, intent: ActionIntent, magnitude: MagnitudeName | None) -> float:
         if intent == "restore_best":
             return RESTORE_STEP_COST
@@ -660,11 +808,16 @@ class StellaratorEnvironment(
             + breakdown.feasibility_crossing_bonus
             + breakdown.feasibility_regression_penalty
             + breakdown.feasibility_delta_reward
+            + breakdown.best_feasibility_bonus
+            + breakdown.near_feasible_bonus
             + breakdown.aspect_ratio_repair_reward
             + breakdown.triangularity_repair_reward
             + breakdown.iota_repair_reward
             + breakdown.objective_delta_reward
+            + breakdown.best_score_bonus
             + breakdown.step_cost
+            + breakdown.no_progress_penalty
+            + breakdown.repeat_state_penalty
             + breakdown.recovery_bonus
             + breakdown.terminal_improvement_bonus
             + breakdown.terminal_budget_bonus
@@ -681,11 +834,16 @@ class StellaratorEnvironment(
             ("feasibility_crossing_bonus", breakdown.feasibility_crossing_bonus),
             ("feasibility_regression_penalty", breakdown.feasibility_regression_penalty),
             ("feasibility_delta_reward", breakdown.feasibility_delta_reward),
+            ("best_feasibility_bonus", breakdown.best_feasibility_bonus),
+            ("near_feasible_bonus", breakdown.near_feasible_bonus),
             ("aspect_ratio_repair_reward", breakdown.aspect_ratio_repair_reward),
             ("triangularity_repair_reward", breakdown.triangularity_repair_reward),
             ("iota_repair_reward", breakdown.iota_repair_reward),
             ("objective_delta_reward", breakdown.objective_delta_reward),
+            ("best_score_bonus", breakdown.best_score_bonus),
             ("step_cost", breakdown.step_cost),
+            ("no_progress_penalty", breakdown.no_progress_penalty),
+            ("repeat_state_penalty", breakdown.repeat_state_penalty),
             ("recovery_bonus", breakdown.recovery_bonus),
             ("terminal_improvement_bonus", breakdown.terminal_improvement_bonus),
             ("terminal_budget_bonus", breakdown.terminal_budget_bonus),
@@ -705,15 +863,61 @@ class StellaratorEnvironment(
         if metrics.evaluation_failed:
             return
 
+        if self._is_better_than_best(
+            metrics,
+            best_low_fidelity_feasibility=self._state.best_low_fidelity_feasibility,
+            best_low_fidelity_score=self._state.best_low_fidelity_score,
+        ):
+            self._state.best_params = params
+            self._state.best_low_fidelity_score = metrics.p1_score
+            self._state.best_low_fidelity_feasibility = metrics.p1_feasibility
+
+    def _is_better_than_best(
+        self,
+        metrics: EvaluationMetrics,
+        *,
+        best_low_fidelity_feasibility: float,
+        best_low_fidelity_score: float,
+    ) -> bool:
         current = (
             (1, metrics.p1_score) if metrics.constraints_satisfied else (0, -metrics.p1_feasibility)
         )
         best = (
-            (1, self._state.best_low_fidelity_score)
-            if self._state.best_low_fidelity_feasibility <= FEASIBILITY_TOLERANCE
-            else (0, -self._state.best_low_fidelity_feasibility)
+            (1, best_low_fidelity_score)
+            if best_low_fidelity_feasibility <= FEASIBILITY_TOLERANCE
+            else (0, -best_low_fidelity_feasibility)
         )
-        if current > best:
-            self._state.best_params = params
-            self._state.best_low_fidelity_score = metrics.p1_score
-            self._state.best_low_fidelity_feasibility = metrics.p1_feasibility
+        return current > best
+
+    def _is_better_than_reference(
+        self,
+        metrics: EvaluationMetrics,
+        reference_metrics: EvaluationMetrics,
+    ) -> bool:
+        return self._metrics_rank(metrics) > self._metrics_rank(reference_metrics)
+
+    def _metrics_rank(self, metrics: EvaluationMetrics) -> tuple[int, float]:
+        if metrics.evaluation_failed:
+            return (-1, float("-inf"))
+        if metrics.constraints_satisfied:
+            return (1, metrics.p1_score)
+        return (0, -metrics.p1_feasibility)
+
+    def _advance_no_progress(self, *, step_improved: bool) -> int:
+        if step_improved:
+            self._state.no_progress_steps = 0
+        else:
+            self._state.no_progress_steps += 1
+        return self._state.no_progress_steps
+
+    def _is_repeat_state(self, params: LowDimBoundaryParams) -> bool:
+        return self._state_key(params) in self._state.visited_state_keys
+
+    def _record_visited_state(self, params: LowDimBoundaryParams) -> None:
+        self._state.visited_state_keys.append(self._state_key(params))
+
+    def _state_key(self, params: LowDimBoundaryParams) -> str:
+        return (
+            f"{params.aspect_ratio:.6f}|{params.elongation:.6f}|"
+            f"{params.rotational_transform:.6f}|{params.triangularity_scale:.6f}"
+        )

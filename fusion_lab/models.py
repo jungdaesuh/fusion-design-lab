@@ -57,11 +57,16 @@ class RewardBreakdown(BaseModel):
     feasibility_crossing_bonus: float = 0.0
     feasibility_regression_penalty: float = 0.0
     feasibility_delta_reward: float = 0.0
+    best_feasibility_bonus: float = 0.0
+    near_feasible_bonus: float = 0.0
     aspect_ratio_repair_reward: float = 0.0
     triangularity_repair_reward: float = 0.0
     iota_repair_reward: float = 0.0
     objective_delta_reward: float = 0.0
+    best_score_bonus: float = 0.0
     step_cost: float = 0.0
+    no_progress_penalty: float = 0.0
+    repeat_state_penalty: float = 0.0
     recovery_bonus: float = 0.0
     terminal_improvement_bonus: float = 0.0
     terminal_budget_bonus: float = 0.0
@@ -81,6 +86,7 @@ class ActionMonitor(BaseModel):
     params_after: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
     clamped: bool = False
     no_op: bool = False
+    repeat_state: bool = False
     used_best_params: bool = False
 
 
@@ -115,6 +121,7 @@ class StellaratorObservation(Observation):
     failure_reason: str = ""
     step_number: int = 0
     budget_remaining: int = 6
+    no_progress_steps: int = 0
     best_low_fidelity_score: float = 0.0
     best_low_fidelity_feasibility: float = float("inf")
     best_high_fidelity_score: float | None = None
@@ -132,7 +139,6 @@ class StellaratorState(State):
     current_params: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
     best_params: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
     initial_low_fidelity_score: float = 0.0
-    initial_high_fidelity_score: float | None = None
     best_low_fidelity_score: float = 0.0
     best_low_fidelity_feasibility: float = float("inf")
     best_high_fidelity_score: float | None = None
@@ -142,4 +148,6 @@ class StellaratorState(State):
     episode_done: bool = False
     constraints_satisfied: bool = True
     total_reward: float = 0.0
+    no_progress_steps: int = 0
+    visited_state_keys: list[str] = Field(default_factory=list)
     history: list[str] = Field(default_factory=list)
