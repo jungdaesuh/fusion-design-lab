@@ -251,6 +251,13 @@ The observation should expose:
 
 The observation must be interpretable by a human without additional hidden state.
 
+Current runtime note:
+
+- `best_score` and `best_feasibility` are not yet fully split by fidelity in the observation schema
+- low-fidelity run observations display rollout best state
+- high-fidelity submit observations may display high-fidelity best state instead
+- keep that distinction explicit in docs and traces until the contract is simplified further
+
 ### Action Space
 
 The live action space stays intentionally small and discrete while exposing the repaired 4-knob low-dimensional family.

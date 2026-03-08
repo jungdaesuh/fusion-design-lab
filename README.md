@@ -53,19 +53,20 @@ Implementation status:
 
 ## Known Gaps
 
-- The current 3-knob family is structurally blocked on P1 triangularity with the real verifier path. A sampled low-fidelity sweep kept `average_triangularity` at roughly `+0.004975` and `p1_feasibility` at roughly `1.00995`, with zero feasible samples. That means reward tuning is secondary until the parameterization is repaired.
+- Historical blocker note: the old 3-knob family was structurally blocked on P1 triangularity with the real verifier path. A sampled low-fidelity sweep kept `average_triangularity` at roughly `+0.004975` and `p1_feasibility` at roughly `1.00995`, with zero feasible samples. That blocker motivated the repaired 4-knob runtime that is now live.
 - The repaired family now uses frozen exact seeds with explicit triangularity control. Those seeds are near-boundary references, not yet tracked fixtures.
 - The repaired low-dimensional family still needs measured ranges and deltas. Do not narrate guessed `rotational_transform` bounds, `triangularity_scale` deltas, or a larger budget as validated facts until they are measured on the repaired environment.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
 - Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.
+- `best_score` and `best_feasibility` are currently context-dependent in observations: run-time views reflect low-fidelity rollout state, while submit-time views can reflect high-fidelity best state. Keep that distinction explicit in docs, traces, and baseline interpretation until the contract is simplified further.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after the repaired parameterization and manual playtesting.
 
 Current mode:
 
 - strategic task choice is already locked
-- the next work is parameterization repair, then fixtures, manual playtesting, heuristic refresh, smoke validation, and deployment
+- the next work is measured sweep validation, then fixtures, manual playtesting, heuristic refresh, smoke validation, and deployment
 - new planning text should only appear when a real blocker forces a decision change
 
 ## Planned Repository Layout

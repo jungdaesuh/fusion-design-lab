@@ -155,6 +155,8 @@ target_spec: str
 Current requirement:
 
 - the observation and diagnostics text should make the low-fi vs high-fi distinction explicit
+- in the current runtime, `best_score` and `best_feasibility` may reflect low-fidelity rollout state during `run` and high-fidelity best state during `submit`
+- do not narrate those fields as one fidelity-independent quantity until the contract is simplified further
 
 ### Reward V0
 

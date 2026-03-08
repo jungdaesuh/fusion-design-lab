@@ -170,6 +170,7 @@ Add clarity about fidelity:
 - low-fidelity step-time metrics should be labeled as such
 - high-fidelity submit-time metrics should be labeled as such
 - do not expose them as if they are the same truth surface
+- in the current runtime, `best_score` and `best_feasibility` can switch meaning with fidelity context, so traces and baselines should not treat them as one invariant metric yet
 
 This can be done either by:
 
