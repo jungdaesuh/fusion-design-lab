@@ -65,6 +65,7 @@ Do not leave silent divergence.
 - Treat supporting decision records as rationale, not as a fresh task queue.
 - Do not leave fallout after contract changes. If a schema, action, reward, or task term changes, update dependent files in the same task so the repo stays coherent.
 - Do not leave stale consumers behind after refactors. Task summaries, baselines, notebooks, and docs must either match the new contract or be deliberately updated.
+- Do not swallow errors. No broad `except` blocks, `pass`, silent fallbacks, or ignored verifier/runtime failures unless the behavior is explicitly required and documented.
 
 ## Environment Contract Rules
 
