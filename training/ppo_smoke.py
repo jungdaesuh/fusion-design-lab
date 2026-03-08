@@ -126,6 +126,10 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         )
 
     def _decode_action(self, action: int) -> StellaratorAction:
+        if action not in range(LOW_FI_ACTION_COUNT):
+            raise ValueError(
+                f"Action {action} is outside diagnostic action space [0, {LOW_FI_ACTION_COUNT - 1}]"
+            )
         return diagnostic_action(action)
 
     def action_label(self, action: int) -> str:
@@ -174,13 +178,13 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         }
 
     def _termination_reason(self, obs: StellaratorObservation) -> str:
+        if not obs.done:
+            return "in_progress"
         if obs.evaluation_failed:
             return "evaluation_failed"
         if obs.constraints_satisfied:
             return "constraints_satisfied"
-        if obs.done:
-            return "budget_exhausted"
-        return "in_progress"
+        return "budget_exhausted"
 
 
 def parse_args() -> argparse.Namespace:
@@ -253,7 +257,7 @@ def evaluate_policy(
             action, _ = model.predict(obs, deterministic=True)
             action_index = int(action)
             obs, reward, terminated, truncated, info = env.step(action_index)
-            done = terminated or truncated
+            done = terminated or truncated or str(info["termination_reason"]) != "in_progress"
             total_reward += reward
             step_index += 1
             final_info = info
