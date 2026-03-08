@@ -42,7 +42,7 @@ Still open:
 
 - decision on whether reset-seed pool should change from paired checks
 - HF Space deployment evidence
-- Colab artifact wiring
+- public notebook artifact wiring
 - demo and README polish after the artifacts are real
 
 Current caution:
@@ -99,7 +99,7 @@ Use the docs like this:
 Visible artifacts:
 
 - [ ] HF Space environment
-- [ ] Required Colab notebook
+- [ ] Public submission notebook
 - [ ] 1-minute demo video
 - [x] Public repo and README
 
@@ -107,7 +107,7 @@ Compute surfaces:
 
 - Northflank is the main compute workspace for verifier-heavy work
 - HF Space is the hosted environment surface
-- Colab is the required public artifact and should show trained-policy behavior against the live environment
+- the public notebook artifact should show trained-policy behavior against the live environment and can be mirrored to Colab if the submission form still requires it
 - trained-policy work should still iterate on low-fidelity `run`; use high-fidelity `submit` only for sparse checkpoint evaluation and final evidence
 
 Evidence order:
@@ -145,7 +145,7 @@ The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V
 - [x] Refresh the heuristic baseline using the repaired-family evidence.
 - [ ] Prove a stable local episode path.
 - [ ] Deploy the same task contract to HF Space and prove one clean remote episode.
-- [ ] Wire the Colab artifact to the live environment.
+- [ ] Wire the public notebook artifact to the live environment.
 - [ ] Record the demo around environment clarity, reward iteration, and baseline evidence.
 - [ ] Polish the public repo only after the artifacts above exist.
 
@@ -187,7 +187,7 @@ Gate 7: remote surface is real
 
 Gate 8: submission artifacts exist
 
-- Colab, demo, and README all reflect the actual environment rather than a hypothetical future one
+- the public notebook artifact, demo, and README all reflect the actual environment rather than a hypothetical future one
 
 ## 10. Fallback Rules
 

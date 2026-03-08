@@ -3,7 +3,7 @@
 Fusion Design Lab is an environment-first [OpenEnv](https://openenv.dev) hackathon project for the `P1` stellarator benchmark.
 
 **Live Environment**: [HF Space](https://huggingface.co/spaces/CreativeEngineer/fusion-design-lab)
-**Training Notebook**: [Colab (GRPO + Unsloth)](training/notebooks/fusion_design_lab_training.ipynb)
+**Training Notebook**: [Repository Notebook (GRPO + Unsloth)](training/notebooks/fusion_design_lab_training.ipynb)
 
 ## What It Does
 
@@ -57,7 +57,7 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - [x] Complete paired high-fidelity fixture checks and at least one real submit-side manual trace before any broader training push
 - [x] Refresh the heuristic baseline for the real verifier path
 - [x] Deploy the real environment to HF Space
-- [x] Add the Colab training notebook under `training/notebooks`
+- [x] Add the public training notebook under `training/notebooks`
 
 ## Known Gaps
 
@@ -121,13 +121,13 @@ uv sync --extra notebooks
 
 - Recommended compute workspace: Northflank Jupyter Notebook with PyTorch on the team H100
 - OpenEnv deployment target: Hugging Face Spaces
-- Minimal submission notebook target: Colab
-- Required notebook artifact: one public Colab notebook that demonstrates trained-policy behavior against the environment
+- Submission notebook surface: one public notebook artifact; mirror it to Colab if the submission form still requires Colab specifically
+- Required notebook artifact: one public notebook that demonstrates trained-policy behavior against the environment
 - Verifier of record: `constellaration.problems.GeometricalProblem`
 - Environment style: fresh wiring in this repo, not a port of the old `ai-sci-feasible-designs` harness
 - Northflank containers are ephemeral, so persistent storage should be attached before relying on saved models, caches, or fixture data
 - Preferred deployment path: push this GitHub repo and let HF Space build from the repo/Docker configuration rather than copying code manually
-- Preferred Colab/HF Space connectivity: make the HF Space public for the hackathon unless privacy becomes necessary; if private, document and use an explicit access token in the notebook
+- Preferred notebook/HF Space connectivity: make the HF Space public for the hackathon unless privacy becomes necessary; if private, document and use an explicit access token in the notebook
 
 ## Immediate Next Steps
 
@@ -139,7 +139,7 @@ uv sync --extra notebooks
 - [ ] Save one presentation-ready comparison trace from the refreshed heuristic baseline.
 - [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
 - [x] Deploy the environment to HF Space.
-- [x] Add the Colab notebook under `training/notebooks`.
+- [x] Add the public training notebook under `training/notebooks`.
 
 These are implementation steps, not another planning phase.
 
