@@ -92,6 +92,10 @@ Required fields:
 - `aspect_ratio`
 - `average_triangularity`
 - `edge_iota_over_nfp`
+- `aspect_ratio_violation`
+- `triangularity_violation`
+- `iota_violation`
+- `dominant_constraint`
 - `p1_feasibility`
 - `p1_score`
 - `constraints_satisfied`
@@ -118,6 +122,8 @@ Interpretation rules:
 - high-fidelity `submit` metrics must be labeled as high-fidelity
 - low-fidelity and high-fidelity best-state reporting must stay separate
 - the observation must be understandable without hidden state
+- normalized constraint-violation telemetry must follow the official `P1` constraint scales
+- the dominant active constraint must be visible so a human can explain repair-phase rewards
 - reward telemetry must expose which bonuses, penalties, and shaping terms contributed to the scalar reward
 - action telemetry must expose parameter values before and after the action, including clamped and no-op moves
 
@@ -183,24 +189,31 @@ Training and evaluation rule:
 - keep higher-fidelity `submit` for terminal truth, explicit replay/debug work, paired fixture checks, and submit-side manual traces
 - do not move VMEC-backed submit evaluation into every training step unless the contract is deliberately redefined
 
-## 9. Reward V0
+## 9. Reward V1
 
-`Reward V0` is the live reward contract until playtesting proves a concrete pathology.
+`Reward V1` replaces `Reward V0` because the old infeasible shaping only used `Δ official_feasibility`.
+That was too coarse once the transferred P1 findings made the main pathology clear: official
+feasibility is a max over normalized constraint violations, so useful repair steps on
+non-dominant constraints could be nearly invisible to the reward.
 
 Target behavior:
 
 - infeasible to feasible crossing gets a clear positive bonus
 - feasible to infeasible regression gets a clear penalty
-- when both states are infeasible, reduced official feasibility violation should help
+- when both states are infeasible, reduced official feasibility violation should still help
+- when both states are infeasible, reduced normalized triangularity violation should help the most
+- when both states are infeasible, reduced normalized aspect-ratio and edge-iota violations should also help
 - when both states are feasible, lower `max_elongation` should help
-- non-submit actions pay a small step cost
+- larger `run` actions should pay a larger step cost than smaller `run` actions
+- `restore_best` should keep a flat non-submit step cost
 - `submit` should be better than passive exhaustion when the design is genuinely improved
 - recovery after a failed evaluation may receive a modest bounded bonus
 
 Rules:
 
 - keep reward scalar and verifier-driven
-- do not add mode-specific or parameter-specific reward shaping
+- keep the infeasible shaping tied to official normalized constraint violations, not family-name priors
+- do not add family-specific reward shaping from `scadena`, `CreativeEngineer`, `Samet`, or `egodos`
 - do not use reward complexity to compensate for blocked parameterization, poor seeds, or unclear observations
 
 ## 10. Reset and Fixture Policy

@@ -6,6 +6,12 @@ from openenv.core import Action, Observation, State
 from pydantic import BaseModel, Field
 
 ActionIntent = Literal["run", "submit", "restore_best"]
+ConstraintName = Literal[
+    "none",
+    "aspect_ratio",
+    "average_triangularity",
+    "edge_iota_over_nfp",
+]
 ParameterName = Literal[
     "aspect_ratio",
     "elongation",
@@ -51,6 +57,9 @@ class RewardBreakdown(BaseModel):
     feasibility_crossing_bonus: float = 0.0
     feasibility_regression_penalty: float = 0.0
     feasibility_delta_reward: float = 0.0
+    aspect_ratio_repair_reward: float = 0.0
+    triangularity_repair_reward: float = 0.0
+    iota_repair_reward: float = 0.0
     objective_delta_reward: float = 0.0
     step_cost: float = 0.0
     recovery_bonus: float = 0.0
@@ -94,6 +103,10 @@ class StellaratorObservation(Observation):
     aspect_ratio: float = 0.0
     average_triangularity: float = 0.0
     edge_iota_over_nfp: float = 0.0
+    aspect_ratio_violation: float = 0.0
+    triangularity_violation: float = 0.0
+    iota_violation: float = 0.0
+    dominant_constraint: ConstraintName = "none"
     p1_score: float = 0.0
     p1_feasibility: float = 0.0
     vacuum_well: float = 0.0

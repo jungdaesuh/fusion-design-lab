@@ -3,6 +3,7 @@
 from fusion_lab.models import (
     ActionMonitor,
     ActionIntent,
+    ConstraintName,
     DirectionName,
     EvaluationFidelityName,
     LowDimBoundaryParams,
@@ -20,6 +21,7 @@ from fusion_lab.models import (
 __all__ = [
     "ActionIntent",
     "ActionMonitor",
+    "ConstraintName",
     "DirectionName",
     "EvaluationFidelityName",
     "LowDimBoundaryParams",

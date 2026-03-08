@@ -49,7 +49,7 @@ Step 1:
 
 Current conclusion:
 
-- Reward V0 is legible on the low-fidelity repair path around the default reset seed
+- At the time of this initial playtest, Reward V0 was legible on the low-fidelity repair path around the default reset seed
 - a real `submit` trace is now recorded; next manual validation is to extend beyond the initial 5-10 episode path and look for one clear exploit or ambiguity
 
 Episode C: submit-side manual trace
@@ -80,3 +80,5 @@ Step sequence:
 Artifact:
 
 - [manual submit trace JSON](../baselines/submit_side_trace.json)
+  Note:
+  this is a historical submit-side artifact from the earlier Reward V0 / pre-telemetry contract surface. Keep it as supporting evidence for the old submit path, not as the current Reward V1 observation-format example.

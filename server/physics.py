@@ -15,7 +15,7 @@ from constellaration.geometry.surface_rz_fourier import SurfaceRZFourier
 from constellaration.initial_guess import generate_rotating_ellipse
 from constellaration.problems import GeometricalProblem
 
-from fusion_lab.models import LowDimBoundaryParams
+from fusion_lab.models import ConstraintName, LowDimBoundaryParams
 
 ASPECT_RATIO_MAX: Final[float] = 4.0
 AVERAGE_TRIANGULARITY_MAX: Final[float] = -0.5
@@ -35,6 +35,10 @@ class EvaluationMetrics:
     aspect_ratio: float
     average_triangularity: float
     edge_iota_over_nfp: float
+    aspect_ratio_violation: float
+    triangularity_violation: float
+    iota_violation: float
+    dominant_constraint: ConstraintName
     p1_score: float
     p1_feasibility: float
     constraints_satisfied: bool
@@ -119,12 +123,19 @@ def _to_evaluation_metrics(
     if not minimize_objective:
         raise ValueError("P1 objective is expected to be minimize-only.")
     p1_score = _score_from_objective(float(objective)) if constraints_satisfied else 0.0
+    aspect_ratio_violation, triangularity_violation, iota_violation, dominant_constraint = (
+        _constraint_violation_metrics(metrics)
+    )
 
     return EvaluationMetrics(
         max_elongation=float(objective),
         aspect_ratio=float(metrics.aspect_ratio),
         average_triangularity=float(metrics.average_triangularity),
         edge_iota_over_nfp=float(metrics.edge_rotational_transform_over_n_field_periods),
+        aspect_ratio_violation=aspect_ratio_violation,
+        triangularity_violation=triangularity_violation,
+        iota_violation=iota_violation,
+        dominant_constraint=dominant_constraint,
         p1_score=p1_score,
         p1_feasibility=p1_feasibility,
         constraints_satisfied=constraints_satisfied,
@@ -145,6 +156,10 @@ def _failure_metrics(
         aspect_ratio=0.0,
         average_triangularity=0.0,
         edge_iota_over_nfp=0.0,
+        aspect_ratio_violation=0.0,
+        triangularity_violation=0.0,
+        iota_violation=0.0,
+        dominant_constraint="none",
         p1_score=0.0,
         p1_feasibility=FAILED_FEASIBILITY,
         constraints_satisfied=False,
@@ -158,3 +173,42 @@ def _failure_metrics(
 def _score_from_objective(objective: float) -> float:
     normalized = min(max((objective - 1.0) / 9.0, 0.0), 1.0)
     return 1.0 - normalized
+
+
+def _constraint_violation_metrics(
+    metrics: ConstellarationMetrics,
+) -> tuple[float, float, float, ConstraintName]:
+    aspect_ratio_violation = max(float(metrics.aspect_ratio) - ASPECT_RATIO_MAX, 0.0) / (
+        ASPECT_RATIO_MAX
+    )
+    triangularity_violation = max(
+        float(metrics.average_triangularity) - AVERAGE_TRIANGULARITY_MAX,
+        0.0,
+    ) / abs(AVERAGE_TRIANGULARITY_MAX)
+    iota_violation = (
+        max(
+            EDGE_IOTA_OVER_NFP_MIN
+            - abs(float(metrics.edge_rotational_transform_over_n_field_periods)),
+            0.0,
+        )
+        / EDGE_IOTA_OVER_NFP_MIN
+    )
+
+    dominant_constraint: ConstraintName = "none"
+    dominant_violation = 0.0
+    constraint_violations: tuple[tuple[ConstraintName, float], ...] = (
+        ("aspect_ratio", aspect_ratio_violation),
+        ("average_triangularity", triangularity_violation),
+        ("edge_iota_over_nfp", iota_violation),
+    )
+    for constraint_name, violation in constraint_violations:
+        if violation > dominant_violation:
+            dominant_constraint = constraint_name
+            dominant_violation = violation
+
+    return (
+        aspect_ratio_violation,
+        triangularity_violation,
+        iota_violation,
+        dominant_constraint,
+    )
