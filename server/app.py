@@ -3,14 +3,8 @@ from __future__ import annotations
 from openenv.core import create_fastapi_app
 
 from fusion_lab.models import StellaratorAction, StellaratorObservation
-from server.environment import (
-    ASPECT_RATIO_MAX,
-    AVERAGE_TRIANGULARITY_MAX,
-    BUDGET,
-    EDGE_IOTA_OVER_NFP_MIN,
-    N_FIELD_PERIODS,
-    StellaratorEnvironment,
-)
+from server.environment import BUDGET, N_FIELD_PERIODS, StellaratorEnvironment
+from server.physics import ASPECT_RATIO_MAX, AVERAGE_TRIANGULARITY_MAX, EDGE_IOTA_OVER_NFP_MIN
 
 app = create_fastapi_app(
     env=StellaratorEnvironment,

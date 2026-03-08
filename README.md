@@ -21,7 +21,7 @@ Implementation status:
 - `P1` is locked as the benchmark task
 - docs are aligned to fresh `P1` wiring in this repo
 - shared models, baselines, and server/client entry points now reflect the locked `P1` contract
-- the current environment uses a synthetic `P1` evaluator; the next runtime step is swapping in `constellaration` as the verifier of record
+- the current environment uses `constellaration` for low-fidelity `run` steps and high-fidelity `submit` evaluation
 
 ## Execution Status
 
@@ -31,18 +31,18 @@ Implementation status:
 - [x] Update the API/task surface to match `P1`
 - [x] Update baseline agents to the `P1` contract
 - [x] Add a post-terminal guard so `step()` is a no-op after `done=True`
-- [x] Run an initial baseline comparison on the current synthetic `P1` branch state
-- [ ] Replace the synthetic evaluator with `constellaration`
+- [x] Re-run the baseline comparison on the `constellaration`-backed branch state
+- [x] Replace the synthetic evaluator with `constellaration`
 - [ ] Add tracked `P1` fixtures under `server/data/p1/`
 - [ ] Run manual playtesting and record the first reward pathology
 - [ ] Deploy the real environment to HF Space
 
 ## Known Gaps
 
-- The current evaluator in `server/physics.py` is a synthetic proxy for `P1`, not the official `constellaration` verifier yet.
 - `BASELINE_PARAMS` is intentionally repairable but currently infeasible at reset; do not describe it as a feasible anchor.
+- `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
-- The first local baseline run is only a synthetic-proxy sanity check; heuristic beat random on 20/20 seeded episodes, but this should be re-run after `constellaration` wiring.
+- The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after manual playtesting.
 
 Current mode:
 
@@ -105,8 +105,8 @@ uv sync --extra notebooks
    - import `constellaration`
    - run one rotating-ellipse generation plus one low-fidelity verifier call
    - write an artifact to persistent storage
-3. Replace the synthetic evaluator in `server/physics.py` with `constellaration`-based `P1` verification.
-4. Add tracked `P1` fixtures under `server/data/p1`.
+3. Add tracked `P1` fixtures under `server/data/p1`.
+4. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
 5. Add the Colab notebook under `training/notebooks`.
 6. Run manual playtest episodes before heavy training work.
 

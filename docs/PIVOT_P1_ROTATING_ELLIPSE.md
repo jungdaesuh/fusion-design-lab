@@ -211,9 +211,9 @@ This section exists to justify the pivot with an implementation path. It should 
 
 ## Fallback
 
-If constellaration deployment fails (Docker build, HF Spaces issues):
-- The current synthetic physics environment is already working and deployment-ready
-- Fall back to shipping that with updated docs acknowledging it as a proxy model
+If full high-fidelity `constellaration` deployment fails (Docker build, HF Spaces issues):
+- Keep the low-fidelity `constellaration` run path working
+- Fall back to a low-fidelity-only hosted environment and document the limitation clearly
 - Do not spend more than 1 hour debugging deployment before falling back
 
 ## Known-Good Fixtures
