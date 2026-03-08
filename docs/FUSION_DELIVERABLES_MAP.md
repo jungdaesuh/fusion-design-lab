@@ -13,6 +13,10 @@ Use this map to sequence execution, not to reopen already-locked task choices.
 - [x] baseline comparison has been rerun on the real verifier path
 - [x] Northflank smoke workflow and note are committed
 - [x] Northflank smoke test has passed on the team H100
+- [x] current 3-knob family has been verified as blocked on P1 triangularity
+- [ ] repaired low-dimensional boundary builder is implemented
+- [ ] explicit VMEC failure semantics are implemented
+- [ ] low-fi `run` truth vs high-fi `submit` truth is labeled clearly
 - [ ] tracked fixtures are checked in
 - [ ] manual playtest evidence exists
 - [ ] heuristic baseline has been refreshed for the real verifier path
@@ -53,6 +57,8 @@ flowchart TD
 
     B0 --> F["Observation + action schema frozen"]
     B3 --> G["Fresh P1 verifier loop proven"]
+    G --> G1["Parameterization can actually reach P1 feasibility"]
+    G --> G2["VMEC failures are explicit and penalized"]
     B2 --> H["Exploit observed -> penalty added"]
     B4 --> I0["Deterministic action schema"]
     D2 --> I["Human can act coherently in env"]
@@ -104,10 +110,13 @@ flowchart LR
 
 Northflank compute bring-up and smoke validation are complete.
 
-1. Add tracked fixtures and run fixture sanity checks.
-2. Manual-playtest the environment and record the first real pathology, if any.
-3. Refresh the heuristic baseline from that evidence.
-4. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
-5. Use the notebook to show traces and comparisons; include training only if it adds signal.
-6. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
-7. Polish the repo only after the artifacts are real.
+1. Repair the low-dimensional parameterization so triangularity is controllable under the official verifier.
+2. Add explicit VMEC failure semantics and clear low-fi vs high-fi observation labeling.
+3. Run a small measured sweep before locking ranges, deltas, reset seeds, or budget changes.
+4. Add tracked fixtures and run fixture sanity checks.
+5. Manual-playtest the environment and record the first real pathology, if any.
+6. Refresh the heuristic baseline from that evidence.
+7. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
+8. Use the notebook to show traces and comparisons; include training only if it adds signal.
+9. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
+10. Polish the repo only after the artifacts are real.

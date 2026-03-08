@@ -16,6 +16,8 @@
 - [x] Northflank smoke test has passed on the team H100
 - [x] current 3-knob family has been checked against the real low-fidelity verifier
 - [ ] parameterization repair is implemented so triangularity is controllable
+- [ ] explicit VMEC failure semantics are implemented
+- [ ] low-fi `run` truth vs high-fi `submit` truth is labeled clearly in the environment surface
 - [ ] tracked `P1` fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
@@ -269,6 +271,13 @@ This is not trying to expose the full Fourier-boundary space. The goal is a legi
    - `submit`
    - exhausted budget
 
+Failure semantics must also be explicit:
+
+- if VMEC or the forward model fails, the run still consumes budget
+- the observation must expose that the step failed
+- the reward must apply a documented penalty
+- the environment must not silently replace the failed result with a fake success path
+
 ### Terminal Contract
 
 The episode should end cleanly and deterministically.
@@ -305,6 +314,10 @@ Implementation split:
 
 The verifier should be boundary-based. Parameterization-specific logic should not be treated as verifier truth.
 
+Current execution rule:
+
+- do not narrate guessed repaired-family ranges, deltas, or a larger budget as settled defaults until they are measured on the repaired family
+
 ## 11. Reward V0
 
 The reward in this document is not the final reward. It is `Reward V0`.
@@ -330,6 +343,7 @@ Current execution note:
 - do not tune reward further until the repaired low-dimensional family can actually approach P1 feasibility
 - once parameterization is repaired, keep `Reward V0` scalar and feasibility-first
 - clearly distinguish low-fidelity step-time metrics from high-fidelity submit-time truth in the observation contract and docs
+- do not use reward complexity to compensate for missing action expressivity or missing VMEC failure semantics
 
 ### Reward V0 Failure Modes To Test
 
@@ -377,6 +391,8 @@ These are still hypotheses until manually or empirically checked:
 - `restore_best` is useful without becoming an exploit
 - heuristic should beat random on mean episode reward
 - low-fidelity interaction is predictive enough for useful policy learning
+- useful repaired-family parameter ranges and deltas
+- whether the current budget should stay at `6` or change after playtesting
 
 These should not be narrated as facts in the final demo until validated.
 
@@ -517,6 +533,8 @@ The repo should make the environment easy to understand:
 - observation schema frozen
 - action schema frozen
 - terminal conditions frozen
+- explicit VMEC failure semantics defined
+- low-fi vs high-fi metric labeling defined
 
 ### Gate 2: Verifier Wiring Pass
 
@@ -575,21 +593,23 @@ Deliverables:
 
 ### Phase 1
 
-Wire the official verifier and run fixture checks.
+Repair the low-dimensional parameterization, wire the verifier split cleanly, and run a small measured sweep before fixture checks.
 
 Deliverables:
 
-- one good fixture
-- near-boundary fixtures
-- bad fixtures
-- confidence that reward/verifier ordering is sane
+- repaired low-dimensional boundary builder
+- boundary-based verifier split
+- explicit VMEC failure semantics
+- measured parameter ranges, deltas, and candidate reset seeds
 
 ### Phase 2
 
-Manual-playtest the environment.
+Freeze initial fixtures and manual-playtest the environment.
 
 Deliverables:
 
+- one good or near-boundary fixture
+- bad fixtures
 - 5 to 10 episode logs
 - notes on leverage, ambiguity, and pathologies
 
@@ -688,7 +708,7 @@ Instead:
 - simplify the initial states
 - tighten the action set
 - reduce magnitude choices
-- keep the environment more learnable within the fixed budget
+- keep the environment more learnable before changing the budget
 
 ### If the task is too easy
 
@@ -696,6 +716,7 @@ Do not add more domains.
 
 Instead:
 
+- first verify that parameterization repair and reset seeds did not make the task trivial
 - adjust budget
 - adjust magnitudes
 - adjust reward to discourage trivial submission
@@ -728,10 +749,11 @@ That last line is intentionally conservative. It is strong enough without claimi
 
 ## 21. Immediate Next Actions
 
-1. Freeze the `P1` environment contract in code and docs.
-2. Implement fresh verifier wiring in this repo.
-3. Run fixture checks before heavy training work.
-4. Run manual playtests before heavy training work.
-5. Mark the current reward as `V0`.
-6. Log the first real pathology and reward revision.
-7. Do not let notebook or video work outrun the environment evidence.
+1. Repair the low-dimensional boundary parameterization so triangularity is controllable.
+2. Split boundary construction from official boundary evaluation.
+3. Add explicit VMEC failure semantics and clear low-fi vs high-fi labeling.
+4. Run a small measured sweep before locking ranges, deltas, or budget changes.
+5. Freeze fixtures and run manual playtests before heavy training work.
+6. Mark the current reward as `V0`.
+7. Log the first real pathology and reward revision.
+8. Do not let notebook or video work outrun the environment evidence.

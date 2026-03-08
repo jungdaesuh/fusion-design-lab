@@ -26,6 +26,8 @@ Use these docs as the planning SSOT:
 
 `docs/PIVOT_P1_ROTATING_ELLIPSE.md` is a supporting decision record, not a planning SSOT. If it disagrees with the three docs above, the three SSOT docs win.
 
+`docs/P1_ENV_CONTRACT_V1.md` is a supporting technical spec for the current implementation phase. It should refine the SSOT docs, not silently diverge from them.
+
 If code and docs disagree, either:
 
 1. update code to match the docs, or

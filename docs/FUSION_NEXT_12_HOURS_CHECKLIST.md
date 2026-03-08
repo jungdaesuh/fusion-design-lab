@@ -9,19 +9,23 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 ## Current Branch Status
 
 - [x] `P1` task is locked
-- [x] rotating-ellipse `P1` contract is implemented in the working tree
+- [x] 3-knob rotating-ellipse `P1` contract is implemented in the working tree
 - [x] baselines and API surface have been moved to the `P1` contract
 - [x] add a post-terminal guard in `step()`
 - [x] replace the synthetic evaluator with `constellaration`
 - [x] re-run baselines on the real verifier path
 - [x] commit the Northflank smoke workflow and note
 - [x] pass the Northflank smoke test on the team H100
+- [x] verify that the current 3-knob family is blocked on P1 triangularity under the real verifier path
+- [ ] repair the low-dimensional parameterization
+- [ ] add explicit VMEC failure semantics
+- [ ] label low-fi `run` truth vs high-fi `submit` truth in the task surface
 - [ ] add tracked fixtures and manual playtest evidence
 - [ ] refresh the heuristic baseline after the real-verifier rerun
 
 Current caution:
 
-- do not assume the default baseline params are a near-feasible playtest start; on the current real verifier path they are still deeply infeasible, so fixture discovery comes first
+- do not assume the current 3-knob family is a viable playtest start; parameterization repair comes before fixture discovery, manual playtesting, and heuristic refresh
 
 ## Plan V2 Inheritance
 
@@ -73,9 +77,10 @@ Artifacts:
    - reward shaping
    - manual playtesting
 5. Mark open assumptions explicitly:
-   - whether the rotating-ellipse action set is expressive enough
+   - whether the repaired low-dimensional action set is expressive enough
    - whether the fixed step budget is enough
    - whether `restore_best` is useful without becoming an exploit
+   - whether repaired-family ranges and deltas need adjustment after measurement
 
 Exit condition: a human can read the spec and understand how to act in the environment.
 
@@ -90,34 +95,41 @@ Transition rule:
 
 ## Hour 2-4: Verify Wiring, Then Manual Playtest
 
-1. Run fixture checks:
+1. Repair the low-dimensional parameterization so triangularity is controllable.
+2. Add explicit VMEC failure semantics and visible failure observations.
+3. Label low-fi `run` truth vs high-fi `submit` truth clearly.
+4. Run a small measured sweep on the repaired family before freezing defaults.
+5. Run fixture checks:
    - known-good or near-winning design
    - near-boundary designs
    - clearly bad designs
-   - do not rely on the default baseline params as the only starting point
-2. Confirm:
+   - do not rely on the current default baseline params as the only starting point
+6. Confirm:
    - verifier outputs are sane
    - reward ordering is sane
    - objective direction is correct
-3. Manually play 5 to 10 episodes.
-4. Log for each step:
+7. Manually play 5 to 10 episodes.
+8. Log for each step:
    - observation
    - chosen action
    - expected effect
    - returned reward
    - confusion or exploit if observed
-5. Identify at least one bad incentive or exploit.
-6. Patch reward or penalty logic immediately.
-7. Write the reward shaping story:
+9. Identify at least one bad incentive or exploit.
+10. Patch reward or penalty logic immediately.
+11. Write the reward shaping story:
    - initial reward V0
    - bad behavior
    - refinement to reward V1
    - improved behavior
-8. If no real pathology appears, record that `Reward V0` survived playtesting and move on.
+12. If no real pathology appears, record that `Reward V0` survived playtesting and move on.
 
 Exit condition: you can explain why the environment now rewards the intended behavior.
 
 Artifacts:
+- repaired low-dimensional boundary plan
+- explicit failure semantics note
+- measured range and delta note
 - fixture check note
 - manual playtest log
 - reward shaping note
@@ -205,16 +217,17 @@ Artifacts:
 ## Artifact Order
 
 1. Environment spec
-2. Fixture check note
-3. Manual playtest log
-4. Reward revision note
-5. Stable task run
-6. Random baseline
-7. Heuristic baseline
-8. Northflank traces or training evidence
-9. Colab training or eval evidence
-10. Demo recording
-11. Repo polish
+2. Repaired parameterization note
+3. Fixture check note
+4. Manual playtest log
+5. Reward revision note
+6. Stable task run
+7. Random baseline
+8. Heuristic baseline
+9. Northflank traces or training evidence
+10. Colab training or eval evidence
+11. Demo recording
+12. Repo polish
 
 ## Non-Negotiables
 
@@ -223,6 +236,7 @@ Artifacts:
 - Do not optimize training before manual playtesting.
 - Do not rely on reward curves alone; keep trajectory evidence.
 - Do not narrate hypotheses as facts before they are checked.
+- Do not guess repaired-family ranges, deltas, or budget changes without a measured sweep.
 - Do not polish the repo or video before the environment and baselines are real.
 - Treat judge comments as pressure toward clarity and reproducibility, not broader unsupported claims.
 - Do not force a training-centric story if the strongest evidence is environment quality plus baselines.
