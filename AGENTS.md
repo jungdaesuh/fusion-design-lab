@@ -24,6 +24,8 @@ Use these docs as the planning SSOT:
 - `docs/FUSION_DELIVERABLES_MAP.md`
 - `docs/FUSION_NEXT_12_HOURS_CHECKLIST.md`
 
+`docs/PIVOT_P1_ROTATING_ELLIPSE.md` is a supporting decision record, not a planning SSOT. If it disagrees with the three docs above, the three SSOT docs win.
+
 If code and docs disagree, either:
 
 1. update code to match the docs, or
@@ -39,6 +41,7 @@ Do not leave silent divergence.
 4. Manual-playtest before investing heavily in training.
 5. Prefer behavior traces and baselines over reward-curve-only storytelling.
 6. Keep claims conservative and evidence-backed.
+7. Once the task family is locked, shift to implementation instead of reopening strategy.
 
 ## Working Rules
 
@@ -48,6 +51,8 @@ Do not leave silent divergence.
 - Do not add new tests during the hackathon unless the user explicitly requests them.
 - Do not add complicated reward shaping until the simpler version has been tested against actual trajectories.
 - Do not optimize notebook/training work ahead of local environment stability, remote environment stability, and baseline comparisons.
+- Do not create new planning loops around decisions that are already locked in the SSOT docs unless a hard blocker appears.
+- Treat supporting decision records as rationale, not as a fresh task queue.
 
 ## Environment Contract Rules
 
