@@ -1,7 +1,7 @@
 # P1 Parameterization Deep-Dive
 
 **Date:** 2026-03-07
-**Status:** Findings complete. Partial implementation exists; parameterization repair pending.
+**Status:** Findings complete. Parameterization repair is implemented; measured sweep follow-up is pending.
 
 This document records the investigation into why the current 3-knob rotating-ellipse
 environment cannot produce P1-feasible designs, what the original winning session

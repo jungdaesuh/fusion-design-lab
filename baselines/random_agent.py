@@ -8,7 +8,12 @@ import sys
 from fusion_lab.models import StellaratorAction
 from server.environment import StellaratorEnvironment
 
-PARAMETERS = ["aspect_ratio", "elongation", "rotational_transform"]
+PARAMETERS = [
+    "aspect_ratio",
+    "elongation",
+    "rotational_transform",
+    "triangularity_scale",
+]
 DIRECTIONS = ["increase", "decrease"]
 MAGNITUDES = ["small", "medium", "large"]
 

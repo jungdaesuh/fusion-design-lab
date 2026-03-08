@@ -1,25 +1,11 @@
-"""Heuristic baseline agent for the stellarator design environment.
-
-Strategy: guided perturbations informed by domain knowledge.
-1. Push elongation upward to improve triangularity.
-2. Nudge rotational transform upward to stay on the iota side of feasibility.
-3. Submit before exhausting budget.
-"""
+"""Heuristic baseline agent for the stellarator design environment."""
 
 from __future__ import annotations
 
 import sys
 
-from fusion_lab.models import StellaratorAction
+from fusion_lab.models import StellaratorAction, StellaratorObservation
 from server.environment import StellaratorEnvironment
-
-STRATEGY: list[tuple[str, str, str]] = [
-    ("elongation", "increase", "medium"),
-    ("elongation", "increase", "small"),
-    ("rotational_transform", "increase", "small"),
-    ("aspect_ratio", "decrease", "small"),
-    ("rotational_transform", "increase", "small"),
-]
 
 
 def heuristic_episode(
@@ -29,43 +15,74 @@ def heuristic_episode(
     total_reward = 0.0
     trace: list[dict[str, object]] = [{"step": 0, "score": obs.p1_score}]
 
-    for parameter, direction, magnitude in STRATEGY:
-        if obs.done or obs.budget_remaining <= 1:
-            break
-
-        action = StellaratorAction(
-            intent="run",
-            parameter=parameter,
-            direction=direction,
-            magnitude=magnitude,
-        )
+    while not obs.done:
+        action = _choose_action(obs)
         obs = env.step(action)
         total_reward += obs.reward or 0.0
         trace.append(
             {
                 "step": len(trace),
-                "action": f"{parameter} {direction} {magnitude}",
+                "action": _action_label(action),
                 "score": obs.p1_score,
                 "best_score": obs.best_score,
                 "reward": obs.reward,
-            }
-        )
-
-    if not obs.done:
-        submit = StellaratorAction(intent="submit")
-        obs = env.step(submit)
-        total_reward += obs.reward or 0.0
-        trace.append(
-            {
-                "step": len(trace),
-                "action": "submit",
-                "score": obs.p1_score,
-                "best_score": obs.best_score,
-                "reward": obs.reward,
+                "failure": obs.evaluation_failed,
             }
         )
 
     return total_reward, trace
+
+
+def _choose_action(obs: StellaratorObservation) -> StellaratorAction:
+    if obs.constraints_satisfied:
+        if obs.budget_remaining <= 2:
+            return StellaratorAction(intent="submit")
+        return StellaratorAction(
+            intent="run",
+            parameter="elongation",
+            direction="decrease",
+            magnitude="small",
+        )
+
+    if obs.evaluation_failed:
+        return StellaratorAction(intent="restore_best")
+
+    if obs.average_triangularity > -0.5:
+        return StellaratorAction(
+            intent="run",
+            parameter="triangularity_scale",
+            direction="increase",
+            magnitude="small",
+        )
+
+    if obs.edge_iota_over_nfp < 0.3:
+        return StellaratorAction(
+            intent="run",
+            parameter="rotational_transform",
+            direction="increase",
+            magnitude="small",
+        )
+
+    if obs.aspect_ratio > 4.0:
+        return StellaratorAction(
+            intent="run",
+            parameter="aspect_ratio",
+            direction="decrease",
+            magnitude="small",
+        )
+
+    return StellaratorAction(
+        intent="run",
+        parameter="elongation",
+        direction="decrease",
+        magnitude="small",
+    )
+
+
+def _action_label(action: StellaratorAction) -> str:
+    if action.intent != "run":
+        return action.intent
+    return f"{action.parameter} {action.direction} {action.magnitude}"
 
 
 def main(n_episodes: int = 20) -> None:

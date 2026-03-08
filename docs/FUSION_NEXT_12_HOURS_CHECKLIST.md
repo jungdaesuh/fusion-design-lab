@@ -9,7 +9,7 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 ## Current Branch Status
 
 - [x] `P1` task is locked
-- [x] 3-knob rotating-ellipse `P1` contract is implemented in the working tree
+- [x] repaired 4-knob low-dimensional `P1` contract is implemented in the working tree
 - [x] baselines and API surface have been moved to the `P1` contract
 - [x] add a post-terminal guard in `step()`
 - [x] replace the synthetic evaluator with `constellaration`
@@ -17,15 +17,15 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [x] commit the Northflank smoke workflow and note
 - [x] pass the Northflank smoke test on the team H100
 - [x] verify that the current 3-knob family is blocked on P1 triangularity under the real verifier path
-- [ ] repair the low-dimensional parameterization
-- [ ] add explicit VMEC failure semantics
-- [ ] label low-fi `run` truth vs high-fi `submit` truth in the task surface
+- [x] repair the low-dimensional parameterization
+- [x] add explicit VMEC failure semantics
+- [x] label low-fi `run` truth vs high-fi `submit` truth in the task surface
 - [ ] add tracked fixtures and manual playtest evidence
 - [ ] refresh the heuristic baseline after the real-verifier rerun
 
 Current caution:
 
-- do not assume the current 3-knob family is a viable playtest start; parameterization repair comes before fixture discovery, manual playtesting, and heuristic refresh
+- do not assume the first repaired defaults are final; run a measured sweep before treating ranges, deltas, or reset seeds as stable
 
 ## Plan V2 Inheritance
 

@@ -7,7 +7,7 @@
 ## 0. Current Branch Status
 
 - [x] `P1` task family is locked
-- [x] 3-knob rotating-ellipse `P1` contract is implemented in code
+- [x] repaired 4-knob low-dimensional `P1` contract is implemented in code
 - [x] real `constellaration` verifier wiring is in place
 - [x] low-fidelity `run` plus high-fidelity `submit` split is documented
 - [x] post-terminal `step()` guard is in place
@@ -15,9 +15,9 @@
 - [x] Northflank smoke workflow and note are committed
 - [x] Northflank smoke test has passed on the team H100
 - [x] current 3-knob family has been checked against the real low-fidelity verifier
-- [ ] parameterization repair is implemented so triangularity is controllable
-- [ ] explicit VMEC failure semantics are implemented
-- [ ] low-fi `run` truth vs high-fi `submit` truth is labeled clearly in the environment surface
+- [x] parameterization repair is implemented so triangularity is controllable
+- [x] explicit VMEC failure semantics are implemented
+- [x] low-fi `run` truth vs high-fi `submit` truth is labeled clearly in the environment surface
 - [ ] tracked `P1` fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
@@ -25,7 +25,7 @@
 
 Current caution:
 
-- the current 3-knob family is structurally blocked on the official triangularity constraint under the real verifier path, so parameterization repair is now the first blocker before fixture discovery or manual playtesting
+- the repaired family is now live, but the exact ranges, deltas, and reset seeds still need a measured sweep before they should be treated as stable defaults
 
 ## 1. Submission Thesis
 

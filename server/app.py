@@ -16,7 +16,10 @@ app = create_fastapi_app(
 @app.get("/task")
 def task_summary() -> dict[str, object]:
     return {
-        "description": "Optimize the P1 benchmark with a rotating-ellipse parameterization.",
+        "description": (
+            "Optimize the P1 benchmark with a custom low-dimensional boundary family "
+            "derived from a rotating-ellipse seed."
+        ),
         "constraints": {
             "aspect_ratio_max": ASPECT_RATIO_MAX,
             "average_triangularity_max": AVERAGE_TRIANGULARITY_MAX,
@@ -25,9 +28,18 @@ def task_summary() -> dict[str, object]:
         "n_field_periods": N_FIELD_PERIODS,
         "budget": BUDGET,
         "actions": ["run", "submit", "restore_best"],
-        "parameters": ["aspect_ratio", "elongation", "rotational_transform"],
+        "parameters": [
+            "aspect_ratio",
+            "elongation",
+            "rotational_transform",
+            "triangularity_scale",
+        ],
         "directions": ["increase", "decrease"],
         "magnitudes": ["small", "medium", "large"],
+        "evaluation_modes": {
+            "run": "low-fidelity constellaration evaluation",
+            "submit": "high-fidelity constellaration evaluation",
+        },
     }
 
 
