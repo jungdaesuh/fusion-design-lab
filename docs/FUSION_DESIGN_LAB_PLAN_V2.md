@@ -41,6 +41,8 @@ We are submitting a clear, reproducible training environment for a constrained s
 
 Training is supporting evidence. The environment is the product.
 
+A trained model is optional. The Colab notebook is still a required public artifact, and it can remain evaluation-first if training evidence is weak.
+
 ## 2. Locked Decisions
 
 These decisions are now fixed unless a hard blocker appears:
@@ -86,7 +88,7 @@ The judging signal now implies four priorities:
 The four visible artifacts remain:
 
 1. HF Space environment
-2. Colab notebook for evaluation or training
+2. Required Colab notebook for evaluation or training
 3. 1-minute demo video
 4. Public repo and README
 
@@ -94,7 +96,7 @@ The primary compute workspace should be Northflank:
 
 - Northflank Jupyter Notebook with PyTorch on the team H100 for development, verifier integration, baselines, and training/debugging
 - HF Space as the hosted environment surface
-- Colab as the minimal required public notebook artifact
+- Colab as the minimal required public notebook artifact, even if it ships as an evaluation-first notebook instead of a training-first notebook
 
 But the evidence order is:
 
@@ -195,6 +197,7 @@ Use each surface for one clear purpose:
   - remote `reset` and `step` endpoint for the final demo path
 - Colab:
   - minimal reproducible evaluation or training notebook required by the hackathon
+  - the notebook itself is mandatory; a trained model inside it is not
 
 Northflank-specific constraint:
 

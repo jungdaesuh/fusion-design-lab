@@ -12,6 +12,8 @@ The repo is organized around one clear submission thesis:
 
 Training is supporting evidence. The environment is the product.
 
+A trained model is optional for this repo's submission story. A public Colab notebook artifact is still required by the hackathon, and that notebook can stay evaluation-first if training evidence is weak.
+
 ## Current Status
 
 This repository is the clean hackathon workspace. The detailed planning docs live in `docs/FUSION_DESIGN_LAB_PLAN_V2.md`, `docs/FUSION_DELIVERABLES_MAP.md`, and `docs/FUSION_NEXT_12_HOURS_CHECKLIST.md`.
@@ -106,6 +108,7 @@ uv sync --extra notebooks
 - Recommended compute workspace: Northflank Jupyter Notebook with PyTorch on the team H100
 - OpenEnv deployment target: Hugging Face Spaces
 - Minimal submission notebook target: Colab
+- Required notebook artifact: one public Colab notebook, even if it only demonstrates evaluation traces rather than a trained policy
 - Verifier of record: `constellaration.problems.GeometricalProblem`
 - Environment style: fresh wiring in this repo, not a port of the old `ai-sci-feasible-designs` harness
 - Northflank containers are ephemeral, so persistent storage should be attached before relying on saved models, caches, or fixture data
