@@ -106,8 +106,6 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         if seed is not None:
             self._episode_index = 0
             return seed % len(RESET_SEEDS)
-        if not TRAIN_RESET_SEED_INDICES:
-            raise ValueError("TRAIN_RESET_SEED_INDICES must define at least one seed index.")
         next_seed = TRAIN_RESET_SEED_INDICES[self._episode_index % len(TRAIN_RESET_SEED_INDICES)]
         self._episode_index += 1
         return next_seed
@@ -117,19 +115,16 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         action: int,
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, object]]:
         obs = self._env.step(self._decode_action(action))
+        terminated = self._is_terminal_observation(obs)
         return (
             self._encode_observation(obs),
             float(obs.reward if obs.reward is not None else 0.0),
-            bool(obs.done),
+            terminated,
             False,
             self._info(obs),
         )
 
     def _decode_action(self, action: int) -> StellaratorAction:
-        if action not in range(LOW_FI_ACTION_COUNT):
-            raise ValueError(
-                f"Action {action} is outside diagnostic action space [0, {LOW_FI_ACTION_COUNT - 1}]"
-            )
         return diagnostic_action(action)
 
     def action_label(self, action: int) -> str:
@@ -178,13 +173,16 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         }
 
     def _termination_reason(self, obs: StellaratorObservation) -> str:
-        if not obs.done:
-            return "in_progress"
         if obs.evaluation_failed:
             return "evaluation_failed"
         if obs.constraints_satisfied:
             return "constraints_satisfied"
-        return "budget_exhausted"
+        if obs.done:
+            return "budget_exhausted"
+        return "in_progress"
+
+    def _is_terminal_observation(self, obs: StellaratorObservation) -> bool:
+        return bool(obs.done or obs.constraints_satisfied or obs.evaluation_failed)
 
 
 def parse_args() -> argparse.Namespace:
@@ -251,13 +249,13 @@ def evaluate_policy(
         total_reward = 0.0
         steps: list[TraceStep] = []
         step_index = 0
-        final_info = dict[str, object](info)
+        final_info = dict(info)
 
         while not done:
             action, _ = model.predict(obs, deterministic=True)
             action_index = int(action)
             obs, reward, terminated, truncated, info = env.step(action_index)
-            done = terminated or truncated or str(info["termination_reason"]) != "in_progress"
+            done = terminated or truncated
             total_reward += reward
             step_index += 1
             final_info = info
