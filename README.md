@@ -3,7 +3,7 @@
 Fusion Design Lab is an environment-first [OpenEnv](https://openenv.dev) hackathon project for the `P1` stellarator benchmark.
 
 **Live Environment**: [HF Space](https://huggingface.co/spaces/CreativeEngineer/fusion-design-lab)
-**Training Notebook**: [Repository Notebook (GRPO + Unsloth)](training/notebooks/fusion_design_lab_training.ipynb)
+**Training Notebook**: [Repository Notebook (GRPO + HF TRL)](training/notebooks/fusion_design_lab_training.ipynb)
 
 ## What It Does
 
@@ -23,7 +23,7 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - **Physics engine** (`server/physics.py`): `constellaration` VMEC-backed boundary evaluation
 - **Models** (`fusion_lab/models.py`): Pydantic schemas for actions, observations, state
 - **Client** (`fusion_lab/client.py`): Typed OpenEnv client for remote interaction
-- **Training** (`training/`): GRPO notebook (Unsloth + TRL) and PPO smoke test
+- **Training** (`training/`): GRPO notebook (HF TRL) and PPO smoke test
 
 ## Current Status
 
@@ -33,6 +33,7 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - GRPO training notebook is checked into the repo and aligned with the shared `fusion_lab/llm_agent.py` contract
 - LLM rollout tooling can now generate fresh model completions per seed and save fixed-seed reward/outcome summaries
 - Low-fidelity PPO smoke artifacts and paired high-fidelity fixture checks exist
+- The live low-fidelity reward is now `Reward V2`: verifier-native repair shaping plus bounded best-so-far / anti-stagnation terms
 - Before/after trained-policy evidence on the current low-fidelity-only workflow is still open
 
 ## Execution Status
