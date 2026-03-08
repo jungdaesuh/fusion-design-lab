@@ -132,6 +132,8 @@ For this hackathon repo, prefer smoke validation, manual playtesting, and runnab
 - Keep commits scoped to the task.
 - Do not mix environment-contract edits with unrelated cleanup.
 - Prefer small, reviewable increments.
+- Work on the `main` branch unless explicitly asked to use a different branch.
+- When explicitly asked to push, push directly to `origin/main` unless explicitly told otherwise.
 - Branch names created for new work should use the `codex/` prefix.
 
 ## What Good Looks Like
