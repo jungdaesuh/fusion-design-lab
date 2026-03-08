@@ -52,7 +52,7 @@ Implementation status:
 - [x] Label low-fi `run` truth vs high-fi `submit` truth in observations and task docs
 - [x] Separate high-fidelity submit scoring/reporting from low-fidelity rollout score state
 - [x] Add tracked `P1` fixtures under `server/data/p1/`
-- [ ] Run manual playtesting and record the first reward pathology
+- [ ] Run a tiny low-fi PPO smoke run, then record at least one submit-side manual trace and the first real reward pathology
 - [ ] Refresh the heuristic baseline for the real verifier path
 - [ ] Deploy the real environment to HF Space
 

@@ -151,14 +151,14 @@ Gate 1: measured sweep exists
 
 - repaired-family ranges, deltas, and reset seeds are justified by recorded evidence
 
-Gate 2: fixture checks pass
-
-- good, boundary, and bad references behave as expected
-
-Gate 3: tiny PPO smoke is sane
+Gate 2: tiny PPO smoke is sane
 
 - a small low-fidelity policy can improve or at least reveal a concrete failure mode quickly
 - trajectories are readable enough to debug
+
+Gate 3: fixture checks pass
+
+- good, boundary, and bad references behave as expected
 
 Gate 4: manual playtest passes
 
