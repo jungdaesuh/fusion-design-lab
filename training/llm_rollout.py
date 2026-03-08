@@ -10,10 +10,11 @@ from pathlib import Path
 from typing import Final
 
 from fusion_lab.llm_agent import (
+    build_messages,
     build_prompt,
+    LLMEpisodeTrace,
     parse_action_plan,
     run_episode_with_actions,
-    LLMEpisodeTrace,
 )
 from fusion_lab.models import StellaratorAction
 from server.environment import StellaratorEnvironment
@@ -130,6 +131,7 @@ def prompt_payload(seed: int) -> dict[str, object]:
     return {
         "created_at_utc": datetime.now(UTC).isoformat(),
         "seed": seed,
+        "messages": list(build_messages(observation)),
         "prompt": build_prompt(observation),
         "target_spec": observation.target_spec,
         "budget_remaining": observation.budget_remaining,
@@ -346,6 +348,7 @@ def evaluate_payload(
         evaluations.append(
             {
                 "seed": seed,
+                "messages": list(build_messages(observation)),
                 "prompt": prompt,
                 "completion": completion,
                 "parsed_action_count": len(actions),

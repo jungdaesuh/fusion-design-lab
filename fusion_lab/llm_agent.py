@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
-from typing import Final, Sequence
+from typing import Final, Literal, Sequence, TypedDict
 
 from fusion_lab.models import (
     DirectionName,
@@ -21,6 +21,12 @@ RUN_PARAMETERS: Final[tuple[ParameterName, ...]] = (
 )
 RUN_DIRECTIONS: Final[tuple[DirectionName, ...]] = ("increase", "decrease")
 RUN_MAGNITUDES: Final[tuple[MagnitudeName, ...]] = ("small", "medium", "large")
+
+
+class PromptMessage(TypedDict):
+    role: Literal["system", "user"]
+    content: str
+
 
 SYSTEM_PROMPT: Final[str] = """You are an expert stellarator designer.
 
@@ -162,11 +168,17 @@ def format_observation(observation: StellaratorObservation) -> str:
     )
 
 
-def build_prompt(observation: StellaratorObservation) -> str:
+def build_messages(observation: StellaratorObservation) -> tuple[PromptMessage, PromptMessage]:
     return (
-        f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
-        f"<|im_start|>user\n{format_observation(observation)}<|im_end|>\n"
-        "<|im_start|>assistant\n"
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": format_observation(observation)},
+    )
+
+
+def build_prompt(observation: StellaratorObservation) -> str:
+    system_message, user_message = build_messages(observation)
+    return (
+        f"System:\n{system_message['content']}\n\nUser:\n{user_message['content']}\n\nAssistant:\n"
     )
 
 
