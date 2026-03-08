@@ -12,4 +12,10 @@ Training policy:
 
 - [ ] Northflank notebook artifacts saved
 - [ ] Colab notebook saved
+- [x] tiny low-fi PPO smoke artifact saved
 - [ ] trained-policy evidence saved
+
+## Runnable paths
+
+- install the training dependencies: `uv sync --extra training`
+- tiny low-fi PPO smoke run: `uv run --extra training python training/ppo_smoke.py`

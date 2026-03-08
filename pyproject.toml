@@ -18,6 +18,10 @@ notebooks = [
   "ipykernel>=6.29.0",
   "jupyterlab>=4.3.0",
 ]
+training = [
+  "gymnasium>=1.0.0",
+  "stable-baselines3>=2.5.0",
+]
 dev = [
   "pre-commit>=4.0.0",
   "pytest>=8.3.0",
