@@ -13,7 +13,9 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [x] baselines and API surface have been moved to the `P1` contract
 - [x] add a post-terminal guard in `step()`
 - [x] replace the synthetic evaluator with `constellaration`
+- [x] re-run baselines on the real verifier path
 - [ ] add tracked fixtures and manual playtest evidence
+- [ ] refresh the heuristic baseline after the real-verifier rerun
 
 ## Plan V2 Inheritance
 
@@ -103,6 +105,7 @@ Transition rule:
    - bad behavior
    - refinement to reward V1
    - improved behavior
+8. If no real pathology appears, record that `Reward V0` survived playtesting and move on.
 
 Exit condition: you can explain why the environment now rewards the intended behavior.
 

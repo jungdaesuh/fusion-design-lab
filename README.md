@@ -22,6 +22,7 @@ Implementation status:
 - docs are aligned to fresh `P1` wiring in this repo
 - shared models, baselines, and server/client entry points now reflect the locked `P1` contract
 - the current environment uses `constellaration` for low-fidelity `run` steps and high-fidelity `submit` evaluation
+- the remaining runtime work is fixture coverage, manual playtesting, heuristic refresh, and deployment evidence
 
 ## Execution Status
 
@@ -35,6 +36,8 @@ Implementation status:
 - [x] Replace the synthetic evaluator with `constellaration`
 - [ ] Add tracked `P1` fixtures under `server/data/p1/`
 - [ ] Run manual playtesting and record the first reward pathology
+- [ ] Refresh the heuristic baseline for the real verifier path
+- [ ] Pass the Northflank smoke test on the H100 workspace
 - [ ] Deploy the real environment to HF Space
 
 ## Known Gaps
@@ -47,7 +50,7 @@ Implementation status:
 Current mode:
 
 - strategic task choice is already locked
-- the next work is implementation, smoke validation, and manual playtesting
+- the next work is fixtures, manual playtesting, heuristic refresh, smoke validation, and deployment
 - new planning text should only appear when a real blocker forces a decision change
 
 ## Planned Repository Layout
@@ -100,15 +103,15 @@ uv sync --extra notebooks
 
 ## Immediate Next Steps
 
-1. Set up the Northflank Jupyter Notebook with PyTorch and attach persistent storage.
-2. Pass a Northflank smoke test:
+1. Add tracked `P1` fixtures under `server/data/p1`.
+2. Run manual playtest episodes and record the first real reward pathology, if any.
+3. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
+4. Pass a Northflank smoke test:
    - import `constellaration`
    - run one rotating-ellipse generation plus one low-fidelity verifier call
    - write an artifact to persistent storage
-3. Add tracked `P1` fixtures under `server/data/p1`.
-4. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
-5. Add the Colab notebook under `training/notebooks`.
-6. Run manual playtest episodes before heavy training work.
+5. Deploy the environment to HF Space.
+6. Add the Colab notebook under `training/notebooks`.
 
 These are implementation steps, not another planning phase.
 

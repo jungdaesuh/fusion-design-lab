@@ -6,6 +6,15 @@
 
 Use this file as rationale for the pivot, not as a fresh planning queue. Once the pivot is accepted, implementation should follow the SSOT plan docs.
 
+## Current Branch Status
+
+- [x] pivot accepted
+- [x] rotating-ellipse `P1` contract is implemented
+- [x] `constellaration` verifier path is wired
+- [ ] tracked fixtures are added
+- [ ] manual playtest evidence is recorded
+- [ ] heuristic baseline is refreshed for the real verifier path
+
 ## Decision
 
 Pivot the OpenEnv environment to use the official ConStellaration P1 benchmark with real VMEC physics, scoped to the rotating-ellipse low-dimensional parameter space.
@@ -147,7 +156,6 @@ current_params: {aspect_ratio, elongation, rotational_transform}
 best_params: {aspect_ratio, elongation, rotational_transform}
 initial_score: float
 best_score: float
-current_feasibility: float
 best_feasibility: float
 history: list[str]
 ```
@@ -171,12 +179,16 @@ history: list[str]
 
 ### Phase 1: Physics Backend (~1 hour)
 
+Status: done.
+
 Rewrite `server/physics.py` to wrap:
 - `constellaration.initial_guess.generate_rotating_ellipse` for boundary generation
 - `constellaration.forward_model.forward_model` with low-fi settings for evaluation
-- `constellaration.problems.GeometricalProblem` for official P1 scoring on submit
+- `constellaration.problems.GeometricalProblem` for official P1 scoring on every evaluation
 
 ### Phase 2: Environment Contract (~1 hour)
+
+Status: done.
 
 Update `server/environment.py`:
 - New observation schema with P1 metrics
@@ -188,6 +200,8 @@ Update `fusion_lab/models.py` for new schemas.
 
 ### Phase 3: Manual Playtest (~30 min)
 
+Status: open.
+
 Validate hypothesis: "6 actions is enough."
 - Play 5-10 episodes manually
 - Log: can a human reach feasibility? Improve elongation?
@@ -196,11 +210,15 @@ Validate hypothesis: "6 actions is enough."
 
 ### Phase 4: Baselines (~30 min)
 
+Status: partial. Baselines exist, but the heuristic needs refresh on the real verifier path.
+
 - Random agent
 - Heuristic agent (greedy toward known-good parameter region)
 - Comparison table
 
 ### Phase 5: Deploy + Evidence (~2 hours)
+
+Status: open.
 
 - Update Dockerfile/deps for constellaration
 - `openenv validate` + `openenv push`

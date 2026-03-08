@@ -10,4 +10,11 @@ Intended contents:
 
 These fixtures are for verifier and reward sanity checks.
 
+## Status
+
+- [ ] known-good or near-winning fixture added
+- [ ] near-boundary fixture added
+- [ ] clearly infeasible fixture added
+- [ ] fixture sanity note written
+
 Do not copy the old `ai-sci-feasible-designs` harness here. Reuse only the specific JSON artifacts needed for the fresh `P1` environment.

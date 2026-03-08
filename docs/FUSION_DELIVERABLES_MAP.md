@@ -6,6 +6,16 @@ Northflank is the recommended compute workspace behind those artifacts. HF Space
 
 Use this map to sequence execution, not to reopen already-locked task choices.
 
+## Current Branch Status
+
+- [x] `P1` contract is frozen in code
+- [x] official `constellaration` verifier loop is wired
+- [x] baseline comparison has been rerun on the real verifier path
+- [ ] tracked fixtures are checked in
+- [ ] manual playtest evidence exists
+- [ ] heuristic baseline has been refreshed for the real verifier path
+- [ ] HF Space deployment is live
+
 ## Deliverables Tree
 
 ```mermaid
@@ -90,14 +100,12 @@ flowchart LR
 
 ## Priority Order
 
-1. Bring up the Northflank H100 workspace with persistent storage.
-2. Pass the Northflank smoke test.
-3. Prove the fresh local `P1` verifier loop.
-4. Freeze the environment contract and mark the initial reward as `V0`.
-5. Run verifier/fixture checks and then manual-playtest the environment.
-6. Fix obvious reward/pathology issues.
-7. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
-8. Get random and heuristic baselines.
-9. Use the notebook to show traces and comparisons; include training only if it adds signal.
-10. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
-11. Polish the repo only after the artifacts are real.
+1. Add tracked fixtures and run fixture sanity checks.
+2. Manual-playtest the environment and record the first real pathology, if any.
+3. Refresh the heuristic baseline from that evidence.
+4. Bring up the Northflank H100 workspace with persistent storage.
+5. Pass the Northflank smoke test.
+6. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
+7. Use the notebook to show traces and comparisons; include training only if it adds signal.
+8. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
+9. Polish the repo only after the artifacts are real.

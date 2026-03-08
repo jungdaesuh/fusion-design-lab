@@ -36,9 +36,9 @@ Priority source:
 
 ```mermaid
 flowchart TD
-    A["Northflank Smoke Test"] --> C["constellaration Physics Wiring"]
+    A["Northflank Smoke Test"] --> E["Fixture Checks"]
     B["P1 Contract Lock"] --> D["P1 Models + Environment"]
-    C --> D
+    C["constellaration Physics Wiring"] --> D
     D --> E["Fixture Checks"]
     E --> F["Manual Playtest"]
     F --> G["Reward V1"]
@@ -121,6 +121,13 @@ flowchart TD
   [AGENTS.md](AGENTS.md),
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md)
 
+- [ ] Write down whether `Reward V0` survives unchanged
+  Goal:
+  if playtesting does not reveal a real pathology, record that outcome explicitly instead of forcing a `V1`
+  Related:
+  [README.md](README.md),
+  [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md)
+
 - [x] Decide the non-submit terminal reward policy
   Goal:
   budget exhaustion now yields a smaller end-of-episode reward than `submit`, so non-submitting agents still get terminal feedback without outranking explicit submit behavior
@@ -184,3 +191,4 @@ flowchart TD
 - [ ] Do not add training-first complexity before manual playtesting
 - [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
 - [ ] Do not describe the current baseline reset state as already feasible
+- [ ] Do not force a `Reward V1` story if `Reward V0` survives manual playtesting

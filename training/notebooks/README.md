@@ -12,6 +12,12 @@ Recommended split:
 - Northflank notebook: main compute workspace on the team H100
 - Colab notebook: thin public artifact required by the hackathon
 
+## Status
+
+- [ ] Northflank smoke notebook note saved
+- [ ] manual-playtest notebook or trace notebook saved
+- [ ] thin public Colab notebook saved
+
 Operational defaults:
 
 - use the same Python dependency set as the repo runtime
