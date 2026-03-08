@@ -3,8 +3,7 @@
 Strategy: guided perturbations informed by domain knowledge.
 1. Push elongation upward to improve triangularity.
 2. Nudge rotational transform upward to stay on the iota side of feasibility.
-3. Use restore_best to recover from any worsening.
-4. Submit before exhausting budget.
+3. Submit before exhausting budget.
 """
 
 from __future__ import annotations
@@ -29,10 +28,6 @@ def heuristic_episode(
     obs = env.reset(seed=seed)
     total_reward = 0.0
     trace: list[dict[str, object]] = [{"step": 0, "score": obs.p1_score}]
-    prev_best = (
-        int(obs.best_feasibility <= 0.01),
-        obs.best_score if obs.best_feasibility <= 0.01 else -obs.best_feasibility,
-    )
 
     for parameter, direction, magnitude in STRATEGY:
         if obs.done or obs.budget_remaining <= 1:
@@ -55,27 +50,6 @@ def heuristic_episode(
                 "reward": obs.reward,
             }
         )
-
-        current_best = (
-            int(obs.best_feasibility <= 0.01),
-            obs.best_score if obs.best_feasibility <= 0.01 else -obs.best_feasibility,
-        )
-
-        if current_best < prev_best and obs.budget_remaining > 1:
-            restore = StellaratorAction(intent="restore_best")
-            obs = env.step(restore)
-            total_reward += obs.reward or 0.0
-            trace.append(
-                {
-                    "step": len(trace),
-                    "action": "restore_best",
-                    "score": obs.p1_score,
-                    "best_score": obs.best_score,
-                    "reward": obs.reward,
-                }
-            )
-
-        prev_best = current_best
 
     if not obs.done:
         submit = StellaratorAction(intent="submit")

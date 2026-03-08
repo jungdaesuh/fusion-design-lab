@@ -22,15 +22,12 @@ def random_episode(
     trace: list[dict[str, object]] = [{"step": 0, "score": obs.p1_score}]
 
     while not obs.done:
-        if obs.budget_remaining <= 0:
-            action = StellaratorAction(intent="submit")
-        else:
-            action = StellaratorAction(
-                intent="run",
-                parameter=rng.choice(PARAMETERS),
-                direction=rng.choice(DIRECTIONS),
-                magnitude=rng.choice(MAGNITUDES),
-            )
+        action = StellaratorAction(
+            intent="run",
+            parameter=rng.choice(PARAMETERS),
+            direction=rng.choice(DIRECTIONS),
+            magnitude=rng.choice(MAGNITUDES),
+        )
         obs = env.step(action)
         total_reward += obs.reward or 0.0
         trace.append(
