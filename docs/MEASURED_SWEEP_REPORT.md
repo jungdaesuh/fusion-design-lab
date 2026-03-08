@@ -234,6 +234,28 @@ Combining both sweeps and the prior deep-dive data:
 The crash penalty (`-2.1` net) already discourages exploration into crash zones.
 The agent should learn to avoid `rot_transform > 1.75` naturally.
 
+### Known gap: elongation crash pocket
+
+The replay playtest (`docs/P1_REPLAY_PLAYTEST_REPORT.md`, Episode 1 steps 4-5)
+discovered VMEC crashes at `elongation ~1.25-1.30` during low-fidelity evaluation,
+with recovery at `elongation=1.20`. This crash pocket is inside the documented
+range `(1.2, 1.8)` and was **not mapped** by either sweep, because the targeted
+grid did not vary elongation aggressively at feasible parameter combinations.
+
+This means the crash zone table above is incomplete — it only maps the
+`rotational_transform` dimension. The elongation dimension has internal crash
+pockets that agents exploring lower elongation values will encounter.
+
+### Scope note: low-fidelity only
+
+Both sweeps used low-fidelity VMEC evaluation. The high-fidelity submit path
+has its own convergence behavior documented in `docs/P1_HIGHFI_SUBMIT_BLOCKER.md`.
+After that blocker was resolved (switching from `high_fidelity` to
+`from_boundary_resolution` VMEC preset), the submit path converges on all
+boundaries that low-fi converges on, but the cross-fidelity gap is
+path-dependent — some low-fi feasible states crash at high-fi (see replay
+playtest Episode 5).
+
 ---
 
 ## 7. Recommendation
