@@ -66,7 +66,7 @@ def landing_page() -> str:
     <h2>Constraints</h2>
     <div class="constraint"><span class="name">aspect_ratio</span><span class="bound">&le; 4.0</span></div>
     <div class="constraint"><span class="name">average_triangularity</span><span class="bound">&le; &minus;0.5</span></div>
-    <div class="constraint"><span class="name">edge_iota_over_nfp</span><span class="bound">&ge; 0.3</span></div>
+    <div class="constraint"><span class="name">abs(edge_iota_over_nfp)</span><span class="bound">&ge; 0.3</span></div>
   </div>
 
   <div class="card">
@@ -98,7 +98,7 @@ def task_summary() -> dict[str, object]:
         "constraints": {
             "aspect_ratio_max": ASPECT_RATIO_MAX,
             "average_triangularity_max": AVERAGE_TRIANGULARITY_MAX,
-            "edge_iota_over_nfp_min": EDGE_IOTA_OVER_NFP_MIN,
+            "abs_edge_iota_over_nfp_min": EDGE_IOTA_OVER_NFP_MIN,
         },
         "n_field_periods": N_FIELD_PERIODS,
         "budget": BUDGET,
