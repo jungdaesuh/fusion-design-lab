@@ -154,6 +154,7 @@ def format_observation(observation: StellaratorObservation) -> str:
         f"- evaluation_fidelity: {observation.evaluation_fidelity}\n"
         f"- evaluation_failed: {observation.evaluation_failed}\n"
         f"- budget_remaining: {observation.budget_remaining}\n"
+        f"- no_progress_steps: {observation.no_progress_steps}\n"
         f"- best_low_fidelity_score: {observation.best_low_fidelity_score:.4f}\n"
         f"- best_low_fidelity_feasibility: {observation.best_low_fidelity_feasibility:.6f}\n"
         f"- diagnostics: {observation.diagnostics_text}\n"

@@ -61,7 +61,7 @@ flowchart TD
     P --> F["Tiny PPO Smoke"]
     F --> E["Fixture Checks"]
     E --> G["Submit-side Manual Playtest"]
-    G --> H["Reward V1"]
+    G --> H["Reward V2"]
     H --> I["Baselines"]
     I --> J["HF Space Deploy"]
     J --> K["Colab Notebook"]
@@ -220,6 +220,13 @@ flowchart TD
   [AGENTS.md](AGENTS.md),
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md)
 
+- [x] Update reward from `V1` to `V2` after the verifier-native shaping exposed short-horizon gaps
+  Goal:
+  add bounded new-best, near-feasible, and anti-stagnation terms without breaking the verifier-native reward story
+  Related:
+  [AGENTS.md](AGENTS.md),
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
+
 - [x] Write down why `Reward V0` did not survive unchanged
   Goal:
   document the concrete pathology: pure `Δ official_feasibility` hid useful non-dominant repairs because official feasibility is a max over normalized constraint violations
@@ -294,6 +301,6 @@ flowchart TD
 - [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
 - [x] Do not compare high-fidelity submit scores against low-fidelity best/initial score state in the final story
 - [ ] Do not describe the current baseline reset state as feasible or near-feasible
-- [x] Do not force a `Reward V1` story if `Reward V0` survives manual playtesting
+- [x] Do not force a new reward-version story until the previous reward version shows a real pathology
   Note:
-  completed by recording the concrete `Reward V0` pathology and only then moving to `Reward V1`
+  completed by recording the concrete `Reward V0` pathology before `Reward V1`, then recording the concrete short-horizon `Reward V1` gaps before `Reward V2`
