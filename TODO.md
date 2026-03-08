@@ -99,6 +99,8 @@ flowchart TD
   Files:
   [server/data/p1/README.md](server/data/p1/README.md),
   [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
+  Note:
+  the default baseline params are not near-feasible on the real verifier path, so they are not enough for the fixture set by themselves
 
 - [ ] Run fixture sanity checks
   Goal:
@@ -190,5 +192,5 @@ flowchart TD
 - [ ] Do not let notebook or demo work outrun environment evidence
 - [ ] Do not add training-first complexity before manual playtesting
 - [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
-- [ ] Do not describe the current baseline reset state as already feasible
+- [ ] Do not describe the current baseline reset state as feasible or near-feasible
 - [ ] Do not force a `Reward V1` story if `Reward V0` survives manual playtesting

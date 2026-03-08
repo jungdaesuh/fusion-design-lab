@@ -42,7 +42,7 @@ Implementation status:
 
 ## Known Gaps
 
-- `BASELINE_PARAMS` is intentionally repairable but currently infeasible at reset; do not describe it as a feasible anchor.
+- `BASELINE_PARAMS` is not a near-feasible anchor on the real verifier path. The current low-fidelity measurement is roughly `p1_feasibility=1.01`, `average_triangularity=+0.005`, and `edge_iota_over_nfp=0.059`, so fixture discovery has to happen before meaningful manual playtesting.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after manual playtesting.

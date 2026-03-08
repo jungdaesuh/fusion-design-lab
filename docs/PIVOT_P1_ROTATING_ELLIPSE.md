@@ -15,6 +15,10 @@ Use this file as rationale for the pivot, not as a fresh planning queue. Once th
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
 
+Current caution:
+
+- the default rotating-ellipse baseline params are currently useful as an infeasible reference, not as a near-feasible anchor, so the fixture set still needs a better boundary-region map
+
 ## Decision
 
 Pivot the OpenEnv environment to use the official ConStellaration P1 benchmark with real VMEC physics, scoped to the rotating-ellipse low-dimensional parameter space.
@@ -239,8 +243,9 @@ If full high-fidelity `constellaration` deployment fails (Docker build, HF Space
 Start with 1-2 rotating-ellipse configurations for sanity checks and expand only if the implementation needs more coverage:
 
 1. **Repairable baseline anchor:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — intentionally infeasible at reset but close enough to support short repair/improvement episodes
+1. **Current default baseline reference:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — currently deeply infeasible on the real verifier path; keep as a negative or repair reference only
 2. **Infeasible reference:** aspect_ratio=5.0, elongation=3.0, rotational_transform=0.2 — expected to violate constraints
-3. **Baseline comparison:** add only if manual playtesting shows a second start state is useful
+3. **Near-boundary anchor:** still needs to be found from real verifier probing before manual playtesting
 
 These are for verifier/reward sanity, not a prerequisite seed-mining project.
 

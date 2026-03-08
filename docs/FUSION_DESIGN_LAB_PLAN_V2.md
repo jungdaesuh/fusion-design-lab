@@ -17,6 +17,10 @@
 - [ ] heuristic baseline is refreshed for the real verifier path
 - [ ] HF Space deployment evidence is recorded
 
+Current caution:
+
+- the default baseline params are not currently a near-feasible playtest anchor on the real verifier path, so fixture discovery is a real prerequisite for meaningful manual playtesting
+
 ## 1. Submission Thesis
 
 We are not primarily submitting "a trained model for fusion."
@@ -322,6 +326,8 @@ Use:
 - one known-good design or near-winning design
 - a few near-boundary designs
 - a few clearly infeasible designs
+
+Do not assume the default baseline params are enough for this set. They are currently useful as an infeasible reference, not as a near-feasible anchor.
 
 Purpose:
 
