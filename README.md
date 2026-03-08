@@ -30,7 +30,7 @@ Implementation status:
 - the current environment uses `constellaration` for low-fidelity `run` steps and high-fidelity `submit` evaluation
 - the repaired 4-knob low-dimensional family is now wired into the runtime path
 - the first measured sweep note, tracked low-fidelity fixtures, and an initial low-fidelity manual playtest note now exist
-- the next runtime work is a tiny low-fi PPO smoke run plus paired high-fidelity fixture checks, then a submit-side manual trace, heuristic refresh, and deployment evidence
+- the next runtime work is a tiny low-fi PPO smoke run as a diagnostic-only check, followed immediately by paired high-fidelity fixture checks and one real submit-side manual trace
 
 ## Execution Status
 
@@ -52,7 +52,7 @@ Implementation status:
 - [x] Label low-fi `run` truth vs high-fi `submit` truth in observations and task docs
 - [x] Separate high-fidelity submit scoring/reporting from low-fidelity rollout score state
 - [x] Add tracked `P1` fixtures under `server/data/p1/`
-- [ ] Run a tiny low-fi PPO smoke run, then record at least one submit-side manual trace and the first real reward pathology
+- [ ] Run a tiny low-fi PPO smoke run as a diagnostic-only check, then complete paired high-fidelity fixture checks and at least one real submit-side manual trace before any broader training push
 - [ ] Refresh the heuristic baseline for the real verifier path
 - [ ] Deploy the real environment to HF Space
 
@@ -67,12 +67,12 @@ Implementation status:
 - Observation best-state reporting is now split explicitly between low-fidelity rollout state and high-fidelity submit state; baseline traces and demo copy should use those explicit fields rather than infer a mixed best-state story.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after the repaired parameterization and manual playtesting.
-- The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next fail-fast step is a tiny low-fi PPO smoke run alongside high-fidelity fixture pairing, then a real `submit` trace.
+- The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next fail-fast step is a tiny low-fi PPO smoke run used only to surface obvious learnability bugs, followed immediately by high-fidelity fixture pairing and one real `submit` trace.
 
 Current mode:
 
 - strategic task choice is already locked
-- the next work is a tiny low-fi PPO smoke run plus paired high-fidelity fixture checks, then a submit-side manual trace, heuristic refresh, smoke validation, and deployment
+- the next work is a tiny low-fi PPO smoke run as a smoke test only, then paired high-fidelity fixture checks, one submit-side manual trace, heuristic refresh, smoke validation, and deployment
 - new planning text should only appear when a real blocker forces a decision change
 
 ## Planned Repository Layout
@@ -117,7 +117,7 @@ uv sync --extra notebooks
 - Recommended compute workspace: Northflank Jupyter Notebook with PyTorch on the team H100
 - OpenEnv deployment target: Hugging Face Spaces
 - Minimal submission notebook target: Colab
-- Required notebook artifact: one public Colab notebook, even if it only demonstrates evaluation traces rather than a trained policy
+- Required notebook artifact: one public Colab notebook that demonstrates trained-policy behavior against the environment
 - Verifier of record: `constellaration.problems.GeometricalProblem`
 - Environment style: fresh wiring in this repo, not a port of the old `ai-sci-feasible-designs` harness
 - Northflank containers are ephemeral, so persistent storage should be attached before relying on saved models, caches, or fixture data
@@ -126,10 +126,10 @@ uv sync --extra notebooks
 
 ## Immediate Next Steps
 
-- [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks.
-- [ ] Run a tiny low-fidelity PPO smoke run and save a few trajectories.
+- [ ] Run a tiny low-fidelity PPO smoke run and stop after a few readable trajectories or one clear failure mode.
+- [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks immediately after the PPO smoke run.
 - [ ] Decide whether any reset seed should move based on the measured sweep plus those paired checks.
-- [ ] Run at least one submit-side manual trace and record the first real reward pathology, if any.
+- [ ] Run at least one submit-side manual trace before any broader training push, then record the first real reward pathology, if any.
 - [ ] Refresh the heuristic baseline using measured sweep and playtest evidence, then save one comparison trace.
 - [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
 - [ ] Deploy the environment to HF Space.

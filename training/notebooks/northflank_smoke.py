@@ -7,10 +7,8 @@ from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
 
-from constellaration.initial_guess import generate_rotating_ellipse
-
-from server.environment import BASELINE_PARAMS, N_FIELD_PERIODS
-from server.physics import EvaluationMetrics, evaluate_params
+from server.contract import N_FIELD_PERIODS, SMOKE_TEST_PARAMS
+from server.physics import EvaluationMetrics, build_boundary_from_params, evaluate_boundary
 
 
 DEFAULT_OUTPUT_DIR = Path("training/notebooks/artifacts")
@@ -23,15 +21,15 @@ class SmokeArtifact:
     boundary_type: str
     n_field_periods: int
     params: dict[str, float]
-    metrics: dict[str, float | bool]
+    metrics: dict[str, str | float | bool]
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Run the Fusion Design Lab Northflank smoke check: generate one "
-            "rotating-ellipse boundary, run one low-fidelity verifier call, "
-            "and write a JSON artifact."
+            "rotating-ellipse-derived low-dimensional boundary, run one "
+            "low-fidelity verifier call, and write a JSON artifact."
         )
     )
     parser.add_argument(
@@ -47,23 +45,17 @@ def parse_args() -> argparse.Namespace:
 
 
 def build_artifact() -> SmokeArtifact:
-    boundary = generate_rotating_ellipse(
-        aspect_ratio=BASELINE_PARAMS.aspect_ratio,
-        elongation=BASELINE_PARAMS.elongation,
-        rotational_transform=BASELINE_PARAMS.rotational_transform,
+    boundary = build_boundary_from_params(
+        SMOKE_TEST_PARAMS,
         n_field_periods=N_FIELD_PERIODS,
     )
-    metrics = evaluate_params(
-        BASELINE_PARAMS,
-        n_field_periods=N_FIELD_PERIODS,
-        fidelity="low",
-    )
+    metrics = evaluate_boundary(boundary, fidelity="low")
     return SmokeArtifact(
         created_at_utc=datetime.now(UTC).isoformat(),
         constellaration_version=version("constellaration"),
         boundary_type=type(boundary).__name__,
         n_field_periods=N_FIELD_PERIODS,
-        params=BASELINE_PARAMS.model_dump(),
+        params=SMOKE_TEST_PARAMS.model_dump(),
         metrics=_metrics_payload(metrics),
     )
 
@@ -76,8 +68,11 @@ def write_artifact(output_dir: Path, artifact: SmokeArtifact) -> Path:
     return output_path
 
 
-def _metrics_payload(metrics: EvaluationMetrics) -> dict[str, float | bool]:
+def _metrics_payload(metrics: EvaluationMetrics) -> dict[str, str | float | bool]:
     return {
+        "evaluation_fidelity": metrics.evaluation_fidelity,
+        "evaluation_failed": metrics.evaluation_failed,
+        "failure_reason": metrics.failure_reason,
         "max_elongation": metrics.max_elongation,
         "aspect_ratio": metrics.aspect_ratio,
         "average_triangularity": metrics.average_triangularity,

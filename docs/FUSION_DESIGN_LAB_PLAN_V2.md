@@ -80,6 +80,8 @@ Practical fail-fast rule:
 
 - allow a tiny low-fidelity PPO smoke run before full submit-side validation
 - use it only to surface obvious learnability bugs, reward exploits, or action-space problems
+- stop after a few readable trajectories or one clear failure mode
+- run paired high-fidelity fixture checks and one real submit-side trace immediately after the smoke run
 - do not use low-fidelity training alone as proof that the terminal `submit` contract is trustworthy
 
 ## 5. Document Roles
@@ -133,8 +135,8 @@ The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V
 
 ## 8. Execution Order
 
-- [ ] Run a tiny low-fidelity PPO smoke pass and inspect a few trajectories for obvious learnability failures or reward exploits.
-- [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit checks.
+- [ ] Run a tiny low-fidelity PPO smoke pass and stop after a few trajectories once it reveals either readable behavior or one clear failure mode.
+- [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit checks immediately after the PPO smoke pass.
 - [ ] Decide whether the reset pool should change based on the measured sweep plus those paired checks.
 - [ ] Run at least one submit-side manual trace, then expand to 5 to 10 episodes and record the first real confusion point, exploit, or reward pathology.
 - [ ] Adjust reward or penalties only if playtesting exposes a concrete problem.
@@ -155,10 +157,12 @@ Gate 2: tiny PPO smoke is sane
 
 - a small low-fidelity policy can improve or at least reveal a concrete failure mode quickly
 - trajectories are readable enough to debug
+- the smoke run stops at that diagnostic threshold instead of turning into a broader training phase
 
 Gate 3: fixture checks pass
 
 - good, boundary, and bad references behave as expected
+- the paired high-fidelity checks happen immediately after the PPO smoke run, not as optional later work
 
 Gate 4: manual playtest passes
 

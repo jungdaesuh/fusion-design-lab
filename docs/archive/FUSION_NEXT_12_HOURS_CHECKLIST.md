@@ -14,8 +14,9 @@ Use these docs instead:
 Current execution priority remains:
 
 1. measured sweep
-2. tracked fixtures
-3. manual playtest
-4. heuristic baseline refresh
-5. HF Space proof
-6. notebook, demo, and repo polish
+2. tiny PPO smoke pass as a diagnostic-only check
+3. tracked fixtures with paired high-fidelity submit checks
+4. one submit-side manual trace, then broader manual playtest
+5. heuristic baseline refresh
+6. HF Space proof
+7. notebook, demo, and repo polish

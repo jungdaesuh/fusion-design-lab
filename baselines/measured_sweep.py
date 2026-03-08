@@ -4,7 +4,11 @@ Validates ranges, crash zones, feasibility regions, and identifies
 candidate reset seeds for the repaired low-dimensional family.
 
 Usage:
-    uv run python baselines/measured_sweep.py
+    # Broad evenly spaced grid (default 3 points per parameter)
+    uv run python baselines/measured_sweep.py --grid-points 5
+
+    # Targeted sweep around the known feasible zone
+    uv run python baselines/measured_sweep.py --targeted
 """
 
 from __future__ import annotations
@@ -29,15 +33,29 @@ def linspace_inclusive(low: float, high: float, n: int) -> list[float]:
     return [round(float(v), 4) for v in np.linspace(low, high, n)]
 
 
+TARGETED_VALUES: dict[str, list[float]] = {
+    "aspect_ratio": [3.4, 3.6, 3.8],
+    "elongation": [1.2, 1.4, 1.6],
+    "rotational_transform": [1.50, 1.55, 1.60, 1.65, 1.70, 1.75, 1.80],
+    "triangularity_scale": [0.55, 0.58, 0.60, 0.62, 0.65],
+}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run a measured low-fidelity sweep over the repaired 4-knob family."
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--grid-points",
         type=int,
         default=3,
-        help="Number of evenly spaced points per parameter range.",
+        help="Number of evenly spaced points per parameter range (default: 3).",
+    )
+    mode.add_argument(
+        "--targeted",
+        action="store_true",
+        help="Use the pre-defined targeted value set around the known feasible zone.",
     )
     parser.add_argument(
         "--output-dir",
@@ -48,12 +66,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_sweep(*, grid_points: int) -> list[dict]:
-    if grid_points < 2:
-        raise ValueError("--grid-points must be at least 2.")
-    grids = {
-        name: linspace_inclusive(lo, hi, grid_points) for name, (lo, hi) in SWEEP_RANGES.items()
-    }
+def run_sweep(*, grid_points: int, targeted: bool = False) -> tuple[list[dict], float]:
+    if targeted:
+        grids = TARGETED_VALUES
+    else:
+        if grid_points < 2:
+            raise ValueError("--grid-points must be at least 2.")
+        grids = {
+            name: linspace_inclusive(lo, hi, grid_points) for name, (lo, hi) in SWEEP_RANGES.items()
+        }
 
     configs = list(
         product(
@@ -108,7 +129,8 @@ def run_sweep(*, grid_points: int) -> list[dict]:
                 f"{rate:.1f} eval/s"
             )
 
-    return results
+    total_elapsed = time.monotonic() - t0
+    return results, total_elapsed
 
 
 def analyze(results: list[dict]) -> dict:
@@ -196,17 +218,28 @@ def analyze(results: list[dict]) -> dict:
 
 def main() -> None:
     args = parse_args()
-    results = run_sweep(grid_points=args.grid_points)
+    results, elapsed_s = run_sweep(
+        grid_points=args.grid_points,
+        targeted=args.targeted,
+    )
 
     out_dir = args.output_dir
     out_dir.mkdir(exist_ok=True)
+    mode_label = "targeted" if args.targeted else f"grid{args.grid_points}"
     timestamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     out_path = out_dir / f"measured_sweep_{timestamp}.json"
 
     analysis = analyze(results)
 
+    metadata = {
+        "mode": mode_label,
+        "timestamp": timestamp,
+        "elapsed_seconds": round(elapsed_s, 1),
+        "seconds_per_eval": round(elapsed_s / max(len(results), 1), 2),
+    }
+
     with open(out_path, "w") as f:
-        json.dump({"analysis": analysis, "results": results}, f, indent=2)
+        json.dump({"metadata": metadata, "analysis": analysis, "results": results}, f, indent=2)
     print(f"\nResults saved to {out_path}")
 
 

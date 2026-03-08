@@ -54,9 +54,9 @@ flowchart TD
     B["P1 Contract Lock"] --> D["P1 Models + Environment"]
     C["constellaration Physics Wiring"] --> D
     D --> P["Parameterization Repair"]
-    P --> E["Fixture Checks"]
-    E --> F["Tiny PPO Smoke"]
-    F --> G["Submit-side Manual Playtest"]
+    P --> F["Tiny PPO Smoke"]
+    F --> E["Fixture Checks"]
+    E --> G["Submit-side Manual Playtest"]
     G --> H["Reward V1"]
     H --> I["Baselines"]
     I --> J["HF Space Deploy"]
@@ -196,6 +196,8 @@ flowchart TD
   fail quickly on learnability, reward exploits, and action-space problems before investing in longer training
   Note:
   treat this as a smoke test, not as proof that the terminal `submit` contract is already validated
+  stop after a few readable trajectories or one clear failure mode
+  paired high-fidelity fixture checks must happen immediately after this smoke pass
 
 - [ ] Manual-playtest 5-10 episodes
   Goal:
