@@ -2,7 +2,7 @@
 title: Fusion Design Lab
 sdk: docker
 app_port: 8000
-short_description: OpenEnv P1 stellarator design environment for the OpenEnv hackathon.
+short_description: OpenEnv stellarator design optimization environment
 ---
 
 # Fusion Design Lab
