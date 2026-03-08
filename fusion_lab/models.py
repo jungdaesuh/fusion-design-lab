@@ -33,6 +33,53 @@ def default_low_dim_boundary_params() -> LowDimBoundaryParams:
     )
 
 
+class RewardBreakdown(BaseModel):
+    intent: ActionIntent = "run"
+    total: float = 0.0
+    evaluation_failed: bool = False
+    recovered_from_failure: bool = False
+    reference_constraints_satisfied: bool = False
+    reference_score: float | None = None
+    reference_feasibility: float | None = None
+    reference_max_elongation: float | None = None
+    initial_reference_score: float | None = None
+    terminal_score_ratio: float | None = None
+    invalid_action_penalty: float = 0.0
+    failure_penalty: float = 0.0
+    failure_submit_penalty: float = 0.0
+    failure_budget_penalty: float = 0.0
+    feasibility_crossing_bonus: float = 0.0
+    feasibility_regression_penalty: float = 0.0
+    feasibility_delta_reward: float = 0.0
+    objective_delta_reward: float = 0.0
+    step_cost: float = 0.0
+    recovery_bonus: float = 0.0
+    terminal_improvement_bonus: float = 0.0
+    terminal_budget_bonus: float = 0.0
+    terminal_no_improvement_penalty: float = 0.0
+
+
+def default_reward_breakdown() -> RewardBreakdown:
+    return RewardBreakdown()
+
+
+class ActionMonitor(BaseModel):
+    intent: ActionIntent = "run"
+    parameter: ParameterName | None = None
+    direction: DirectionName | None = None
+    magnitude: MagnitudeName | None = None
+    params_before: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
+    params_after: LowDimBoundaryParams = Field(default_factory=default_low_dim_boundary_params)
+    clamped: bool = False
+    no_op: bool = False
+    used_best_params: bool = False
+
+
+def default_action_monitor() -> ActionMonitor:
+    params = default_low_dim_boundary_params()
+    return ActionMonitor(params_before=params, params_after=params)
+
+
 class StellaratorAction(Action):
     intent: ActionIntent
     parameter: ParameterName | None = None
@@ -61,6 +108,10 @@ class StellaratorObservation(Observation):
     best_high_fidelity_feasibility: float | None = None
     constraints_satisfied: bool = True
     target_spec: str = ""
+    reward_breakdown: RewardBreakdown = Field(default_factory=default_reward_breakdown)
+    action_monitor: ActionMonitor = Field(default_factory=default_action_monitor)
+    episode_total_reward: float = 0.0
+    trajectory_summary: str = ""
 
 
 class StellaratorState(State):
@@ -77,4 +128,5 @@ class StellaratorState(State):
     budget_remaining: int = 6
     episode_done: bool = False
     constraints_satisfied: bool = True
+    total_reward: float = 0.0
     history: list[str] = Field(default_factory=list)

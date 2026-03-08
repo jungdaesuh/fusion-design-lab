@@ -21,6 +21,8 @@ Training policy:
 - tiny low-fi PPO smoke run: `uv run --extra training python training/ppo_smoke.py`
 - generate an LLM-ready prompt payload: `uv run python training/llm_rollout.py prompt --seed 0`
 - replay an LLM completion or action plan: `uv run python training/llm_rollout.py replay --seed 0 --completion-file <path>`
+- monitor reward terms, action clamping, and verifier outcomes across seeds:
+  `uv run python training/llm_rollout.py monitor --completion-file <path> --seeds 0,1,2`
 
 ## Shared LLM Contract
 
@@ -33,3 +35,4 @@ Use that module as the source of truth for:
 - prompt formatting
 - action-plan parsing
 - local rollout replay
+- rollout telemetry structure used by the monitor command

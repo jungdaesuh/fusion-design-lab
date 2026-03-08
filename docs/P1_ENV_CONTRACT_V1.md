@@ -107,6 +107,10 @@ Required fields:
 - `best_high_fidelity_feasibility`
 - `target_spec`
 - `diagnostics_text`
+- `reward_breakdown`
+- `action_monitor`
+- `episode_total_reward`
+- `trajectory_summary`
 
 Interpretation rules:
 
@@ -114,6 +118,8 @@ Interpretation rules:
 - high-fidelity `submit` metrics must be labeled as high-fidelity
 - low-fidelity and high-fidelity best-state reporting must stay separate
 - the observation must be understandable without hidden state
+- reward telemetry must expose which bonuses, penalties, and shaping terms contributed to the scalar reward
+- action telemetry must expose parameter values before and after the action, including clamped and no-op moves
 
 ## 6. Episode Flow
 
@@ -139,6 +145,7 @@ At termination, the environment must provide:
 - final feasibility status
 - total reward
 - a short human-readable trajectory summary
+- the final reward breakdown and action telemetry for the terminal step
 
 Terminal reporting rules:
 

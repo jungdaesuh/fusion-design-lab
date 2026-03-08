@@ -63,6 +63,10 @@ class LLMStepTrace:
     evaluation_fidelity: str
     evaluation_failed: bool
     budget_remaining: int
+    reward_breakdown: dict[str, object]
+    action_monitor: dict[str, object]
+    episode_total_reward: float
+    trajectory_summary: str
     diagnostics_text: str
 
 
@@ -74,6 +78,10 @@ class LLMEpisodeTrace:
     final_feasibility: float
     constraints_satisfied: bool
     evaluation_failed: bool
+    final_evaluation_fidelity: str
+    failure_reason: str
+    final_reward_breakdown: dict[str, object]
+    trajectory_summary: str
     steps: list[LLMStepTrace]
 
     def asdict(self) -> dict[str, object]:
@@ -199,6 +207,10 @@ def run_episode_with_actions(
                 evaluation_fidelity=observation.evaluation_fidelity,
                 evaluation_failed=observation.evaluation_failed,
                 budget_remaining=observation.budget_remaining,
+                reward_breakdown=observation.reward_breakdown.model_dump(),
+                action_monitor=observation.action_monitor.model_dump(),
+                episode_total_reward=observation.episode_total_reward,
+                trajectory_summary=observation.trajectory_summary,
                 diagnostics_text=observation.diagnostics_text,
             )
         )
@@ -212,5 +224,9 @@ def run_episode_with_actions(
         final_feasibility=observation.p1_feasibility,
         constraints_satisfied=observation.constraints_satisfied,
         evaluation_failed=observation.evaluation_failed,
+        final_evaluation_fidelity=observation.evaluation_fidelity,
+        failure_reason=observation.failure_reason,
+        final_reward_breakdown=observation.reward_breakdown.model_dump(),
+        trajectory_summary=observation.trajectory_summary,
         steps=step_traces,
     )

@@ -5,7 +5,10 @@ from typing import Any, Final, Optional
 from openenv.core import Environment as BaseEnvironment
 
 from fusion_lab.models import (
+    ActionMonitor,
+    ActionIntent,
     LowDimBoundaryParams,
+    RewardBreakdown,
     StellaratorAction,
     StellaratorObservation,
     StellaratorState,
@@ -78,12 +81,15 @@ class StellaratorEnvironment(
             budget_remaining=BUDGET,
             episode_done=False,
             constraints_satisfied=metrics.constraints_satisfied,
+            total_reward=0.0,
         )
         self._last_metrics = metrics
         self._last_successful_metrics = None if metrics.evaluation_failed else metrics
         return self._build_observation(
             metrics,
             action_summary="Episode started from a frozen low-dimensional seed.",
+            reward_breakdown=RewardBreakdown(intent="run"),
+            action_monitor=self._action_monitor_for_no_op(StellaratorAction(intent="run")),
         )
 
     def step(
@@ -97,10 +103,13 @@ class StellaratorEnvironment(
                 self._state.current_params,
                 fidelity="low",
             )
+            reward_breakdown = RewardBreakdown(intent=action.intent)
             return self._build_observation(
                 metrics,
                 action_summary="Episode already ended. Call reset() before sending more actions.",
                 reward=0.0,
+                reward_breakdown=reward_breakdown,
+                action_monitor=self._action_monitor_for_no_op(action),
                 done=True,
             )
 
@@ -121,11 +130,19 @@ class StellaratorEnvironment(
             return self._handle_invalid_run()
 
         self._state.budget_remaining -= 1
-        params = self._apply_action(
+        params_before = self._state.current_params
+        params, clamped, no_op = self._apply_action(
             params=self._state.current_params,
             parameter=action.parameter,
             direction=action.direction,
             magnitude=action.magnitude,
+        )
+        action_monitor = self._build_action_monitor(
+            action=action,
+            params_before=params_before,
+            params_after=params,
+            clamped=clamped,
+            no_op=no_op,
         )
         metrics = self._evaluate_params(params, fidelity="low")
         self._state.current_params = params
@@ -133,9 +150,11 @@ class StellaratorEnvironment(
         self._update_best(params, metrics)
 
         done = self._state.budget_remaining <= 0
-        reward = self._compute_reward(metrics, action.intent, done)
-        summary = self._summary_run(action, metrics)
+        reward_breakdown = self._compute_reward_breakdown(metrics, action.intent, done)
+        reward = reward_breakdown.total
+        summary = self._summary_run(action, metrics, action_monitor)
         self._state.history.append(summary)
+        self._state.total_reward = round(self._state.total_reward + reward, 4)
         self._last_metrics = metrics
         if not metrics.evaluation_failed:
             self._last_successful_metrics = metrics
@@ -145,21 +164,31 @@ class StellaratorEnvironment(
             metrics,
             action_summary=summary,
             reward=reward,
+            reward_breakdown=reward_breakdown,
+            action_monitor=action_monitor,
             done=done,
         )
 
     def _handle_submit(self) -> StellaratorObservation:
+        action = StellaratorAction(intent="submit")
+        action_monitor = self._build_action_monitor(
+            action=action,
+            params_before=self._state.current_params,
+            params_after=self._state.current_params,
+        )
         metrics = self._evaluate_params(self._state.current_params, fidelity="high")
         initial_submit_score = self._initial_high_fidelity_score()
         best_submit_metrics = self._refresh_best_high_fidelity_metrics(metrics)
-        reward = self._compute_reward(
+        reward_breakdown = self._compute_reward_breakdown(
             metrics,
             "submit",
             done=True,
             initial_reference_score=initial_submit_score,
         )
+        reward = reward_breakdown.total
         summary = self._summary_submit(metrics, best_submit_metrics)
         self._state.history.append(summary)
+        self._state.total_reward = round(self._state.total_reward + reward, 4)
         self._state.episode_done = True
         self._last_metrics = metrics
         if not metrics.evaluation_failed:
@@ -169,19 +198,32 @@ class StellaratorEnvironment(
             metrics,
             action_summary=summary,
             reward=reward,
+            reward_breakdown=reward_breakdown,
+            action_monitor=action_monitor,
             done=True,
         )
 
     def _handle_restore(self) -> StellaratorObservation:
         self._state.budget_remaining -= 1
+        params_before = self._state.current_params
         self._state.current_params = self._state.best_params
+        action = StellaratorAction(intent="restore_best")
+        action_monitor = self._build_action_monitor(
+            action=action,
+            params_before=params_before,
+            params_after=self._state.current_params,
+            no_op=params_before == self._state.current_params,
+            used_best_params=True,
+        )
         metrics = self._evaluate_params(self._state.current_params, fidelity="low")
         self._state.constraints_satisfied = metrics.constraints_satisfied
 
         done = self._state.budget_remaining <= 0
-        reward = self._compute_reward(metrics, "restore_best", done)
-        summary = self._summary_restore(metrics)
+        reward_breakdown = self._compute_reward_breakdown(metrics, "restore_best", done)
+        reward = reward_breakdown.total
+        summary = self._summary_restore(metrics, action_monitor)
         self._state.history.append(summary)
+        self._state.total_reward = round(self._state.total_reward + reward, 4)
         self._last_metrics = metrics
         if not metrics.evaluation_failed:
             self._last_successful_metrics = metrics
@@ -191,6 +233,8 @@ class StellaratorEnvironment(
             metrics,
             action_summary=summary,
             reward=reward,
+            reward_breakdown=reward_breakdown,
+            action_monitor=action_monitor,
             done=done,
         )
 
@@ -203,50 +247,68 @@ class StellaratorEnvironment(
         done = self._state.budget_remaining <= 0
         summary = "Invalid run action: parameter, direction, and magnitude are required."
         self._state.history.append(summary)
+        reward_breakdown = RewardBreakdown(intent="run", invalid_action_penalty=-1.0, total=-1.0)
+        action_monitor = self._action_monitor_for_no_op(StellaratorAction(intent="run"))
+        self._state.total_reward = round(self._state.total_reward - 1.0, 4)
         self._state.episode_done = done
         return self._build_observation(
             metrics,
             action_summary=summary,
             reward=-1.0,
+            reward_breakdown=reward_breakdown,
+            action_monitor=action_monitor,
             done=done,
         )
 
-    def _compute_reward(
+    def _compute_reward_breakdown(
         self,
         metrics: EvaluationMetrics,
-        intent: str,
+        intent: ActionIntent,
         done: bool,
         initial_reference_score: float | None = None,
-    ) -> float:
+    ) -> RewardBreakdown:
         recovered_from_failure = self._recovered_from_failed_evaluation(metrics)
         previous_metrics = self._reference_metrics(metrics)
+        breakdown = RewardBreakdown(
+            intent=intent,
+            evaluation_failed=metrics.evaluation_failed,
+            recovered_from_failure=recovered_from_failure,
+            reference_constraints_satisfied=previous_metrics.constraints_satisfied,
+            reference_score=previous_metrics.p1_score,
+            reference_feasibility=previous_metrics.p1_feasibility,
+            reference_max_elongation=previous_metrics.max_elongation,
+            initial_reference_score=initial_reference_score,
+        )
         if metrics.evaluation_failed:
-            reward = FAILURE_PENALTY
+            breakdown.failure_penalty = FAILURE_PENALTY
             if intent != "submit":
-                reward -= 0.1
+                breakdown.step_cost = -0.1
             if intent == "submit":
-                reward -= 1.0
+                breakdown.failure_submit_penalty = -1.0
             elif done:
-                reward -= 0.5
-            return round(reward, 4)
-
-        reward = 0.0
+                breakdown.failure_budget_penalty = -0.5
+            breakdown.total = self._reward_total(breakdown)
+            return breakdown
 
         if metrics.constraints_satisfied and not previous_metrics.constraints_satisfied:
-            reward += 3.0
+            breakdown.feasibility_crossing_bonus = 3.0
         if previous_metrics.constraints_satisfied and not metrics.constraints_satisfied:
-            reward -= 3.0
+            breakdown.feasibility_regression_penalty = -3.0
 
         if metrics.constraints_satisfied and previous_metrics.constraints_satisfied:
-            reward += (previous_metrics.max_elongation - metrics.max_elongation) * 10.0
+            breakdown.objective_delta_reward = (
+                previous_metrics.max_elongation - metrics.max_elongation
+            ) * 10.0
         else:
-            reward += (previous_metrics.p1_feasibility - metrics.p1_feasibility) * 5.0
+            breakdown.feasibility_delta_reward = (
+                previous_metrics.p1_feasibility - metrics.p1_feasibility
+            ) * 5.0
 
         if intent != "submit":
-            reward -= 0.1
+            breakdown.step_cost = -0.1
 
         if recovered_from_failure:
-            reward += 1.0
+            breakdown.recovery_bonus = 1.0
 
         if intent == "submit" or done:
             base_score = (
@@ -254,29 +316,42 @@ class StellaratorEnvironment(
                 if initial_reference_score is not None
                 else self._state.initial_low_fidelity_score
             )
+            breakdown.initial_reference_score = base_score
             improved = metrics.constraints_satisfied and metrics.p1_score > base_score
             if improved:
                 ratio = (metrics.p1_score - base_score) / max(1.0 - base_score, 1e-6)
+                breakdown.terminal_score_ratio = ratio
                 if intent == "submit":
-                    reward += 5.0 * ratio + self._state.budget_remaining / self._state.budget_total
+                    breakdown.terminal_improvement_bonus = 5.0 * ratio
+                    breakdown.terminal_budget_bonus = (
+                        self._state.budget_remaining / self._state.budget_total
+                    )
                 else:
-                    reward += 2.0 * ratio
+                    breakdown.terminal_improvement_bonus = 2.0 * ratio
             else:
-                reward -= 1.0 if intent == "submit" else 0.5
+                breakdown.terminal_no_improvement_penalty = -1.0 if intent == "submit" else -0.5
 
-        return round(reward, 4)
+        breakdown.total = self._reward_total(breakdown)
+        return breakdown
 
     def _build_observation(
         self,
         metrics: EvaluationMetrics,
         action_summary: str,
         reward: float | None = None,
+        reward_breakdown: RewardBreakdown | None = None,
+        action_monitor: ActionMonitor | None = None,
         done: bool = False,
     ) -> StellaratorObservation:
+        reward_breakdown = reward_breakdown or RewardBreakdown()
+        action_monitor = action_monitor or self._action_monitor_for_no_op(
+            StellaratorAction(intent="run")
+        )
         best_low_fidelity_score = self._state.best_low_fidelity_score
         best_low_fidelity_feasibility = self._state.best_low_fidelity_feasibility
         best_high_fidelity_score = self._state.best_high_fidelity_score
         best_high_fidelity_feasibility = self._state.best_high_fidelity_feasibility
+        trajectory_summary = self._trajectory_summary()
         text_lines = [
             action_summary,
             "",
@@ -305,6 +380,11 @@ class StellaratorEnvironment(
                 f"vacuum_well={metrics.vacuum_well:.4f}",
                 f"constraints={'SATISFIED' if metrics.constraints_satisfied else 'VIOLATED'}",
                 f"step={self._state.step_count}  |  budget={self._state.budget_remaining}/{self._state.budget_total}",
+                f"reward_total={reward_breakdown.total:+.4f}",
+                f"reward_terms={self._reward_terms_text(reward_breakdown)}",
+                f"action_clamped={action_monitor.clamped}",
+                f"action_no_op={action_monitor.no_op}",
+                f"episode_total_reward={self._state.total_reward:+.4f}",
             ]
         )
 
@@ -329,22 +409,34 @@ class StellaratorEnvironment(
             constraints_satisfied=metrics.constraints_satisfied,
             target_spec=TARGET_SPEC,
             reward=reward,
+            reward_breakdown=reward_breakdown,
+            action_monitor=action_monitor,
+            episode_total_reward=self._state.total_reward,
+            trajectory_summary=trajectory_summary,
             done=done,
         )
 
-    def _summary_run(self, action: StellaratorAction, metrics: EvaluationMetrics) -> str:
+    def _summary_run(
+        self,
+        action: StellaratorAction,
+        metrics: EvaluationMetrics,
+        action_monitor: ActionMonitor,
+    ) -> str:
         assert action.parameter is not None
         assert action.direction is not None
         assert action.magnitude is not None
+        action_note = self._action_monitor_note(action_monitor)
         if metrics.evaluation_failed:
             return (
                 f"Applied {action.parameter} {action.direction} {action.magnitude}. "
+                f"{action_note}"
                 f"Low-fidelity evaluation failed: {metrics.failure_reason}"
             )
 
         if self._recovered_from_failed_evaluation(metrics):
             return (
                 f"Applied {action.parameter} {action.direction} {action.magnitude}. "
+                f"{action_note}"
                 "Low-fidelity evaluation recovered from the previous failed evaluation. "
                 f"feasibility={metrics.p1_feasibility:.6f}."
             )
@@ -362,6 +454,7 @@ class StellaratorEnvironment(
             )
         return (
             f"Applied {action.parameter} {action.direction} {action.magnitude}. "
+            f"{action_note}"
             f"Low-fidelity evaluation. {objective_summary}"
         )
 
@@ -379,11 +472,16 @@ class StellaratorEnvironment(
             f"constraints={'SATISFIED' if metrics.constraints_satisfied else 'VIOLATED'}."
         )
 
-    def _summary_restore(self, metrics: EvaluationMetrics) -> str:
+    def _summary_restore(self, metrics: EvaluationMetrics, action_monitor: ActionMonitor) -> str:
+        action_note = self._action_monitor_note(action_monitor)
         if metrics.evaluation_failed:
-            return f"Restore-best failed during low-fidelity evaluation: {metrics.failure_reason}"
+            return (
+                f"Restore-best failed during low-fidelity evaluation: {metrics.failure_reason}. "
+                f"{action_note}"
+            )
         return (
             "Restored the best-known design. "
+            f"{action_note}"
             f"Low-fidelity score={metrics.p1_score:.6f}, feasibility={metrics.p1_feasibility:.6f}."
         )
 
@@ -398,16 +496,21 @@ class StellaratorEnvironment(
         parameter: str,
         direction: str,
         magnitude: str,
-    ) -> LowDimBoundaryParams:
+    ) -> tuple[LowDimBoundaryParams, bool, bool]:
         delta = PARAMETER_DELTAS[parameter][magnitude]
         signed_delta = delta if direction == "increase" else -delta
 
-        next_values = params.model_dump()
-        next_values[parameter] = self._clamp(
-            next_values[parameter] + signed_delta,
+        current_value = getattr(params, parameter)
+        requested_value = current_value + signed_delta
+        next_value = self._clamp(
+            requested_value,
             parameter=parameter,
         )
-        return LowDimBoundaryParams.model_validate(next_values)
+        next_values = params.model_dump()
+        next_values[parameter] = next_value
+        clamped = next_value != requested_value
+        no_op = next_value == current_value
+        return LowDimBoundaryParams.model_validate(next_values), clamped, no_op
 
     def _clamp(self, value: float, *, parameter: str) -> float:
         lower, upper = PARAMETER_RANGES[parameter]
@@ -462,6 +565,90 @@ class StellaratorEnvironment(
         if value is None:
             return "n/a"
         return f"{value:.6f}"
+
+    def _build_action_monitor(
+        self,
+        *,
+        action: StellaratorAction,
+        params_before: LowDimBoundaryParams,
+        params_after: LowDimBoundaryParams,
+        clamped: bool = False,
+        no_op: bool = False,
+        used_best_params: bool = False,
+    ) -> ActionMonitor:
+        return ActionMonitor(
+            intent=action.intent,
+            parameter=action.parameter,
+            direction=action.direction,
+            magnitude=action.magnitude,
+            params_before=params_before,
+            params_after=params_after,
+            clamped=clamped,
+            no_op=no_op,
+            used_best_params=used_best_params,
+        )
+
+    def _action_monitor_for_no_op(self, action: StellaratorAction) -> ActionMonitor:
+        params = self._state.current_params
+        return self._build_action_monitor(
+            action=action,
+            params_before=params,
+            params_after=params,
+            no_op=True,
+        )
+
+    def _action_monitor_note(self, action_monitor: ActionMonitor) -> str:
+        if action_monitor.used_best_params and action_monitor.no_op:
+            return "Already at the best-known design. "
+        if action_monitor.no_op:
+            return "The requested move hit a parameter bound and produced no state change. "
+        if action_monitor.clamped:
+            return "The requested move was clipped to stay inside the allowed parameter range. "
+        return ""
+
+    def _reward_total(self, breakdown: RewardBreakdown) -> float:
+        total = (
+            breakdown.invalid_action_penalty
+            + breakdown.failure_penalty
+            + breakdown.failure_submit_penalty
+            + breakdown.failure_budget_penalty
+            + breakdown.feasibility_crossing_bonus
+            + breakdown.feasibility_regression_penalty
+            + breakdown.feasibility_delta_reward
+            + breakdown.objective_delta_reward
+            + breakdown.step_cost
+            + breakdown.recovery_bonus
+            + breakdown.terminal_improvement_bonus
+            + breakdown.terminal_budget_bonus
+            + breakdown.terminal_no_improvement_penalty
+        )
+        return round(total, 4)
+
+    def _reward_terms_text(self, breakdown: RewardBreakdown) -> str:
+        terms = [
+            ("invalid_action_penalty", breakdown.invalid_action_penalty),
+            ("failure_penalty", breakdown.failure_penalty),
+            ("failure_submit_penalty", breakdown.failure_submit_penalty),
+            ("failure_budget_penalty", breakdown.failure_budget_penalty),
+            ("feasibility_crossing_bonus", breakdown.feasibility_crossing_bonus),
+            ("feasibility_regression_penalty", breakdown.feasibility_regression_penalty),
+            ("feasibility_delta_reward", breakdown.feasibility_delta_reward),
+            ("objective_delta_reward", breakdown.objective_delta_reward),
+            ("step_cost", breakdown.step_cost),
+            ("recovery_bonus", breakdown.recovery_bonus),
+            ("terminal_improvement_bonus", breakdown.terminal_improvement_bonus),
+            ("terminal_budget_bonus", breakdown.terminal_budget_bonus),
+            ("terminal_no_improvement_penalty", breakdown.terminal_no_improvement_penalty),
+        ]
+        non_zero_terms = [f"{name}={value:+.4f}" for name, value in terms if value != 0.0]
+        if not non_zero_terms:
+            return "none"
+        return ", ".join(non_zero_terms)
+
+    def _trajectory_summary(self) -> str:
+        if not self._state.history:
+            return "No actions taken yet."
+        return " | ".join(self._state.history)
 
     def _update_best(self, params: LowDimBoundaryParams, metrics: EvaluationMetrics) -> None:
         if metrics.evaluation_failed:
