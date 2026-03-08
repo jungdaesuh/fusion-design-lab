@@ -1,37 +1,37 @@
 # Fusion Design Lab
 
-Fusion Design Lab is an environment-first OpenEnv hackathon project for the `P1` stellarator benchmark.
+Fusion Design Lab is an environment-first [OpenEnv](https://openenv.dev) hackathon project for the `P1` stellarator benchmark.
 
-The repo is organized around one clear submission thesis:
+**Live Environment**: [HF Space](https://huggingface.co/spaces/CreativeEngineer/fusion-design-lab)
+**Training Notebook**: [Colab (GRPO + Unsloth)](training/notebooks/fusion_design_lab_training.ipynb)
 
-- an official `P1` task with `constellaration` as the verifier of record
-- a narrow, reproducible action space
-- real verifier feedback
-- explicit constraints and feasibility semantics
-- a reward function that is iteratively improved through observed behavior
+## What It Does
 
-The environment is the product. A trained policy is still required as evidence that agents can learn and use the environment rather than only manual or scripted play.
+An RL environment where agents optimize stellarator fusion reactor designs by adjusting 4 geometric knobs of a low-dimensional boundary family, aiming to **minimize max elongation** while satisfying 3 hard physics constraints:
 
-A trained model is required for this repo's submission story. A public Colab notebook artifact is also required by the hackathon, and that notebook should include a trained-policy demonstration rather than stay purely eval-first.
+| Constraint | Bound |
+|---|---|
+| `aspect_ratio` | ≤ 4.0 |
+| `average_triangularity` | ≤ -0.5 |
+| `edge_iota_over_nfp` | ≥ 0.3 |
+
+The environment uses [`constellaration`](https://pypi.org/project/constellaration/) as the physics verifier — low-fidelity (~0.6s) for the RL inner loop, high-fidelity (~4s) for terminal submit. Each episode has a budget of **6 evaluations** across **26 discrete actions** (4 parameters × 2 directions × 3 magnitudes + restore_best + submit).
+
+## Architecture
+
+- **Environment server** (`server/`): FastAPI app with `/reset`, `/step`, `/health`, `/task` endpoints
+- **Physics engine** (`server/physics.py`): `constellaration` VMEC-backed boundary evaluation
+- **Models** (`fusion_lab/models.py`): Pydantic schemas for actions, observations, state
+- **Client** (`fusion_lab/client.py`): Typed OpenEnv client for remote interaction
+- **Training** (`training/`): GRPO notebook (Unsloth + TRL) and PPO smoke test
 
 ## Current Status
 
-This repository is the clean hackathon workspace. The live docs now split cleanly by role:
-
-- planning and execution: `docs/FUSION_DESIGN_LAB_PLAN_V2.md`
-- technical contract: `docs/P1_ENV_CONTRACT_V1.md`
-- blocker and sweep evidence: `docs/P1_PARAMETERIZATION_DEEPDIVE.md`
-
-Implementation status:
-
-- `P1` is locked as the benchmark task
-- docs are aligned to fresh `P1` wiring in this repo
-- shared models, baselines, and server/client entry points now reflect the locked `P1` contract
-- the current environment uses `constellaration` for low-fidelity `run` steps and high-fidelity `submit` evaluation
-- the repaired 4-knob low-dimensional family is now wired into the runtime path
-- the first measured sweep note, tracked low-fidelity fixtures, and an initial low-fidelity manual playtest note now exist
-- the first tiny low-fi PPO smoke artifact and paired high-fidelity fixture checks now exist
-- a one-trajectory submit-side manual trace has now been recorded
+- `P1` is locked as the benchmark task with `constellaration` as verifier of record
+- The repaired 4-knob low-dimensional boundary family is wired into the runtime path
+- Environment deployed to HF Spaces and verified (health, reset, step all operational)
+- GRPO training notebook created with Unsloth + TRL integration
+- Low-fidelity PPO smoke artifacts and paired high-fidelity fixture checks exist
 
 ## Execution Status
 
@@ -56,7 +56,8 @@ Implementation status:
 - [x] Run a tiny low-fi PPO smoke run as a diagnostic-only check and save one trajectory artifact
 - [x] Complete paired high-fidelity fixture checks and at least one real submit-side manual trace before any broader training push
 - [x] Refresh the heuristic baseline for the real verifier path
-- [ ] Deploy the real environment to HF Space
+- [x] Deploy the real environment to HF Space
+- [x] Add the Colab training notebook under `training/notebooks`
 
 ## Known Gaps
 
@@ -71,7 +72,7 @@ Implementation status:
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The refreshed real-verifier heuristic now follows the measured feasible sequence instead of the older threshold-only policy: on a fresh `uv run python baselines/compare.py 5` rerun, it finished with `5/5` feasible high-fidelity finals, mean final `P1` score `0.291951`, and `5/5` wins over random.
 - The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next fail-fast step is now reset-seed confirmation and one presentation-ready comparison trace backed by the paired high-fidelity evidence.
-- The first tiny PPO smoke note is in [docs/P1_PPO_SMOKE_NOTE.md](docs/P1_PPO_SMOKE_NOTE.md). It produced a valid trajectory artifact and exposed a repeated-action local failure, which is the right outcome for a smoke run.
+- The first tiny PPO smoke note is in [docs/P1_PPO_SMOKE_NOTE.md](docs/P1_PPO_SMOKE_NOTE.md). The repaired smoke trainer now finds a real positive repair signal on the easy seed, but it still does not generalize across all frozen seeds, which is the right diagnostic boundary for this stage.
 
 Current mode:
 
@@ -137,8 +138,8 @@ uv sync --extra notebooks
 - [ ] Keep any checkpoint high-fidelity evaluation sparse enough that the low-fidelity inner loop stays fast.
 - [ ] Save one presentation-ready comparison trace from the refreshed heuristic baseline.
 - [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
-- [ ] Deploy the environment to HF Space.
-- [ ] Add the Colab notebook under `training/notebooks`.
+- [x] Deploy the environment to HF Space.
+- [x] Add the Colab notebook under `training/notebooks`.
 
 These are implementation steps, not another planning phase.
 
