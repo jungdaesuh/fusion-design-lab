@@ -18,17 +18,18 @@ Plan V2 §21 and Deliverables Map priority #1.
 
 ### Procedure
 
-1. **Timed a single evaluation** on local CPU to establish per-eval cost:
-   ~2.5s (vs ~0.6s on the Northflank H100).
+1. **Timed a single evaluation** on local CPU to establish approximate per-eval
+   cost. Observed ~2.5s per low-fidelity evaluation (timing metadata is now
+   saved to the JSON artifact by the sweep script for future runs).
 
 2. **Ran a broad 3-point grid sweep** (`baselines/measured_sweep.py --grid-points 3`)
    over the full `PARAMETER_RANGES` to check crash zones, feasibility coverage,
-   and per-parameter trends. 81 configurations, ~2.7 minutes.
+   and per-parameter trends. 81 configurations.
 
-3. **Ran a targeted fine-grid sweep** over the known feasible zone
-   (`rot_transform ∈ [1.50, 1.80]`, `tri_scale ∈ [0.55, 0.65]`) to map the
-   exact feasibility boundary, crash gradient, and candidate reset seeds.
-   315 configurations, ~13 minutes.
+3. **Ran a targeted fine-grid sweep** (`baselines/measured_sweep.py --targeted`)
+   over the known feasible zone (`rot_transform ∈ [1.50, 1.80]`,
+   `tri_scale ∈ [0.55, 0.65]`) to map the exact feasibility boundary, crash
+   gradient, and candidate reset seeds. 315 configurations.
 
 4. **Validated the 3 current reset seeds** individually against the live
    `build_boundary_from_params` + `evaluate_boundary` code path.
@@ -36,13 +37,14 @@ Plan V2 §21 and Deliverables Map priority #1.
 5. **Checked delta reachability**: whether 6 steps at maximum delta can traverse
    each parameter range end-to-end.
 
-6. **Cross-referenced** results against the prior 256-point sweep documented in
-   `docs/P1_PARAMETERIZATION_DEEPDIVE.md` §4.
+6. **Cross-referenced** results against the prior recorded 4-knob sweep
+   documented in `docs/P1_PARAMETERIZATION_DEEPDIVE.md` §4.
 
 ### Tools
 
-- Script: `baselines/measured_sweep.py` (committed, reusable with `--grid-points`
-  and `--output-dir` flags)
+- Script: `baselines/measured_sweep.py`
+  - broad grid: `--grid-points N` (evenly spaced across `PARAMETER_RANGES`)
+  - targeted: `--targeted` (pre-defined value set around the known feasible zone)
 - Code path: `server.physics.build_boundary_from_params` →
   `server.physics.evaluate_boundary` (low-fidelity)
 - Runtime: local CPU (Darwin), `uv run python`
@@ -52,7 +54,7 @@ Plan V2 §21 and Deliverables Map priority #1.
 ## 1. Sweep Configuration
 
 Two sweeps were run on local CPU using the live `build_boundary_from_params` +
-`evaluate_boundary` code path (low-fidelity VMEC, ~2.5s per eval on local CPU).
+`evaluate_boundary` code path (low-fidelity VMEC).
 
 ### Broad sweep (3-point grid)
 
@@ -150,6 +152,11 @@ with `tri_scale < 0.60` are feasible. The binding constraint is always
 `average_triangularity` (requires `≤ -0.5`).
 
 ### Top feasible designs (by score)
+
+Note: the `P1` verifier uses a 1% feasibility tolerance (`FEASIBILITY_TOLERANCE = 0.01`
+in `server/physics.py`). Designs with `feas ≤ 0.01` are considered feasible by
+`GeometricalProblem.is_feasible()`. Rows below showing `feas=0.0046` are feasible
+under this tolerance even though their raw feasibility is nonzero.
 
 | AR | elong | rt | ts | score | feas | elong_out | tri | iota |
 |----|-------|------|------|---------|---------|-----------|---------|--------|
@@ -260,5 +267,16 @@ crash avoidance from the 1.75-1.80 boundary.
 ## 8. Artifacts
 
 - `baselines/sweep_results/measured_sweep_20260308T050043Z.json` — broad 81-point sweep
+  (produced by `baselines/measured_sweep.py --grid-points 3`)
 - `baselines/sweep_results/targeted_sweep.json` — targeted 315-point sweep
-- Prior 256-point sweep data in `docs/P1_PARAMETERIZATION_DEEPDIVE.md` §4
+  (produced during the initial investigation session before the `--targeted`
+  mode was committed; running `baselines/measured_sweep.py --targeted` now
+  reproduces equivalent sweep coverage/results under a timestamped
+  `measured_sweep_*.json` filename, but with a different JSON schema)
+- Prior recorded 4-knob sweep data referenced in `docs/P1_PARAMETERIZATION_DEEPDIVE.md` §4
+
+Provenance note: the committed JSON artifacts predate the `metadata` block added
+to the sweep script. Future runs include `metadata.elapsed_seconds` and
+`metadata.seconds_per_eval`. The existing broad sweep artifact contains only
+`analysis` and `results`; the existing targeted sweep artifact is a raw list of
+rows without a `metadata` or `analysis` wrapper.
