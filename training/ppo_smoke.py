@@ -17,37 +17,16 @@ from server.contract import RESET_SEEDS
 from server.environment import BUDGET, StellaratorEnvironment
 
 DEFAULT_OUTPUT_DIR: Final[Path] = Path("training/artifacts/ppo_smoke")
-DEFAULT_TOTAL_TIMESTEPS: Final[int] = 128
+DEFAULT_TOTAL_TIMESTEPS: Final[int] = 32
 DEFAULT_EVAL_EPISODES: Final[int] = 3
+ENCODED_OBSERVATION_DIM: Final[int] = 17
 
-RUN_ACTION_SPECS: Final[tuple[tuple[str, str, str], ...]] = (
-    ("aspect_ratio", "increase", "small"),
-    ("aspect_ratio", "increase", "medium"),
-    ("aspect_ratio", "increase", "large"),
-    ("aspect_ratio", "decrease", "small"),
-    ("aspect_ratio", "decrease", "medium"),
-    ("aspect_ratio", "decrease", "large"),
-    ("elongation", "increase", "small"),
-    ("elongation", "increase", "medium"),
-    ("elongation", "increase", "large"),
-    ("elongation", "decrease", "small"),
-    ("elongation", "decrease", "medium"),
-    ("elongation", "decrease", "large"),
-    ("rotational_transform", "increase", "small"),
+DIAGNOSTIC_RUN_ACTION_SPECS: Final[tuple[tuple[str, str, str], ...]] = (
     ("rotational_transform", "increase", "medium"),
-    ("rotational_transform", "increase", "large"),
-    ("rotational_transform", "decrease", "small"),
-    ("rotational_transform", "decrease", "medium"),
-    ("rotational_transform", "decrease", "large"),
-    ("triangularity_scale", "increase", "small"),
     ("triangularity_scale", "increase", "medium"),
-    ("triangularity_scale", "increase", "large"),
-    ("triangularity_scale", "decrease", "small"),
-    ("triangularity_scale", "decrease", "medium"),
-    ("triangularity_scale", "decrease", "large"),
 )
-LOW_FI_ACTION_COUNT: Final[int] = len(RUN_ACTION_SPECS) + 1
-LOW_FI_RESTORE_ACTION_INDEX: Final[int] = len(RUN_ACTION_SPECS)
+TRAIN_RESET_SEED_INDICES: Final[tuple[int, ...]] = (2,)
+LOW_FI_ACTION_COUNT: Final[int] = len(DIAGNOSTIC_RUN_ACTION_SPECS)
 
 
 @dataclass(frozen=True)
@@ -61,6 +40,7 @@ class TraceStep:
     constraints_satisfied: bool
     evaluation_failed: bool
     budget_remaining: int
+    termination_reason: str
     max_elongation: float
     average_triangularity: float
     edge_iota_over_nfp: float
@@ -75,7 +55,23 @@ class EpisodeTrace:
     final_feasibility: float
     constraints_satisfied: bool
     evaluation_failed: bool
+    termination_reason: str
     steps: list[TraceStep]
+
+
+def diagnostic_action(action_index: int) -> StellaratorAction:
+    parameter, direction, magnitude = DIAGNOSTIC_RUN_ACTION_SPECS[action_index]
+    return StellaratorAction(
+        intent="run",
+        parameter=parameter,
+        direction=direction,
+        magnitude=magnitude,
+    )
+
+
+def diagnostic_action_label(action_index: int) -> str:
+    action = diagnostic_action(action_index)
+    return f"{action.parameter} {action.direction} {action.magnitude}"
 
 
 class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
@@ -89,7 +85,8 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(12,),
+            # Keep this aligned with _encode_observation feature count.
+            shape=(ENCODED_OBSERVATION_DIM,),
             dtype=np.float32,
         )
         self.action_space = spaces.Discrete(LOW_FI_ACTION_COUNT)
@@ -109,7 +106,9 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         if seed is not None:
             self._episode_index = 0
             return seed % len(RESET_SEEDS)
-        next_seed = self._episode_index % len(RESET_SEEDS)
+        if not TRAIN_RESET_SEED_INDICES:
+            raise ValueError("TRAIN_RESET_SEED_INDICES must define at least one seed index.")
+        next_seed = TRAIN_RESET_SEED_INDICES[self._episode_index % len(TRAIN_RESET_SEED_INDICES)]
         self._episode_index += 1
         return next_seed
 
@@ -120,30 +119,20 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
         obs = self._env.step(self._decode_action(action))
         return (
             self._encode_observation(obs),
-            float(obs.reward or 0.0),
+            float(obs.reward if obs.reward is not None else 0.0),
             bool(obs.done),
             False,
             self._info(obs),
         )
 
     def _decode_action(self, action: int) -> StellaratorAction:
-        if action == LOW_FI_RESTORE_ACTION_INDEX:
-            return StellaratorAction(intent="restore_best")
-        parameter, direction, magnitude = RUN_ACTION_SPECS[action]
-        return StellaratorAction(
-            intent="run",
-            parameter=parameter,
-            direction=direction,
-            magnitude=magnitude,
-        )
+        return diagnostic_action(action)
 
     def action_label(self, action: int) -> str:
-        if action == LOW_FI_RESTORE_ACTION_INDEX:
-            return "restore_best"
-        parameter, direction, magnitude = RUN_ACTION_SPECS[action]
-        return f"{parameter} {direction} {magnitude}"
+        return diagnostic_action_label(action)
 
     def _encode_observation(self, obs: StellaratorObservation) -> np.ndarray:
+        params = self._env.state.current_params
         budget_fraction = obs.budget_remaining / BUDGET
         step_fraction = obs.step_number / BUDGET
         return np.array(
@@ -155,11 +144,16 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
                 obs.p1_score,
                 obs.p1_feasibility,
                 obs.vacuum_well,
+                params.aspect_ratio,
+                params.elongation,
+                params.rotational_transform,
+                params.triangularity_scale,
                 budget_fraction,
                 step_fraction,
                 obs.best_low_fidelity_score,
                 obs.best_low_fidelity_feasibility,
-                float(obs.constraints_satisfied) - float(obs.evaluation_failed),
+                float(obs.constraints_satisfied),
+                float(obs.evaluation_failed),
             ],
             dtype=np.float32,
         )
@@ -172,7 +166,21 @@ class LowFiSmokeEnv(gym.Env[np.ndarray, int]):
             "evaluation_failed": obs.evaluation_failed,
             "p1_score": obs.p1_score,
             "p1_feasibility": obs.p1_feasibility,
+            "max_elongation": obs.max_elongation,
+            "average_triangularity": obs.average_triangularity,
+            "edge_iota_over_nfp": obs.edge_iota_over_nfp,
+            "termination_reason": self._termination_reason(obs),
+            "current_seed": self._seed,
         }
+
+    def _termination_reason(self, obs: StellaratorObservation) -> str:
+        if obs.evaluation_failed:
+            return "evaluation_failed"
+        if obs.constraints_satisfied:
+            return "constraints_satisfied"
+        if obs.done:
+            return "budget_exhausted"
+        return "in_progress"
 
 
 def parse_args() -> argparse.Namespace:
@@ -216,26 +224,30 @@ def build_model(env: LowFiSmokeEnv, seed: int) -> PPO:
         seed=seed,
         verbose=0,
         device="cpu",
-        n_steps=32,
-        batch_size=32,
-        n_epochs=4,
-        gamma=0.98,
+        n_steps=16,
+        batch_size=16,
+        n_epochs=8,
+        gamma=0.995,
         learning_rate=3e-4,
         ent_coef=0.01,
     )
 
 
-def evaluate_policy(model: PPO, *, eval_episodes: int, base_seed: int) -> list[EpisodeTrace]:
+def evaluate_policy(
+    model: PPO, *, eval_episodes: int, base_seed: int
+) -> tuple[list[EpisodeTrace], list[int]]:
     traces: list[EpisodeTrace] = []
+    eval_reset_seed_indices: list[int] = []
+    env = LowFiSmokeEnv()
     for episode in range(eval_episodes):
-        env = LowFiSmokeEnv()
         seed = base_seed + episode
-        obs, _ = env.reset(seed=seed)
+        eval_reset_seed_indices.append(seed % len(RESET_SEEDS))
+        obs, info = env.reset(seed=seed)
         done = False
         total_reward = 0.0
         steps: list[TraceStep] = []
         step_index = 0
-        final_info: dict[str, object] = {}
+        final_info = dict[str, object](info)
 
         while not done:
             action, _ = model.predict(obs, deterministic=True)
@@ -256,9 +268,10 @@ def evaluate_policy(model: PPO, *, eval_episodes: int, base_seed: int) -> list[E
                     constraints_satisfied=bool(info["constraints_satisfied"]),
                     evaluation_failed=bool(info["evaluation_failed"]),
                     budget_remaining=int(info["budget_remaining"]),
-                    max_elongation=float(obs[0]),
-                    average_triangularity=float(obs[2]),
-                    edge_iota_over_nfp=float(obs[3]),
+                    termination_reason=str(info["termination_reason"]),
+                    max_elongation=float(info["max_elongation"]),
+                    average_triangularity=float(info["average_triangularity"]),
+                    edge_iota_over_nfp=float(info["edge_iota_over_nfp"]),
                 )
             )
 
@@ -271,10 +284,11 @@ def evaluate_policy(model: PPO, *, eval_episodes: int, base_seed: int) -> list[E
                 final_feasibility=float(final_info["p1_feasibility"]),
                 constraints_satisfied=bool(final_info["constraints_satisfied"]),
                 evaluation_failed=bool(final_info["evaluation_failed"]),
+                termination_reason=str(final_info["termination_reason"]),
                 steps=steps,
             )
         )
-    return traces
+    return traces, eval_reset_seed_indices
 
 
 def artifact_payload(
@@ -282,6 +296,7 @@ def artifact_payload(
     total_timesteps: int,
     eval_episodes: int,
     seed: int,
+    eval_reset_seed_indices: list[int],
     traces: list[EpisodeTrace],
 ) -> dict[str, object]:
     mean_reward = sum(trace.total_reward for trace in traces) / max(len(traces), 1)
@@ -292,12 +307,16 @@ def artifact_payload(
         "total_timesteps": total_timesteps,
         "eval_episodes": eval_episodes,
         "seed": seed,
-        "train_reset_seed_indices": list(range(len(RESET_SEEDS))),
+        "train_reset_seed_indices": list(TRAIN_RESET_SEED_INDICES),
+        "eval_reset_seed_indices": eval_reset_seed_indices,
         "action_space_size": LOW_FI_ACTION_COUNT,
+        "diagnostic_run_actions": [
+            diagnostic_action_label(action_index) for action_index in range(LOW_FI_ACTION_COUNT)
+        ],
         "notes": (
-            "Diagnostic-only PPO smoke run. Submit is intentionally excluded here so the "
-            "smoke loop stays low-fidelity and fast. Training resets cycle through the "
-            "frozen low-fidelity reset seeds to surface positive repair signal sooner."
+            "Diagnostics-only low-fidelity PPO smoke; submit is excluded and the action "
+            "space is narrowed to a two-step repair arc. Evaluation runs across "
+            "frozen seeds and records full low-fi traces."
         ),
         "summary": {
             "mean_eval_reward": round(mean_reward, 4),
@@ -320,7 +339,7 @@ def main() -> None:
     env = LowFiSmokeEnv()
     model = build_model(env, seed=args.seed)
     model.learn(total_timesteps=args.total_timesteps, progress_bar=False)
-    traces = evaluate_policy(
+    traces, eval_reset_seed_indices = evaluate_policy(
         model,
         eval_episodes=args.eval_episodes,
         base_seed=args.seed,
@@ -329,10 +348,14 @@ def main() -> None:
         total_timesteps=args.total_timesteps,
         eval_episodes=args.eval_episodes,
         seed=args.seed,
+        eval_reset_seed_indices=eval_reset_seed_indices,
         traces=traces,
     )
     output_path = write_artifact(args.output_dir, payload)
+    summary = payload["summary"]
     print(output_path)
+    print(f"constraint_satisfaction_rate={summary['constraint_satisfaction_rate']}")
+    print(f"mean_eval_reward={summary['mean_eval_reward']}")
 
 
 if __name__ == "__main__":

@@ -19,3 +19,17 @@ Training policy:
 
 - install the training dependencies: `uv sync --extra training`
 - tiny low-fi PPO smoke run: `uv run --extra training python training/ppo_smoke.py`
+- generate an LLM-ready prompt payload: `uv run python training/llm_rollout.py prompt --seed 0`
+- replay an LLM completion or action plan: `uv run python training/llm_rollout.py replay --seed 0 --completion-file <path>`
+
+## Shared LLM Contract
+
+The prompt/action/replay contract for LLM training lives in:
+
+- `fusion_lab/llm_agent.py`
+
+Use that module as the source of truth for:
+
+- prompt formatting
+- action-plan parsing
+- local rollout replay
