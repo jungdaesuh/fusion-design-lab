@@ -39,9 +39,8 @@ Action rules:
 - each item must be either:
   - {"intent":"run","parameter":"<parameter>","direction":"increase|decrease","magnitude":"small|medium|large"}
   - {"intent":"restore_best"}
-  - {"intent":"submit"}
 - keep the plan short and within the remaining budget
-- use "submit" only when the design looks ready
+- do not output "submit"
 
 Constraint directions:
 - aspect_ratio <= 4.0
@@ -199,7 +198,7 @@ def _parse_action_item(item: object) -> StellaratorAction | None:
     )
 
 
-def parse_action_plan(text: str) -> list[StellaratorAction]:
+def parse_action_plan(text: str, *, allow_submit: bool = False) -> list[StellaratorAction]:
     raw_plan = extract_json_plan(text)
     if raw_plan is None:
         return []
@@ -215,8 +214,10 @@ def parse_action_plan(text: str) -> list[StellaratorAction]:
         action = _parse_action_item(item)
         if action is None:
             continue
+        if action.intent == "submit" and not allow_submit:
+            continue
         parsed.append(action)
-        if action.intent == "submit":
+        if action.intent == "submit" and allow_submit:
             break
     return parsed
 
@@ -225,6 +226,8 @@ def run_episode_with_actions(
     actions: Sequence[StellaratorAction],
     *,
     seed_idx: int,
+    auto_submit: bool = False,
+    allow_submit: bool = False,
 ) -> LLMEpisodeTrace:
     environment = StellaratorEnvironment()
     observation = environment.reset(seed=seed_idx)
@@ -258,12 +261,13 @@ def run_episode_with_actions(
 
     done = False
     step_index = 0
-    for step_index, action in enumerate(actions[:BUDGET], start=1):
+    rollout_actions = [action for action in actions if allow_submit or action.intent != "submit"]
+    for step_index, action in enumerate(rollout_actions[:BUDGET], start=1):
         if _step_and_record(action, step_index):
             done = True
             break
 
-    if not done:
+    if auto_submit and not done:
         _step_and_record(StellaratorAction(intent="submit"), step_index + 1)
 
     return LLMEpisodeTrace(

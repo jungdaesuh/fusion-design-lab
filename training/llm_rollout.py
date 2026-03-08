@@ -137,7 +137,9 @@ def prompt_payload(seed: int) -> dict[str, object]:
     }
 
 
-def parse_actions(args: argparse.Namespace) -> tuple[str, list[StellaratorAction]]:
+def parse_actions(
+    args: argparse.Namespace, *, allow_submit: bool = False
+) -> tuple[str, list[StellaratorAction]]:
     if args.action_plan_file is not None:
         text = args.action_plan_file.read_text()
         source = str(args.action_plan_file)
@@ -147,7 +149,7 @@ def parse_actions(args: argparse.Namespace) -> tuple[str, list[StellaratorAction
     else:
         raise ValueError("replay/monitor requires --completion-file or --action-plan-file")
 
-    return source, parse_action_plan(text)
+    return source, parse_action_plan(text, allow_submit=allow_submit)
 
 
 def write_json(path: Path, payload: dict[str, object]) -> None:
@@ -177,8 +179,8 @@ def run_prompt(args: argparse.Namespace) -> None:
 
 
 def run_replay(args: argparse.Namespace) -> None:
-    source, actions = parse_actions(args)
-    trace = run_episode_with_actions(actions, seed_idx=args.seed)
+    source, actions = parse_actions(args, allow_submit=True)
+    trace = run_episode_with_actions(actions, seed_idx=args.seed, allow_submit=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     output_path = args.output_dir / f"llm_rollout_{timestamp}.json"
     payload = {

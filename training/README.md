@@ -5,8 +5,8 @@ This repository treats notebooks and trained-policy runs as supporting evidence 
 Training policy:
 
 - train on the low-fidelity `run` surface for the normal RL inner loop
-- use high-fidelity `submit` only for sparse checkpoint evaluation, paired fixture checks, submit-side traces, and final evidence
-- if low-fidelity gains do not survive high-fidelity `submit`, stop training and fix the environment or reward before pushing further
+- keep the standard `training/llm_rollout.py` monitor/evaluate workflow on low-fidelity `run` only
+- use high-fidelity `submit` only for explicit replay/debug work, paired fixture checks, submit-side traces, and final evidence
 
 ## Status
 
@@ -38,6 +38,9 @@ Use that module as the source of truth for:
 - action-plan parsing
 - local rollout replay
 - rollout telemetry structure used by the monitor command
+
+For `monitor` and `evaluate`, the rollout stays on low-fidelity `run` steps only and ignores `submit`.
+Use `replay` when you explicitly want to exercise the full environment path including terminal `submit`.
 
 For `evaluate`, the completion command reads the prompt from `stdin` and writes a raw completion to `stdout`.
 The current seed is exposed as the `FUSION_LAB_SEED` environment variable so the same command can be used
