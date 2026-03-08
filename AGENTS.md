@@ -43,6 +43,15 @@ Do not leave silent divergence.
 6. Keep claims conservative and evidence-backed.
 7. Once the task family is locked, shift to implementation instead of reopening strategy.
 
+## Engineering Principles
+
+- `KISS`: prefer the simplest design that satisfies the locked task.
+- `YAGNI`: do not add flexibility, abstractions, or features that the hackathon artifact does not need yet.
+- `DRY`: avoid duplicated environment logic, reward logic, and schema definitions.
+- `SSOT`: keep one canonical definition for the environment contract, reward semantics, and task wording.
+- `SOLID`: keep modules focused, interfaces clear, and responsibilities separated.
+- `Occam's Razor`: when two approaches work, prefer the one with fewer moving parts and fewer assumptions.
+
 ## Working Rules
 
 - Do not broaden the task family beyond the single stellarator environment unless explicitly requested.
