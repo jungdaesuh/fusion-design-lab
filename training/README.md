@@ -23,6 +23,8 @@ Training policy:
 - replay an LLM completion or action plan: `uv run python training/llm_rollout.py replay --seed 0 --completion-file <path>`
 - monitor reward terms, action clamping, and verifier outcomes across seeds:
   `uv run python training/llm_rollout.py monitor --completion-file <path> --seeds 0,1,2`
+- generate fresh model completions per seed and save aggregate reward/outcome metrics:
+  `uv run python training/llm_rollout.py evaluate --completion-command 'python path/to/model_cli.py' --seeds 0,1,2`
 
 ## Shared LLM Contract
 
@@ -36,3 +38,7 @@ Use that module as the source of truth for:
 - action-plan parsing
 - local rollout replay
 - rollout telemetry structure used by the monitor command
+
+For `evaluate`, the completion command reads the prompt from `stdin` and writes a raw completion to `stdout`.
+The current seed is exposed as the `FUSION_LAB_SEED` environment variable so the same command can be used
+for fixed-seed before/after comparisons of untrained and trained checkpoints.
