@@ -1,0 +1,81 @@
+{
+  "bundle": "p1_seed_transfer_2026-03-08",
+  "source_repo": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs",
+  "target_repo": "/Users/suhjungdae/code/fusion-design-lab",
+  "selection_principle": "small high-value P1 seed pack for reward design and policy initialization",
+  "entries": [
+    {
+      "file": "creative_best.json",
+      "source_path": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs/artifacts/p1_official_high_fidelity_inputs/p04_best_r_cos_2_0_down.json",
+      "family": "creative",
+      "role": "best_endpoint",
+      "origin": "CreativeEngineer micro-perturbation winner family",
+      "score": 0.9701411603598098,
+      "feasibility": 0.009487821019544596,
+      "objective": 1.268729556761712
+    },
+    {
+      "file": "creative_seed.json",
+      "source_path": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs/artifacts/p1_official_high_fidelity_inputs/p02_best_submission_seed.json",
+      "family": "creative",
+      "role": "exploitation_anchor",
+      "origin": "CreativeEngineer leaderboard seed",
+      "score": 0.9701409584443864,
+      "feasibility": 0.00949088322352376,
+      "objective": 1.2687313740005226
+    },
+    {
+      "file": "scadena_seed.json",
+      "source_path": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs/artifacts/p1_official_high_fidelity_inputs/p01_scadena_seed.json",
+      "family": "scadena",
+      "role": "repair_anchor",
+      "origin": "scadena-pf leaderboard seed",
+      "score": 0.9694573991433482,
+      "feasibility": 0.0001722869358491049,
+      "objective": 1.2748834077098663
+    },
+    {
+      "file": "scadena_repaired_best.json",
+      "source_path": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs/artifacts/p1_hf_repaired_scadena_cluster_20260308/s03_DAMXY_t099.json",
+      "family": "scadena",
+      "role": "repaired_diverse_feasible",
+      "origin": "raw HF near-P1 seed repaired along scadena corridor",
+      "score": 0.9696318182039995,
+      "feasibility": 0.008515139661142479,
+      "objective": 1.2733136361640056,
+      "blend_t": 0.99
+    },
+    {
+      "file": "samet_seed.json",
+      "source_path": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs/artifacts/p1_non_scadena_seed_pack_20260308/02_samet_exact_feasible_distinct_SametKokoslocke_2026-02-20T16-31-36.961612.json",
+      "family": "samet",
+      "role": "diverse_feasible_anchor",
+      "origin": "SametKokoslocke exact-feasible distinct family",
+      "score": 0.7797358473578075,
+      "feasibility": 0.0,
+      "objective": 2.982377373779732
+    },
+    {
+      "file": "egodos_seed.json",
+      "source_path": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs/artifacts/p1_non_scadena_seed_pack_20260308/03_egodos_near_feasible_repair_target_egodos_2026-02-15T19-23-28.679506.json",
+      "family": "egodos",
+      "role": "near_feasible_target",
+      "origin": "best non-scadena near-feasible repair source",
+      "score": 0.0,
+      "feasibility": 0.012140230868772806,
+      "objective": 2.1191483320378808
+    },
+    {
+      "file": "egodos_sparse_rgroup_best.json",
+      "source_path": "/Users/suhjungdae/code/software/proxima_fusion/ai-sci-feasible-designs/artifacts/p1_non_scadena_frontier_20260308/egodos_rgroup_to_samet_t0p07475.json",
+      "family": "egodos_samet_bridge",
+      "role": "non_scadena_best_new_frontier",
+      "origin": "small sparse low-order r_cos move from egodos toward Samet",
+      "score": 0.8646431004091908,
+      "feasibility": 0.009999602734502733,
+      "objective": 2.2182120963172833,
+      "operator": "sparse_r_group_to_samet",
+      "threshold_t": 0.07475
+    }
+  ]
+}
