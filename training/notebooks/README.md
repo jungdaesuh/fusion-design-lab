@@ -26,10 +26,10 @@ Operational defaults:
 
 - use the same Python dependency set as the repo runtime
 - keep heavy verifier and training work on Northflank
-- keep low-fidelity `run` as the training inner loop; do not put high-fidelity `submit` in every RL step
-- use high-fidelity `submit` only for sparse checkpoint evaluation, paired fixture checks, manual traces, and final evidence
+- keep the live notebook and environment on one low-fidelity reward surface, including explicit `submit`
+- keep high-fidelity validation in offline scripts, paired fixture checks, and final evidence artifacts
 - keep the repository GRPO notebook aligned to the shared helper contract in `fusion_lab/llm_agent.py`
-- the standard notebook reward/eval path is low-fidelity-only and ignores `submit` by default
+- the standard notebook reward/eval path uses the same action contract as the environment, including `submit`
 - keep the public submission notebook focused on connecting to the deployed HF Space and exporting visible traces
 - prefer a public HF Space for the hackathon; if private, document the token setup directly in the notebook
 

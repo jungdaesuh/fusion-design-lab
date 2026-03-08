@@ -1,3 +1,10 @@
+---
+title: Fusion Design Lab
+sdk: docker
+app_port: 8000
+short_description: OpenEnv P1 stellarator design environment for the OpenEnv hackathon.
+---
+
 # Fusion Design Lab
 
 Fusion Design Lab is an environment-first [OpenEnv](https://openenv.dev) hackathon project for the `P1` stellarator benchmark.
@@ -15,7 +22,7 @@ An RL environment where agents optimize stellarator fusion reactor designs by ad
 | `average_triangularity` | ≤ -0.5 |
 | `abs(edge_iota_over_nfp)` | ≥ 0.3 |
 
-The environment uses [`constellaration`](https://pypi.org/project/constellaration/) as the physics verifier — low-fidelity (~0.6s) for the RL inner loop, high-fidelity (~4s) for terminal submit. The live environment still exposes **26 discrete actions** (4 parameters × 2 directions × 3 magnitudes + restore_best + submit), but the standard GRPO notebook and `training/llm_rollout.py` `monitor` / `evaluate` workflows stay on the low-fidelity `run` surface and ignore `submit` by default.
+The environment uses [`constellaration`](https://pypi.org/project/constellaration/) as the live low-fidelity physics verifier (~0.6s) for every in-environment evaluation. The live environment still exposes **26 discrete actions** (4 parameters × 2 directions × 3 magnitudes + restore_best + submit), and `submit` remains an explicit terminal action on that same reward surface rather than a separate high-fidelity mode.
 
 ## Architecture
 
@@ -34,7 +41,7 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - LLM rollout tooling can now generate fresh model completions per seed and save fixed-seed reward/outcome summaries
 - Low-fidelity PPO smoke artifacts and paired high-fidelity fixture checks exist
 - The live low-fidelity reward is now `Reward V2`: verifier-native repair shaping plus bounded best-so-far / anti-stagnation terms
-- Before/after trained-policy evidence on the current low-fidelity-only workflow is still open
+- Before/after trained-policy evidence on the current unified low-fidelity workflow is still open
 
 ## Execution Status
 
@@ -53,11 +60,10 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - [x] Split boundary construction from boundary evaluation in `server/physics.py`
 - [x] Update the action contract from 3 knobs to the repaired low-dimensional family
 - [x] Add explicit VMEC failure semantics to the environment contract
-- [x] Label low-fi `run` truth vs high-fi `submit` truth in observations and task docs
-- [x] Separate high-fidelity submit scoring/reporting from low-fidelity rollout score state
+- [x] Collapse the live environment to one low-fidelity truth surface while keeping explicit `submit`
 - [x] Add tracked `P1` fixtures under `server/data/p1/`
 - [x] Run a tiny low-fi PPO smoke run as a diagnostic-only check and save one trajectory artifact
-- [x] Complete paired high-fidelity fixture checks and at least one real submit-side manual trace before any broader training push
+- [x] Complete paired high-fidelity validation artifacts outside the live environment path
 - [x] Refresh the heuristic baseline for the real verifier path
 - [x] Deploy the real environment to HF Space
 - [x] Add the public training notebook under `training/notebooks`
@@ -65,16 +71,13 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 ## Known Gaps
 
 - Historical blocker note: the old 3-knob family was structurally blocked on P1 triangularity with the real verifier path. A sampled low-fidelity sweep kept `average_triangularity` at roughly `+0.004975` and `p1_feasibility` at roughly `1.00995`, with zero feasible samples. That blocker motivated the repaired 4-knob runtime that is now live.
-- The repaired family now has a first coarse measured sweep note in [docs/P1_MEASURED_SWEEP_NOTE.md](docs/P1_MEASURED_SWEEP_NOTE.md), but reset-seed changes and any budget changes should still wait for paired high-fidelity fixture checks.
+- The repaired family now has a first coarse measured sweep note in [docs/P1_MEASURED_SWEEP_NOTE.md](docs/P1_MEASURED_SWEEP_NOTE.md), but reset-seed changes and any budget changes should still wait for paired high-fidelity validation checks.
 - The paired low-fi/high-fi fixture snapshots are now written into each fixture JSON and summarized in `baselines/fixture_high_fidelity_pairs.json`.
-- `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `from_boundary_resolution`; do not present step-time metrics as final submission metrics.
-- The standard LLM training and evaluation workflow is now low-fidelity-only: the repo notebook and `training/llm_rollout.py` `monitor` / `evaluate` ignore `submit` by default. Reserve `submit` for explicit replay/debug work, paired fixture checks, submit-side traces, and final evidence.
+- The live environment now uses one low-fidelity verifier surface for `run`, `restore_best`, and `submit`. Keep high-fidelity checks in `baselines/high_fidelity_validation.py` and other offline validation artifacts rather than mixing them back into the environment reward loop.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
-- Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.
-- Observation best-state reporting is now split explicitly between low-fidelity rollout state and high-fidelity submit state; baseline traces and demo copy should use those explicit fields rather than infer a mixed best-state story.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
-- The refreshed real-verifier heuristic now follows the measured feasible sequence instead of the older threshold-only policy: on a fresh `uv run python baselines/compare.py 5` rerun, it finished with `5/5` feasible high-fidelity finals, mean final `P1` score `0.291951`, and `5/5` wins over random.
-- The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next fail-fast step is now reset-seed confirmation and one presentation-ready comparison trace backed by the paired high-fidelity evidence.
+- The refreshed real-verifier heuristic now follows the measured feasible sequence instead of the older threshold-only policy: on a fresh `uv run python baselines/compare.py 5` rerun, it finished with `5/5` feasible submitted finals, mean final `P1` score `0.291951`, and `5/5` wins over random.
+- The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next fail-fast step is now reset-seed confirmation and one presentation-ready comparison trace backed by the paired offline high-fidelity evidence.
 - The first tiny PPO smoke note is in [docs/P1_PPO_SMOKE_NOTE.md](docs/P1_PPO_SMOKE_NOTE.md). The repaired smoke trainer now finds a real positive repair signal on the easy seed, but it still does not generalize across all frozen seeds, which is the right diagnostic boundary for this stage.
 
 Current mode:
@@ -135,11 +138,11 @@ uv sync --extra notebooks
 ## Immediate Next Steps
 
 - [x] Run a tiny low-fidelity PPO smoke run and stop after a few readable trajectories or one clear failure mode.
-- [x] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks immediately after the PPO smoke run.
-- [x] Run at least one submit-side manual trace before any broader training push, then record the first real reward pathology, if any.
+- [x] Pair the tracked low-fidelity fixtures with high-fidelity validation spot checks immediately after the PPO smoke run.
+- [x] Run at least one explicit-submit manual trace before any broader training push, then record the first real reward pathology, if any.
 - [ ] Decide whether any reset seed should move based on the measured sweep plus those paired checks.
 - [ ] Save one fixed-seed untrained baseline with `training/llm_rollout.py evaluate`.
-- [ ] Run one short H100 GRPO pass with the repository notebook on the same low-fidelity-only workflow.
+- [ ] Run one short H100 GRPO pass with the repository notebook on the same unified low-fidelity workflow.
 - [ ] Re-run the same seeds after training and save one before/after artifact.
 - [ ] Save one presentation-ready comparison trace from the refreshed heuristic baseline.
 - [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.

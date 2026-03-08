@@ -113,7 +113,7 @@ def task_summary() -> dict[str, object]:
         "magnitudes": ["small", "medium", "large"],
         "evaluation_modes": {
             "run": "low-fidelity constellaration evaluation",
-            "submit": "high-fidelity constellaration evaluation",
+            "submit": "low-fidelity constellaration terminal evaluation",
         },
     }
 
