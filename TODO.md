@@ -43,6 +43,7 @@ Priority source:
 - [x] manual playtest log
 - [x] settle the non-submit terminal reward policy
 - [x] baseline comparison has been re-run on the `constellaration` branch state
+- [ ] tiny low-fi PPO smoke run exists
 - [ ] refresh the heuristic baseline for the real verifier path
 
 ## Execution Graph
@@ -54,12 +55,13 @@ flowchart TD
     C["constellaration Physics Wiring"] --> D
     D --> P["Parameterization Repair"]
     P --> E["Fixture Checks"]
-    E --> F["Manual Playtest"]
-    F --> G["Reward V1"]
-    G --> H["Baselines"]
-    H --> I["HF Space Deploy"]
-    I --> J["Colab Notebook"]
-    J --> K["Demo + README"]
+    E --> F["Tiny PPO Smoke"]
+    F --> G["Submit-side Manual Playtest"]
+    G --> H["Reward V1"]
+    H --> I["Baselines"]
+    I --> J["HF Space Deploy"]
+    J --> K["Colab Notebook"]
+    K --> L["Demo + README"]
 ```
 
 ## Hour 0-2
@@ -189,9 +191,15 @@ flowchart TD
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 
+- [ ] Run a tiny low-fi PPO smoke pass
+  Goal:
+  fail quickly on learnability, reward exploits, and action-space problems before investing in longer training
+  Note:
+  treat this as a smoke test, not as proof that the terminal `submit` contract is already validated
+
 - [ ] Manual-playtest 5-10 episodes
   Goal:
-  expand the initial low-fidelity playtest note into 5-10 episodes and surface at least one pathology or ambiguity
+  start with one submit-side trace, then expand the initial low-fidelity playtest note into 5-10 episodes and surface at least one pathology or ambiguity
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Deliverables Map](docs/archive/FUSION_DELIVERABLES_MAP.md)
@@ -272,7 +280,7 @@ flowchart TD
 - [ ] Do not guess repaired-family ranges, deltas, or budget changes without measurement
 - [ ] Do not port the old `ai-sci-feasible-designs` harness
 - [ ] Do not let notebook or demo work outrun environment evidence
-- [ ] Do not add training-first complexity before manual playtesting
+- [ ] Do not let tiny low-fi smoke training replace paired high-fidelity checks or submit-side manual playtesting
 - [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
 - [x] Do not compare high-fidelity submit scores against low-fidelity best/initial score state in the final story
 - [ ] Do not describe the current baseline reset state as feasible or near-feasible

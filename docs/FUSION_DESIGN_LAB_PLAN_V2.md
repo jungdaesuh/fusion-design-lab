@@ -38,6 +38,7 @@ Completed:
 
 Still open:
 
+- tiny low-fidelity PPO smoke evidence
 - paired high-fidelity checks for the tracked fixtures
 - submit-side manual playtest evidence
 - heuristic baseline refresh on the repaired real-verifier path
@@ -75,6 +76,12 @@ Execution rule:
 - Do not use reward complexity to hide a blocked action family.
 - Do not polish repo or video before the environment and baselines are real.
 
+Practical fail-fast rule:
+
+- allow a tiny low-fidelity PPO smoke run before full submit-side validation
+- use it only to surface obvious learnability bugs, reward exploits, or action-space problems
+- do not use low-fidelity training alone as proof that the terminal `submit` contract is trustworthy
+
 ## 5. Document Roles
 
 Use the docs like this:
@@ -104,6 +111,7 @@ Evidence order:
 - [x] measured sweep note
 - [ ] fixture checks
 - [x] manual playtest log
+- [ ] tiny low-fi PPO smoke trace
 - [ ] reward iteration note
 - [ ] stable local and remote episodes
 - [x] random and heuristic baselines
@@ -125,9 +133,10 @@ The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V
 
 ## 8. Execution Order
 
+- [ ] Run a tiny low-fidelity PPO smoke pass and inspect a few trajectories for obvious learnability failures or reward exploits.
 - [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit checks.
 - [ ] Decide whether the reset pool should change based on the measured sweep plus those paired checks.
-- [ ] Manual-playtest 5 to 10 episodes, including real submit traces, and record the first real confusion point, exploit, or reward pathology.
+- [ ] Run at least one submit-side manual trace, then expand to 5 to 10 episodes and record the first real confusion point, exploit, or reward pathology.
 - [ ] Adjust reward or penalties only if playtesting exposes a concrete problem.
 - [ ] Refresh the heuristic baseline using the repaired-family evidence.
 - [ ] Prove a stable local episode path.
@@ -146,25 +155,30 @@ Gate 2: fixture checks pass
 
 - good, boundary, and bad references behave as expected
 
-Gate 3: manual playtest passes
+Gate 3: tiny PPO smoke is sane
+
+- a small low-fidelity policy can improve or at least reveal a concrete failure mode quickly
+- trajectories are readable enough to debug
+
+Gate 4: manual playtest passes
 
 - a human can read the observation
 - a human can choose a plausible next action
 - a human can explain the reward change
 
-Gate 4: local episode is stable
+Gate 5: local episode is stable
 
 - one clean trajectory is reproducible enough for demo use
 
-Gate 5: baseline story is credible
+Gate 6: baseline story is credible
 
 - heuristic behavior is at least interpretable and preferable to random on the repaired task
 
-Gate 6: remote surface is real
+Gate 7: remote surface is real
 
 - HF Space preserves the same task contract as local
 
-Gate 7: submission artifacts exist
+Gate 8: submission artifacts exist
 
 - Colab, demo, and README all reflect the actual environment rather than a hypothetical future one
 
@@ -174,6 +188,7 @@ If training evidence is weak:
 
 - keep claims conservative about policy quality
 - still ship a trained-policy demonstration and document its limitations plainly
+- do not skip the paired high-fidelity checks or submit-side manual trace
 
 If HF Space deployment is delayed:
 
@@ -199,5 +214,8 @@ If the repaired family is too easy:
 - [x] Record the measured sweep and choose provisional defaults from evidence.
 - [x] Check in tracked fixtures.
 - [x] Record the first manual playtest log.
+- [ ] Run a tiny low-fidelity PPO smoke pass and save a few trajectories.
+- [ ] Pair the tracked fixtures with high-fidelity submit checks.
+- [ ] Record one submit-side manual trace.
 - [ ] Refresh the heuristic baseline from that playtest evidence.
 - [ ] Verify one clean HF Space episode with the same contract.
