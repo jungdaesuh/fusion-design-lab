@@ -11,6 +11,7 @@ Use this map to sequence execution, not to reopen already-locked task choices.
 - [x] `P1` contract is frozen in code
 - [x] official `constellaration` verifier loop is wired
 - [x] baseline comparison has been rerun on the real verifier path
+- [x] Northflank smoke workflow and note are committed
 - [ ] tracked fixtures are checked in
 - [ ] manual playtest evidence exists
 - [ ] heuristic baseline has been refreshed for the real verifier path

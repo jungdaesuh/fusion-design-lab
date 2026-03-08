@@ -34,6 +34,7 @@ Implementation status:
 - [x] Add a post-terminal guard so `step()` is a no-op after `done=True`
 - [x] Re-run the baseline comparison on the `constellaration`-backed branch state
 - [x] Replace the synthetic evaluator with `constellaration`
+- [x] Add a runnable Northflank smoke workflow and note
 - [ ] Add tracked `P1` fixtures under `server/data/p1/`
 - [ ] Run manual playtesting and record the first reward pathology
 - [ ] Refresh the heuristic baseline for the real verifier path

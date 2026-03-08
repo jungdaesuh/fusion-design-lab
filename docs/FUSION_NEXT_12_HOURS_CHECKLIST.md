@@ -14,6 +14,7 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [x] add a post-terminal guard in `step()`
 - [x] replace the synthetic evaluator with `constellaration`
 - [x] re-run baselines on the real verifier path
+- [x] commit the Northflank smoke workflow and note
 - [ ] add tracked fixtures and manual playtest evidence
 - [ ] refresh the heuristic baseline after the real-verifier rerun
 

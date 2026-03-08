@@ -12,6 +12,7 @@
 - [x] low-fidelity `run` plus high-fidelity `submit` split is documented
 - [x] post-terminal `step()` guard is in place
 - [x] baseline comparison has been rerun on the real verifier path
+- [x] Northflank smoke workflow and note are committed
 - [ ] tracked `P1` fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
