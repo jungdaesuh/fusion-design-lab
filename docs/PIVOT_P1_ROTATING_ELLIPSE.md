@@ -9,17 +9,17 @@ Use this file as rationale for the pivot, not as a fresh planning queue. Once th
 ## Current Branch Status
 
 - [x] pivot accepted
-- [x] 3-knob rotating-ellipse `P1` contract is implemented
+- [x] historical upstream 3-knob rotating-ellipse `P1` contract was implemented and evaluated
 - [x] `constellaration` verifier path is wired
-- [x] current 3-knob family is verified as blocked on P1 triangularity
-- [ ] repaired low-dimensional family with explicit triangularity control is implemented
+- [x] historical upstream 3-knob family is verified as blocked on P1 triangularity
+- [x] repaired low-dimensional family with explicit triangularity control is implemented
 - [ ] tracked fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
 
 Current caution:
 
-- the current upstream rotating-ellipse family is useful as a seed generator, but not sufficient as the full environment action family because it does not move triangularity under the real verifier path
+- the upstream rotating-ellipse family remains useful as a seed generator, but the live environment action family is the repaired rotating-ellipse-derived 4-knob contract
 
 ## Decision
 
@@ -52,7 +52,7 @@ This borrows the strongest low-dimensional entry point from the proven winning a
 
 ### Single Task
 
-Improve a stellarator boundary's P1 score using the rotating-ellipse parameterization under the official ConStellaration P1 constraints.
+Improve a stellarator boundary's P1 score using a rotating-ellipse-derived low-dimensional parameterization under the official ConStellaration P1 constraints.
 
 ### P1 Constraints (from `GeometricalProblem`)
 
@@ -68,7 +68,7 @@ Feasibility tolerance: normalized constraint violations <= 1% (0.01).
 
 ### Parameter Space
 
-The upstream rotating-ellipse generator takes 3 continuous parameters + 1 discrete:
+Historical upstream seed generator:
 
 | Parameter | Role | Typical range |
 |---|---|---|
@@ -79,36 +79,43 @@ The upstream rotating-ellipse generator takes 3 continuous parameters + 1 discre
 
 These map to `constellaration.initial_guess.generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` which returns a `SurfaceRZFourier` boundary in ~4ms.
 
-Verified blocker:
+Historical blocker:
 
 - on the real low-fidelity verifier path, sampled 3-knob points kept `average_triangularity` at roughly `+0.004975`
 - sampled `p1_feasibility` stayed at roughly `1.00995`
 - no sampled point was feasible
 
-So the hackathon environment now needs a custom low-dimensional boundary family on top of the rotating-ellipse seed, with an explicit triangularity control knob or equivalent mechanism.
+Current live environment family:
+
+| Parameter | Role | Current implementation range |
+|---|---|---|
+| `aspect_ratio` | Width-to-height ratio of the repaired boundary | 3.2 - 3.8 |
+| `elongation` | Vertical stretching of cross-section | 1.2 - 1.8 |
+| `rotational_transform` | Magnetic field line winding | 1.2 - 1.9 |
+| `triangularity_scale` | Explicit triangularity control | 0.4 - 0.7 |
+| `n_field_periods` | Fixed at 3 (not an action) | 3 |
+
+These ranges describe the live implementation in `server/environment.py`. They are still subject to measured sweep and playtest refinement.
 
 ### Action Space
 
-Original 3-knob action space:
+Current action space:
 
 ```
 intent: "run" | "submit" | "restore_best"
-operator: "aspect_ratio" | "elongation" | "rotational_transform"
+parameter: "aspect_ratio" | "elongation" | "rotational_transform" | "triangularity_scale"
 direction: "increase" | "decrease"
 magnitude: "small" | "medium" | "large"
 ```
 
-This is no longer sufficient on its own. The next contract revision should keep the same discrete structure while adding:
-
-- `triangularity_scale` or equivalent low-dimensional control
-
-Magnitude deltas (to be tuned by playtest):
+Current implementation deltas:
 
 | Parameter | small | medium | large |
 |---|---|---|---|
-| aspect_ratio | 0.1 | 0.3 | 0.8 |
-| elongation | 0.1 | 0.3 | 0.8 |
-| rotational_transform | 0.02 | 0.05 | 0.15 |
+| aspect_ratio | 0.05 | 0.10 | 0.20 |
+| elongation | 0.05 | 0.10 | 0.20 |
+| rotational_transform | 0.05 | 0.10 | 0.20 |
+| triangularity_scale | 0.02 | 0.05 | 0.10 |
 
 ### Episode Flow
 
@@ -135,15 +142,19 @@ p1_score: float                # current step-time score
 p1_feasibility: float          # current step-time max normalized constraint violation
 constraints_satisfied: bool    # feasibility <= 0.01
 vacuum_well: float             # stability indicator
+evaluation_fidelity: "low" | "high"
+evaluation_failed: bool
+failure_reason: str
 step_number: int
 budget_remaining: int
 best_score: float
+best_feasibility: float
 target_spec: str
 ```
 
-Follow-up requirement from the verified blocker:
+Current requirement:
 
-- once submit stays high-fidelity, the observation or diagnostics text should make the low-fi vs high-fi distinction explicit
+- the observation and diagnostics text should make the low-fi vs high-fi distinction explicit
 
 ### Reward V0
 
@@ -170,10 +181,10 @@ submit penalty (if infeasible or no improvement):
 
 This puts feasibility first. An agent that achieves feasibility then minimizes elongation gets rewarded. An agent that never reaches feasibility gets penalized.
 
-Execution note after the verified blocker:
+Current execution note:
 
 - keep reward mostly scalar and verifier-driven
-- repair parameterization before further reward tuning
+- keep parameterization repair and reward semantics separate
 - do not add mode- or constraint-specific reward hacks to compensate for a blocked action family
 
 ### State
@@ -192,7 +203,7 @@ history: list[str]
 
 | | Rotating-ellipse env | Curated-seed Fourier-repair env |
 |---|---|---|
-| Action space | 3 parameters (AR, elongation, iota) | N Fourier modes |
+| Action space | 4 parameters (AR, elongation, rotational transform, triangularity scale) | N Fourier modes |
 | Starting point | Generated from parameters | Frozen from HF dataset |
 | Interpretability | High — parameters map to physical shape | Lower — mode perturbations are abstract |
 | Dataset dependency | None at runtime | Requires offline curation |
@@ -230,7 +241,7 @@ Update `fusion_lab/models.py` for new schemas.
 
 Status: open.
 
-Validate hypothesis: "6 actions is enough" only after parameterization repair.
+Validate hypothesis: "6 actions is enough" on the repaired low-dimensional family.
 - Play 5-10 episodes manually
 - Log: can a human reach feasibility? Improve elongation?
 - Tune magnitude deltas if needed
@@ -264,11 +275,12 @@ If full high-fidelity `constellaration` deployment fails (Docker build, HF Space
 
 ## Known-Good Fixtures
 
-Start with 1-2 rotating-ellipse configurations for sanity checks and expand only if the implementation needs more coverage:
+Start with the frozen repaired-family reset seeds in `server/contract.py` and expand only if the implementation needs more coverage:
 
-1. **Current default baseline reference:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — currently deeply infeasible on the real verifier path; keep as a negative reference only until parameterization repair lands
-2. **Infeasible reference:** aspect_ratio=5.0, elongation=3.0, rotational_transform=0.2 — expected to violate constraints
-3. **Near-boundary anchor:** still needs to be found after parameterization repair and real verifier probing before manual playtesting
+1. **Reset seed:** aspect_ratio=3.6, elongation=1.4, rotational_transform=1.5, triangularity_scale=0.55
+2. **Reset seed:** aspect_ratio=3.4, elongation=1.4, rotational_transform=1.6, triangularity_scale=0.55
+3. **Reset seed:** aspect_ratio=3.8, elongation=1.4, rotational_transform=1.5, triangularity_scale=0.55
+4. **Deliberately bad reference:** keep a clearly infeasible boundary only as a negative verifier/reward sanity check
 
 These are for verifier/reward sanity, not a prerequisite seed-mining project.
 

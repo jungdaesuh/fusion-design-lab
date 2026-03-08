@@ -14,7 +14,7 @@
 - [x] baseline comparison has been rerun on the real verifier path
 - [x] Northflank smoke workflow and note are committed
 - [x] Northflank smoke test has passed on the team H100
-- [x] current 3-knob family has been checked against the real low-fidelity verifier
+- [x] historical upstream 3-knob family has been checked against the real low-fidelity verifier
 - [x] parameterization repair is implemented so triangularity is controllable
 - [x] explicit VMEC failure semantics are implemented
 - [x] low-fi `run` truth vs high-fi `submit` truth is labeled clearly in the environment surface
@@ -181,7 +181,7 @@ Allowed reuse:
 
 Implementation handoff:
 
-- the remaining work is now parameterization repair, then fixture coverage, manual playtesting, heuristic refresh, smoke validation, and deployment
+- the remaining work is now fixture coverage, manual playtesting, heuristic refresh, smoke validation, and deployment
 - do not treat supporting decision notes as a new planning backlog
 
 ## 8.1 Compute Surfaces
@@ -221,11 +221,11 @@ Auth stance:
 
 The environment contract must be frozen before meaningful evaluation.
 
-Current verified blocker:
+Historical blocker that drove the repair:
 
-- the current upstream 3-knob `generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` family does not expose triangularity control
+- the upstream 3-knob `generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` family does not expose triangularity control
 - on the real low-fidelity verifier path, sampled points stayed at roughly `average_triangularity=+0.004975` and `p1_feasibility=1.00995`
-- so the next contract revision must repair parameterization before reward iteration becomes meaningful
+- that blocker is why the repo now uses a repaired 4-knob low-dimensional family with explicit `triangularity_scale`
 
 ### Observation
 
@@ -235,20 +235,27 @@ The observation should expose:
 - current aspect ratio
 - current average triangularity
 - current edge rotational transform over field periods
-- current feasibility score or normalized violation summary
-- best-so-far feasible score
-- best-so-far least-violating design summary
-- step number
-- budget remaining
-- concise textual summary of the last action outcome
+- current `p1_score`
+- current `p1_feasibility`
+- current `constraints_satisfied`
+- current `vacuum_well`
+- `evaluation_fidelity`
+- `evaluation_failed`
+- `failure_reason`
+- `step_number`
+- `budget_remaining`
+- `best_score`
+- `best_feasibility`
+- `target_spec`
+- concise textual summary of the last action outcome in `diagnostics_text`
 
 The observation must be interpretable by a human without additional hidden state.
 
 ### Action Space
 
-The action space stays intentionally small and discrete, but the current 3-knob version is no longer enough. The next contract revision should keep low-dimensional actions while adding an explicit control that can move triangularity.
+The live action space stays intentionally small and discrete while exposing the repaired 4-knob low-dimensional family.
 
-Near-term target:
+Current contract:
 
 - `run`
 - `submit`
@@ -260,11 +267,11 @@ For `run`, the controllable fields are:
   - `aspect_ratio`
   - `elongation`
   - `rotational_transform`
-  - `triangularity_scale` or equivalent low-dimensional triangularity control
+  - `triangularity_scale`
 - direction: increase or decrease
 - magnitude: small, medium, large
 
-This is not trying to expose the full Fourier-boundary space. The goal is a legible environment, not maximal realism. The verifier should stay official; the custom logic belongs in the low-dimensional boundary builder, not in reward semantics.
+This is not trying to expose the full Fourier-boundary space. The goal is a legible environment, not maximal realism. The verifier stays official; the custom logic belongs in the low-dimensional boundary builder, not in reward semantics.
 
 ### Episode Flow
 
@@ -530,7 +537,7 @@ The repo should make the environment easy to understand:
 
 - notebook starts on the team H100
 - persistent storage mount is usable
-- smoke test artifact is written successfully
+- smoke test artifact is written successfully from the rotating-ellipse-derived low-dimensional boundary path
 - latest artifact example: `/home/jovyan/fusion-design-lab/smoke/northflank_smoke_20260308T023646Z.json`
 
 ### Gate 1: Environment Contract Locked

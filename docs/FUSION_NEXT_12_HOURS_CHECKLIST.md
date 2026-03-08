@@ -16,7 +16,7 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [x] re-run baselines on the real verifier path
 - [x] commit the Northflank smoke workflow and note
 - [x] pass the Northflank smoke test on the team H100
-- [x] verify that the current 3-knob family is blocked on P1 triangularity under the real verifier path
+- [x] verify that the historical upstream 3-knob family is blocked on P1 triangularity under the real verifier path
 - [x] repair the low-dimensional parameterization
 - [x] add explicit VMEC failure semantics
 - [x] label low-fi `run` truth vs high-fi `submit` truth in the task surface
@@ -50,7 +50,7 @@ Carry these rules through the whole checklist:
 2. Attach persistent storage before relying on saved models, caches, or fixture downloads.
 3. Preserve the concrete smoke-test evidence:
    - import `constellaration`
-   - generate one rotating-ellipse boundary
+   - generate one rotating-ellipse-derived low-dimensional boundary
    - run one low-fidelity verifier call
    - keep one artifact in persistent storage
    - current artifact: `/home/jovyan/fusion-design-lab/smoke/northflank_smoke_20260308T023646Z.json`

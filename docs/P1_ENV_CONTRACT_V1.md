@@ -15,16 +15,18 @@ This file captures the technical contract that should drive the next code change
 
 The central change is now explicit:
 
-- the current upstream 3-knob rotating-ellipse family is blocked on P1 triangularity under the real verifier path
-- the next environment contract must repair parameterization before more reward iteration or heuristic work
+- the historical upstream 3-knob rotating-ellipse family is blocked on P1 triangularity under the real verifier path
+- that blocker drove the repair to the current 4-knob low-dimensional runtime
 - the runtime now exposes the repaired 4-knob target, but measured sweep validation and fixture calibration are still pending
 
-## Verified Blocker
+## Historical Blocker
+
+This section records the resolved upstream blocker that motivated the current repair. It is not the live runtime state.
 
 Current verified facts:
 
 - upstream `generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` has no triangularity control
-- the current 3-knob environment directly exposes only:
+- the historical 3-knob environment directly exposed only:
   - `aspect_ratio`
   - `elongation`
   - `rotational_transform`
@@ -35,8 +37,8 @@ Current verified facts:
 
 Conclusion:
 
-- the current 3-knob family is not a meaningful playtest or baseline environment for `P1`
-- reward work is secondary until the boundary family can actually approach the official triangularity constraint
+- the historical 3-knob family was not a meaningful playtest or baseline environment for `P1`
+- the live runtime therefore moved to a repaired boundary family before further reward iteration
 
 ## Design Split
 
@@ -66,11 +68,15 @@ Current repo state:
 - explicit failure results are returned when VMEC evaluation fails
 - measured sweep validation is still pending
 
-Target functions:
+Current live functions:
 
-- `build_initial_boundary(...) -> SurfaceRZFourier`
-- `apply_low_dim_perturbation(...) -> SurfaceRZFourier`
+- `build_boundary_from_params(...) -> SurfaceRZFourier`
 - `evaluate_boundary(boundary, fidelity) -> EvaluationMetrics`
+
+Current layering note:
+
+- discrete perturbation application lives in `server/environment.py`
+- there is no separate `apply_low_dim_perturbation(...)` helper in the live code
 
 The verifier layer should own:
 
@@ -147,9 +153,16 @@ Keep:
 - `edge_iota_over_nfp`
 - `p1_feasibility`
 - `p1_score`
+- `constraints_satisfied`
+- `vacuum_well`
+- `evaluation_fidelity`
+- `evaluation_failed`
+- `failure_reason`
+- `step_number`
 - `budget_remaining`
 - `best_score`
 - `best_feasibility`
+- `target_spec`
 - `diagnostics_text`
 
 Add clarity about fidelity:

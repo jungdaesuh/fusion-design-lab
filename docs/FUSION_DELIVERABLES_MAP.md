@@ -13,7 +13,7 @@ Use this map to sequence execution, not to reopen already-locked task choices.
 - [x] baseline comparison has been rerun on the real verifier path
 - [x] Northflank smoke workflow and note are committed
 - [x] Northflank smoke test has passed on the team H100
-- [x] current 3-knob family has been verified as blocked on P1 triangularity
+- [x] historical upstream 3-knob family has been verified as blocked on P1 triangularity
 - [x] repaired low-dimensional boundary builder is implemented
 - [x] explicit VMEC failure semantics are implemented
 - [x] low-fi `run` truth vs high-fi `submit` truth is labeled clearly
