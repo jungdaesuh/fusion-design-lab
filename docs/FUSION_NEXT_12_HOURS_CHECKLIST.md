@@ -17,6 +17,10 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [ ] add tracked fixtures and manual playtest evidence
 - [ ] refresh the heuristic baseline after the real-verifier rerun
 
+Current caution:
+
+- do not assume the default baseline params are a near-feasible playtest start; on the current real verifier path they are still deeply infeasible, so fixture discovery comes first
+
 ## Plan V2 Inheritance
 
 Carry these rules through the whole checklist:
@@ -87,6 +91,7 @@ Transition rule:
    - known-good or near-winning design
    - near-boundary designs
    - clearly bad designs
+   - do not rely on the default baseline params as the only starting point
 2. Confirm:
    - verifier outputs are sane
    - reward ordering is sane
