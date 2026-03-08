@@ -102,7 +102,7 @@ def _run_episode(
     return records
 
 
-def _run(action: str, param: str, direction: str, magnitude: str) -> StellaratorAction:
+def _run(param: str, direction: str, magnitude: str) -> StellaratorAction:
     return StellaratorAction(
         intent="run",
         parameter=param,
@@ -125,12 +125,12 @@ EPISODE_1 = (
     "seed0_repair_objective_exhaustion",
     0,
     [
-        _run("run", "triangularity_scale", "increase", "medium"),  # cross feasibility
-        _run("run", "elongation", "decrease", "small"),  # feasible-side shaping
-        _run("run", "elongation", "decrease", "small"),  # more shaping
-        _run("run", "elongation", "decrease", "small"),  # more shaping
-        _run("run", "elongation", "decrease", "small"),  # more shaping
-        _run("run", "elongation", "decrease", "small"),  # budget=0 → done bonus
+        _run("rotational_transform", "increase", "medium"),  # rt 1.5→1.6 (setup)
+        _run("triangularity_scale", "increase", "medium"),  # tri 0.55→0.60 → cross feasibility
+        _run("elongation", "decrease", "small"),  # feasible-side shaping
+        _run("elongation", "decrease", "small"),  # more shaping
+        _run("elongation", "decrease", "small"),  # more shaping
+        _run("elongation", "decrease", "small"),  # budget=0 → done bonus
     ],
 )
 
@@ -138,14 +138,12 @@ EPISODE_2 = (
     "seed1_repair_different_seed",
     1,
     [
-        _run(
-            "run", "triangularity_scale", "increase", "medium"
-        ),  # cross feasibility from ar=3.4,rt=1.6
-        _run("run", "elongation", "decrease", "small"),  # feasible-side shaping
-        _run("run", "elongation", "decrease", "small"),  # more shaping
-        _run("run", "triangularity_scale", "increase", "small"),  # push tri further
-        _run("run", "elongation", "decrease", "small"),  # more shaping
-        _run("run", "elongation", "decrease", "small"),  # budget exhaustion
+        _run("rotational_transform", "increase", "medium"),  # rt 1.6→1.7 (needed for ar=3.4)
+        _run("triangularity_scale", "increase", "medium"),  # tri 0.55→0.60 → cross feasibility
+        _run("elongation", "decrease", "small"),  # feasible-side shaping
+        _run("elongation", "decrease", "small"),  # more shaping
+        _run("elongation", "decrease", "small"),  # more shaping
+        _run("elongation", "decrease", "small"),  # budget exhaustion
     ],
 )
 
@@ -153,12 +151,12 @@ EPISODE_3 = (
     "seed2_boundary_clamping",
     2,
     [
-        _run("run", "aspect_ratio", "increase", "large"),  # ar=3.8 + 0.2 → clamped at 3.8
-        _run("run", "triangularity_scale", "increase", "medium"),  # repair toward feasibility
-        _run("run", "triangularity_scale", "increase", "medium"),  # push further
-        _run("run", "elongation", "decrease", "small"),  # shaping if feasible
-        _run("run", "aspect_ratio", "decrease", "large"),  # move ar down
-        _run("run", "elongation", "decrease", "small"),  # budget exhaustion
+        _run("aspect_ratio", "increase", "large"),  # ar=3.8 + 0.2 → clamped at 3.8
+        _run("triangularity_scale", "increase", "medium"),  # repair toward feasibility
+        _run("triangularity_scale", "increase", "medium"),  # push further
+        _run("elongation", "decrease", "small"),  # shaping if feasible
+        _run("aspect_ratio", "decrease", "large"),  # move ar down
+        _run("elongation", "decrease", "small"),  # budget exhaustion
     ],
 )
 
@@ -166,12 +164,12 @@ EPISODE_4 = (
     "seed0_crash_recovery_restore",
     0,
     [
-        _run("run", "triangularity_scale", "increase", "medium"),  # cross feasibility first
-        _run("run", "rotational_transform", "increase", "large"),  # rt 1.5→1.7
-        _run("run", "rotational_transform", "increase", "large"),  # rt 1.7→1.9 (crash zone)
+        _run("triangularity_scale", "increase", "medium"),  # cross feasibility first
+        _run("rotational_transform", "increase", "large"),  # rt 1.5→1.7
+        _run("rotational_transform", "increase", "large"),  # rt 1.7→1.9 (crash zone)
         _restore(),  # recover best state
-        _run("run", "elongation", "decrease", "small"),  # continue from best
-        _run("run", "elongation", "decrease", "small"),  # budget exhaustion
+        _run("elongation", "decrease", "small"),  # continue from best
+        _run("elongation", "decrease", "small"),  # budget exhaustion
     ],
 )
 
@@ -179,9 +177,10 @@ EPISODE_5 = (
     "seed0_repair_objective_submit",
     0,
     [
-        _run("run", "triangularity_scale", "increase", "medium"),  # cross feasibility
-        _run("run", "elongation", "decrease", "small"),  # feasible-side objective
-        _submit(),  # explicit high-fidelity submit
+        _run("rotational_transform", "increase", "medium"),  # rt 1.5→1.6 (setup)
+        _run("triangularity_scale", "increase", "medium"),  # tri 0.55→0.60 → cross feasibility
+        _run("elongation", "decrease", "small"),  # feasible-side objective move
+        _submit(),  # explicit high-fidelity submit from feasible state
     ],
 )
 
