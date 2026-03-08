@@ -16,6 +16,7 @@ Recommended split:
 
 - [x] Northflank smoke notebook note saved
 - [x] runnable Northflank smoke script saved
+- [x] Northflank smoke test passed on the team H100
 - [ ] manual-playtest notebook or trace notebook saved
 - [ ] thin public Colab notebook saved
 
@@ -37,5 +38,6 @@ Runnable repo path:
 
 - `uv run python training/notebooks/northflank_smoke.py --output-dir <mounted-persistent-storage-path>`
 - note: `training/notebooks/NORTHFLANK_SMOKE_NOTE.md`
+- latest passing artifact example: `/home/jovyan/fusion-design-lab/smoke/northflank_smoke_20260308T023646Z.json`
 
 The notebooks are supporting evidence for the environment, not the primary product.

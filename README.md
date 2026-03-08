@@ -35,10 +35,10 @@ Implementation status:
 - [x] Re-run the baseline comparison on the `constellaration`-backed branch state
 - [x] Replace the synthetic evaluator with `constellaration`
 - [x] Add a runnable Northflank smoke workflow and note
+- [x] Pass the Northflank smoke test on the H100 workspace
 - [ ] Add tracked `P1` fixtures under `server/data/p1/`
 - [ ] Run manual playtesting and record the first reward pathology
 - [ ] Refresh the heuristic baseline for the real verifier path
-- [ ] Pass the Northflank smoke test on the H100 workspace
 - [ ] Deploy the real environment to HF Space
 
 ## Known Gaps
@@ -107,10 +107,7 @@ uv sync --extra notebooks
 1. Add tracked `P1` fixtures under `server/data/p1`.
 2. Run manual playtest episodes and record the first real reward pathology, if any.
 3. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
-4. Pass a Northflank smoke test:
-   - import `constellaration`
-   - run one rotating-ellipse generation plus one low-fidelity verifier call
-   - write an artifact to persistent storage
+4. Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
 5. Deploy the environment to HF Space.
 6. Add the Colab notebook under `training/notebooks`.
 

@@ -15,6 +15,7 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [x] replace the synthetic evaluator with `constellaration`
 - [x] re-run baselines on the real verifier path
 - [x] commit the Northflank smoke workflow and note
+- [x] pass the Northflank smoke test on the team H100
 - [ ] add tracked fixtures and manual playtest evidence
 - [ ] refresh the heuristic baseline after the real-verifier rerun
 
@@ -41,11 +42,12 @@ Carry these rules through the whole checklist:
 
 1. Bring up the Northflank Jupyter Notebook with PyTorch on the team H100.
 2. Attach persistent storage before relying on saved models, caches, or fixture downloads.
-3. Pass a concrete smoke test:
+3. Preserve the concrete smoke-test evidence:
    - import `constellaration`
    - generate one rotating-ellipse boundary
    - run one low-fidelity verifier call
-   - write one artifact to persistent storage
+   - keep one artifact in persistent storage
+   - current artifact: `/home/jovyan/fusion-design-lab/smoke/northflank_smoke_20260308T023646Z.json`
 
 Exit condition: the notebook is not just open; the verifier path works and persistent storage is usable.
 

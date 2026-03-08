@@ -13,6 +13,7 @@
 - [x] post-terminal `step()` guard is in place
 - [x] baseline comparison has been rerun on the real verifier path
 - [x] Northflank smoke workflow and note are committed
+- [x] Northflank smoke test has passed on the team H100
 - [ ] tracked `P1` fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
@@ -479,6 +480,7 @@ The repo should make the environment easy to understand:
 - notebook starts on the team H100
 - persistent storage mount is usable
 - smoke test artifact is written successfully
+- latest artifact example: `/home/jovyan/fusion-design-lab/smoke/northflank_smoke_20260308T023646Z.json`
 
 ### Gate 1: Environment Contract Locked
 

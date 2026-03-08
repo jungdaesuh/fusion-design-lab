@@ -12,6 +12,7 @@ Use this map to sequence execution, not to reopen already-locked task choices.
 - [x] official `constellaration` verifier loop is wired
 - [x] baseline comparison has been rerun on the real verifier path
 - [x] Northflank smoke workflow and note are committed
+- [x] Northflank smoke test has passed on the team H100
 - [ ] tracked fixtures are checked in
 - [ ] manual playtest evidence exists
 - [ ] heuristic baseline has been refreshed for the real verifier path
@@ -101,12 +102,12 @@ flowchart LR
 
 ## Priority Order
 
+Northflank compute bring-up and smoke validation are complete.
+
 1. Add tracked fixtures and run fixture sanity checks.
 2. Manual-playtest the environment and record the first real pathology, if any.
 3. Refresh the heuristic baseline from that evidence.
-4. Bring up the Northflank H100 workspace with persistent storage.
-5. Pass the Northflank smoke test.
-6. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
-7. Use the notebook to show traces and comparisons; include training only if it adds signal.
-8. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
-9. Polish the repo only after the artifacts are real.
+4. Make one stable OpenEnv `P1` task work remotely with clear, reproducible rules.
+5. Use the notebook to show traces and comparisons; include training only if it adds signal.
+6. Record the demo around environment clarity, verifier fidelity, reward shaping, and one stable trajectory.
+7. Polish the repo only after the artifacts are real.
