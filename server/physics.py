@@ -9,6 +9,7 @@ from constellaration.forward_model import (
     ConstellarationSettings,
     forward_model,
 )
+from constellaration.mhd.vmec_settings import VmecPresetSettings
 from constellaration.geometry import surface_rz_fourier
 from constellaration.geometry.surface_rz_fourier import SurfaceRZFourier
 from constellaration.initial_guess import generate_rotating_ellipse
@@ -94,7 +95,7 @@ def evaluate_boundary(
 def _settings_for_fidelity(fidelity: EvaluationFidelity) -> ConstellarationSettings:
     if fidelity == "high":
         return ConstellarationSettings(
-            vmec_preset_settings=ConstellarationSettings.default_high_fidelity_skip_qi().vmec_preset_settings,
+            vmec_preset_settings=VmecPresetSettings(fidelity="from_boundary_resolution"),
             boozer_preset_settings=None,
             qi_settings=None,
             turbulent_settings=None,

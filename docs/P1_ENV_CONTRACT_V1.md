@@ -163,11 +163,17 @@ The verifier should stay boundary-based:
 
 Do not treat parameterization-specific logic as verifier truth.
 
+VMEC preset mapping:
+
+- `run` steps use the `low_fidelity` VMEC preset (~0.6s, tolerant convergence)
+- `submit` uses the `from_boundary_resolution` VMEC preset (~4s, adaptive convergence matching boundary Fourier resolution)
+- the `high_fidelity` VMEC preset (minimum 10 modes, strict convergence) is not used because it does not converge on the current `mpol=3, ntor=3` boundaries
+
 Training and evaluation rule:
 
 - use low-fidelity `run` as the RL inner-loop surface
-- keep high-fidelity `submit` for terminal truth, paired fixture checks, submit-side manual traces, and sparse checkpoint evaluation
-- do not move high-fidelity VMEC-backed evaluation into every training step unless the contract is deliberately redefined
+- keep higher-fidelity `submit` for terminal truth, paired fixture checks, submit-side manual traces, and sparse checkpoint evaluation
+- do not move VMEC-backed submit evaluation into every training step unless the contract is deliberately redefined
 
 ## 9. Reward V0
 
