@@ -4,7 +4,7 @@
   "notes": [
     "Matches the current default reset seed.",
     "Useful as a near-boundary starting point for short repair episodes.",
-    "High-fidelity submit spot check is still pending."
+    "High-fidelity submit spot check is complete."
   ],
   "params": {
     "aspect_ratio": 3.6,
@@ -21,7 +21,22 @@
     "aspect_ratio": 3.31313049868072,
     "average_triangularity": -0.4746735808874879,
     "edge_iota_over_nfp": 0.2906263991807532,
-    "vacuum_well": -0.7537878932672235
+    "vacuum_well": -0.7537878932672235,
+    "evaluation_fidelity": "low",
+    "failure_reason": ""
   },
-  "high_fidelity": null
+  "high_fidelity": {
+    "evaluation_failed": false,
+    "constraints_satisfied": false,
+    "p1_score": 0.0,
+    "p1_feasibility": 0.0506528382250242,
+    "max_elongation": 6.134177903677296,
+    "aspect_ratio": 3.31313049868072,
+    "average_triangularity": -0.4746735808874879,
+    "edge_iota_over_nfp": 0.28971623977263294,
+    "vacuum_well": -0.7554909069955263,
+    "evaluation_fidelity": "high",
+    "failure_reason": ""
+  },
+  "paired_high_fidelity_timestamp_utc": "2026-03-08T07:07:24.745385+00:00"
 }

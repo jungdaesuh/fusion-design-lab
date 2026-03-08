@@ -4,7 +4,7 @@
   "notes": [
     "Local repair target reached from the default reset band by increasing rotational_transform and triangularity_scale.",
     "Useful as a low-fidelity feasibility reference for Reward V0 sanity checks.",
-    "High-fidelity submit spot check is still pending."
+    "High-fidelity submit spot check is complete."
   ],
   "params": {
     "aspect_ratio": 3.6,
@@ -21,7 +21,22 @@
     "aspect_ratio": 3.2870514531062405,
     "average_triangularity": -0.5002923204919443,
     "edge_iota_over_nfp": 0.30046082924426193,
-    "vacuum_well": -0.7949586699110935
+    "vacuum_well": -0.7949586699110935,
+    "evaluation_fidelity": "low",
+    "failure_reason": ""
   },
-  "high_fidelity": null
+  "high_fidelity": {
+    "evaluation_failed": false,
+    "constraints_satisfied": true,
+    "p1_score": 0.2920325118884466,
+    "p1_feasibility": 0.0,
+    "max_elongation": 7.37170739300398,
+    "aspect_ratio": 3.2870514531062405,
+    "average_triangularity": -0.5002923204919443,
+    "edge_iota_over_nfp": 0.300057398146058,
+    "vacuum_well": -0.7963320784471227,
+    "evaluation_fidelity": "high",
+    "failure_reason": ""
+  },
+  "paired_high_fidelity_timestamp_utc": "2026-03-08T07:07:29.939083+00:00"
 }

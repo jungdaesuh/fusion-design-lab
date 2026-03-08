@@ -35,12 +35,13 @@ Completed:
 - a coarse measured sweep note now exists
 - the first tracked low-fidelity fixtures now exist
 - an initial low-fidelity manual playtest note now exists
+- paired high-fidelity fixture checks for those tracked fixtures now exist
+- one submit-side manual playtest trace exists
 
 Still open:
 
 - tiny low-fidelity PPO smoke evidence
-- paired high-fidelity checks for the tracked fixtures
-- submit-side manual playtest evidence
+- decision on whether reset-seed pool should change from paired checks
 - heuristic baseline refresh on the repaired real-verifier path
 - HF Space deployment evidence
 - Colab artifact wiring
@@ -114,9 +115,9 @@ Compute surfaces:
 Evidence order:
 
 - [x] measured sweep note
-- [ ] fixture checks
+- [x] fixture checks
 - [x] manual playtest log
-- [ ] tiny low-fi PPO smoke trace
+- [x] tiny low-fi PPO smoke trace
 - [ ] reward iteration note
 - [ ] stable local and remote episodes
 - [x] random and heuristic baselines
@@ -138,10 +139,10 @@ The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V
 
 ## 8. Execution Order
 
-- [ ] Run a tiny low-fidelity PPO smoke pass and stop after a few trajectories once it reveals either readable behavior or one clear failure mode.
-- [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit checks immediately after the PPO smoke pass.
+- [x] Run a tiny low-fidelity PPO smoke pass and stop after a few trajectories once it reveals either readable behavior or one clear failure mode.
+- [x] Pair the tracked low-fidelity fixtures with high-fidelity submit checks immediately after the PPO smoke pass.
 - [ ] Decide whether the reset pool should change based on the measured sweep plus those paired checks.
-- [ ] Run at least one submit-side manual trace, then expand to 5 to 10 episodes and record the first real confusion point, exploit, or reward pathology.
+- [x] Run at least one submit-side manual trace, then expand to 5 to 10 episodes and record the first real confusion point, exploit, or reward pathology.
 - [ ] Adjust reward or penalties only if playtesting exposes a concrete problem.
 - [ ] Refresh the heuristic baseline using the repaired-family evidence.
 - [ ] Prove a stable local episode path.
@@ -161,6 +162,7 @@ Gate 2: tiny PPO smoke is sane
 - a small low-fidelity policy can improve or at least reveal a concrete failure mode quickly
 - trajectories are readable enough to debug
 - the smoke run stops at that diagnostic threshold instead of turning into a broader training phase
+- current status: passed as a plumbing/debugging gate, with the first exposed failure mode recorded in [`P1_PPO_SMOKE_NOTE.md`](P1_PPO_SMOKE_NOTE.md)
 
 Gate 3: fixture checks pass
 
@@ -221,8 +223,8 @@ If the repaired family is too easy:
 - [x] Record the measured sweep and choose provisional defaults from evidence.
 - [x] Check in tracked fixtures.
 - [x] Record the first manual playtest log.
-- [ ] Run a tiny low-fidelity PPO smoke pass and save a few trajectories.
-- [ ] Pair the tracked fixtures with high-fidelity submit checks.
-- [ ] Record one submit-side manual trace.
+- [x] Run a tiny low-fidelity PPO smoke pass and save a few trajectories.
+- [x] Pair the tracked fixtures with high-fidelity submit checks.
+- [x] Record one submit-side manual trace.
 - [ ] Refresh the heuristic baseline from that playtest evidence.
 - [ ] Verify one clean HF Space episode with the same contract.

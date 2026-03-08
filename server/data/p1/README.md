@@ -12,7 +12,7 @@ These fixtures are for verifier and reward sanity checks.
 
 ## Status
 
-- [ ] known-good or near-winning fixture added
+- [x] known-good or near-winning fixture added
 - [x] near-boundary fixture added
 - [x] clearly infeasible fixture added
 - [x] fixture sanity note written

@@ -30,7 +30,8 @@ Implementation status:
 - the current environment uses `constellaration` for low-fidelity `run` steps and high-fidelity `submit` evaluation
 - the repaired 4-knob low-dimensional family is now wired into the runtime path
 - the first measured sweep note, tracked low-fidelity fixtures, and an initial low-fidelity manual playtest note now exist
-- the next runtime work is a tiny low-fi PPO smoke run as a diagnostic-only check, followed immediately by paired high-fidelity fixture checks and one real submit-side manual trace
+- the first tiny low-fi PPO smoke artifact and paired high-fidelity fixture checks now exist
+- a one-trajectory submit-side manual trace has now been recorded
 
 ## Execution Status
 
@@ -52,7 +53,8 @@ Implementation status:
 - [x] Label low-fi `run` truth vs high-fi `submit` truth in observations and task docs
 - [x] Separate high-fidelity submit scoring/reporting from low-fidelity rollout score state
 - [x] Add tracked `P1` fixtures under `server/data/p1/`
-- [ ] Run a tiny low-fi PPO smoke run as a diagnostic-only check, then complete paired high-fidelity fixture checks and at least one real submit-side manual trace before any broader training push
+- [x] Run a tiny low-fi PPO smoke run as a diagnostic-only check and save one trajectory artifact
+- [x] Complete paired high-fidelity fixture checks and at least one real submit-side manual trace before any broader training push
 - [ ] Refresh the heuristic baseline for the real verifier path
 - [ ] Deploy the real environment to HF Space
 
@@ -60,7 +62,7 @@ Implementation status:
 
 - Historical blocker note: the old 3-knob family was structurally blocked on P1 triangularity with the real verifier path. A sampled low-fidelity sweep kept `average_triangularity` at roughly `+0.004975` and `p1_feasibility` at roughly `1.00995`, with zero feasible samples. That blocker motivated the repaired 4-knob runtime that is now live.
 - The repaired family now has a first coarse measured sweep note in [docs/P1_MEASURED_SWEEP_NOTE.md](docs/P1_MEASURED_SWEEP_NOTE.md), but reset-seed changes and any budget changes should still wait for paired high-fidelity fixture checks.
-- The tracked fixtures in `server/data/p1/` are currently low-fidelity-calibrated. Do not narrate them as fully paired low-fi/high-fi references until the submit-side spot checks land.
+- The paired low-fi/high-fi fixture snapshots are now written into each fixture JSON and summarized in `baselines/fixture_high_fidelity_pairs.json`.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
 - High-fidelity VMEC-backed `submit` is too expensive to serve as the normal RL inner loop. Keep training rollouts on low-fidelity `run`, then use high-fidelity calls for paired fixtures, submit-side traces, sparse checkpoint evaluation, and final evidence.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
@@ -68,12 +70,13 @@ Implementation status:
 - Observation best-state reporting is now split explicitly between low-fidelity rollout state and high-fidelity submit state; baseline traces and demo copy should use those explicit fields rather than infer a mixed best-state story.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after the repaired parameterization and manual playtesting.
-- The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next fail-fast step is a tiny low-fi PPO smoke run used only to surface obvious learnability bugs, followed immediately by high-fidelity fixture pairing and one real `submit` trace.
+- The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next fail-fast step is now baseline refresh and reset-seed confirmation backed by the paired high-fidelity evidence.
+- The first tiny PPO smoke note is in [docs/P1_PPO_SMOKE_NOTE.md](docs/P1_PPO_SMOKE_NOTE.md). It produced a valid trajectory artifact and exposed a repeated-action local failure, which is the right outcome for a smoke run.
 
 Current mode:
 
 - strategic task choice is already locked
-- the next work is a tiny low-fi PPO smoke run as a smoke test only, then paired high-fidelity fixture checks, one submit-side manual trace, heuristic refresh, smoke validation, and deployment
+- the next work is heuristic refresh, reset-seed confirmation, and deployment
 - new planning text should only appear when a real blocker forces a decision change
 
 ## Planned Repository Layout
@@ -127,10 +130,10 @@ uv sync --extra notebooks
 
 ## Immediate Next Steps
 
-- [ ] Run a tiny low-fidelity PPO smoke run and stop after a few readable trajectories or one clear failure mode.
-- [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks immediately after the PPO smoke run.
+- [x] Run a tiny low-fidelity PPO smoke run and stop after a few readable trajectories or one clear failure mode.
+- [x] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks immediately after the PPO smoke run.
+- [x] Run at least one submit-side manual trace before any broader training push, then record the first real reward pathology, if any.
 - [ ] Decide whether any reset seed should move based on the measured sweep plus those paired checks.
-- [ ] Run at least one submit-side manual trace before any broader training push, then record the first real reward pathology, if any.
 - [ ] Keep any checkpoint high-fidelity evaluation sparse enough that the low-fidelity inner loop stays fast.
 - [ ] Refresh the heuristic baseline using measured sweep and playtest evidence, then save one comparison trace.
 - [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.

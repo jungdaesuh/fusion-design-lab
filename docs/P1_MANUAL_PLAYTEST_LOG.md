@@ -50,4 +50,33 @@ Step 1:
 Current conclusion:
 
 - Reward V0 is legible on the low-fidelity repair path around the default reset seed
-- the most useful next manual check is still a real `submit` trace, but low-fidelity shaping is already understandable by a human
+- a real `submit` trace is now recorded; next manual validation is to extend beyond the initial 5-10 episode path and look for one clear exploit or ambiguity
+
+Episode C: submit-side manual trace
+
+Scope:
+
+- same seed-0 start state as episode A
+- actions: `rotational_transform increase medium`, `triangularity_scale increase medium`, `elongation decrease small`, `submit`
+
+Step sequence:
+
+- Step 1: `rotational_transform increase medium`
+  - low-fidelity feasibility changed by `0.000000` (still infeasible)
+  - reward: `-0.1000`
+- Step 2: `triangularity_scale increase medium`
+  - crossed feasibility boundary
+  - low-fidelity feasibility moved from `0.050653` to `0.000000`
+  - reward: `+3.1533`
+- Step 3: `elongation decrease small`
+  - low-fidelity feasibility moved to `0.000865`
+  - reward: `+0.2665`
+- Step 4: `submit` (high-fidelity)
+  - final feasibility: `0.000865`
+  - final high-fidelity score: `0.296059`
+  - final reward: `+2.0098`
+  - final diagnostics `evaluation_fidelity`=`high`, `constraints`=`SATISFIED`, `best_high_fidelity_score`=`0.296059`
+
+Artifact:
+
+- [manual submit trace JSON](../baselines/submit_side_trace.json)

@@ -4,7 +4,7 @@
   "notes": [
     "Clearly infeasible calibration case from the coarse measured sweep.",
     "The dominant failure mode is low edge_iota_over_nfp, not triangularity.",
-    "High-fidelity submit spot check is still pending."
+    "High-fidelity submit spot check is complete."
   ],
   "params": {
     "aspect_ratio": 3.2,
@@ -21,7 +21,22 @@
     "aspect_ratio": 2.802311169335037,
     "average_triangularity": -0.5512332332730122,
     "edge_iota_over_nfp": 0.12745962182164347,
-    "vacuum_well": -1.0099648537211192
+    "vacuum_well": -1.0099648537211192,
+    "evaluation_fidelity": "low",
+    "failure_reason": ""
   },
-  "high_fidelity": null
+  "high_fidelity": {
+    "evaluation_failed": false,
+    "constraints_satisfied": false,
+    "p1_score": 0.0,
+    "p1_feasibility": 0.5763570514697449,
+    "max_elongation": 5.9831792818066525,
+    "aspect_ratio": 2.802311169335037,
+    "average_triangularity": -0.5512332332730122,
+    "edge_iota_over_nfp": 0.12709288455907652,
+    "vacuum_well": -1.0111716777365585,
+    "evaluation_fidelity": "high",
+    "failure_reason": ""
+  },
+  "paired_high_fidelity_timestamp_utc": "2026-03-08T07:07:19.629771+00:00"
 }

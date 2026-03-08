@@ -43,7 +43,9 @@ Priority source:
 - [x] manual playtest log
 - [x] settle the non-submit terminal reward policy
 - [x] baseline comparison has been re-run on the `constellaration` branch state
-- [ ] tiny low-fi PPO smoke run exists
+- [x] tiny low-fi PPO smoke run exists
+  Note:
+  `training/ppo_smoke.py` now runs a diagnostic-only low-fidelity PPO smoke pass and the first artifact is summarized in `docs/P1_PPO_SMOKE_NOTE.md`
 - [ ] refresh the heuristic baseline for the real verifier path
 
 ## Execution Graph
@@ -182,22 +184,24 @@ flowchart TD
   [server/data/p1/README.md](server/data/p1/README.md),
   [P1 Pivot Record](docs/archive/PIVOT_P1_ROTATING_ELLIPSE.md)
   Note:
-  first tracked fixtures are low-fidelity-calibrated; add paired high-fidelity submit checks next
+  paired high-fidelity submit checks are now written into each tracked fixture and summarized in `baselines/fixture_high_fidelity_pairs.json`
 
-- [ ] Run fixture sanity checks
+- [x] Run fixture sanity checks
   Goal:
   confirm paired low-fi/high-fi verifier outputs, objective direction, and reward ordering
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 
-- [ ] Run a tiny low-fi PPO smoke pass
+- [x] Run a tiny low-fi PPO smoke pass
   Goal:
   fail quickly on learnability, reward exploits, and action-space problems before investing in longer training
   Note:
   treat this as a smoke test, not as proof that the terminal `submit` contract is already validated
   stop after a few readable trajectories or one clear failure mode
   paired high-fidelity fixture checks must happen immediately after this smoke pass
+  Status:
+  first smoke artifact exists; next use of this step should only happen if a follow-up reward or observation change needs re-checking
   high-fidelity VMEC-backed `submit` should stay out of the normal RL inner loop
 
 - [ ] Manual-playtest 5-10 episodes

@@ -1,0 +1,144 @@
+{
+  "timestamp_utc": "2026-03-08T07:07:29.939307+00:00",
+  "n_field_periods": 3,
+  "fixture_count": 3,
+  "pass_count": 3,
+  "fail_count": 0,
+  "results": [
+    {
+      "name": "bad_low_iota",
+      "file": "server/data/p1/bad_low_iota.json",
+      "status": "pass",
+      "low_fidelity": {
+        "evaluation_failed": false,
+        "constraints_satisfied": false,
+        "p1_score": 0.0,
+        "p1_feasibility": 0.575134593927855,
+        "max_elongation": 5.983792904658967,
+        "aspect_ratio": 2.802311169335037,
+        "average_triangularity": -0.5512332332730122,
+        "edge_iota_over_nfp": 0.12745962182164347,
+        "vacuum_well": -1.0099648537211192,
+        "evaluation_fidelity": "low",
+        "failure_reason": ""
+      },
+      "high_fidelity": {
+        "evaluation_failed": false,
+        "constraints_satisfied": false,
+        "p1_score": 0.0,
+        "p1_feasibility": 0.5763570514697449,
+        "max_elongation": 5.9831792818066525,
+        "aspect_ratio": 2.802311169335037,
+        "average_triangularity": -0.5512332332730122,
+        "edge_iota_over_nfp": 0.12709288455907652,
+        "vacuum_well": -1.0111716777365585,
+        "evaluation_fidelity": "high",
+        "failure_reason": ""
+      },
+      "comparison": {
+        "low_high_feasibility_match": true,
+        "feasibility_delta": 0.0012224575418898764,
+        "score_delta": 0.0,
+        "ranking_compatibility": "match",
+        "low_fidelity_stored_p1_score": 0.0,
+        "low_fidelity_stored_p1_feasibility": 0.575134593927855,
+        "low_fidelity_snapshot": {
+          "missing_fields": [],
+          "drift_fields": {},
+          "mismatches": [],
+          "max_abs_drift": 0.0
+        }
+      }
+    },
+    {
+      "name": "boundary_default_reset",
+      "file": "server/data/p1/boundary_default_reset.json",
+      "status": "pass",
+      "low_fidelity": {
+        "evaluation_failed": false,
+        "constraints_satisfied": false,
+        "p1_score": 0.0,
+        "p1_feasibility": 0.0506528382250242,
+        "max_elongation": 6.13677115978351,
+        "aspect_ratio": 3.31313049868072,
+        "average_triangularity": -0.4746735808874879,
+        "edge_iota_over_nfp": 0.2906263991807532,
+        "vacuum_well": -0.7537878932672235,
+        "evaluation_fidelity": "low",
+        "failure_reason": ""
+      },
+      "high_fidelity": {
+        "evaluation_failed": false,
+        "constraints_satisfied": false,
+        "p1_score": 0.0,
+        "p1_feasibility": 0.0506528382250242,
+        "max_elongation": 6.134177903677296,
+        "aspect_ratio": 3.31313049868072,
+        "average_triangularity": -0.4746735808874879,
+        "edge_iota_over_nfp": 0.28971623977263294,
+        "vacuum_well": -0.7554909069955263,
+        "evaluation_fidelity": "high",
+        "failure_reason": ""
+      },
+      "comparison": {
+        "low_high_feasibility_match": true,
+        "feasibility_delta": 0.0,
+        "score_delta": 0.0,
+        "ranking_compatibility": "match",
+        "low_fidelity_stored_p1_score": 0.0,
+        "low_fidelity_stored_p1_feasibility": 0.0506528382250242,
+        "low_fidelity_snapshot": {
+          "missing_fields": [],
+          "drift_fields": {},
+          "mismatches": [],
+          "max_abs_drift": 0.0
+        }
+      }
+    },
+    {
+      "name": "lowfi_feasible_local",
+      "file": "server/data/p1/lowfi_feasible_local.json",
+      "status": "pass",
+      "low_fidelity": {
+        "evaluation_failed": false,
+        "constraints_satisfied": true,
+        "p1_score": 0.29165951078327634,
+        "p1_feasibility": 0.0,
+        "max_elongation": 7.375064402950513,
+        "aspect_ratio": 3.2870514531062405,
+        "average_triangularity": -0.5002923204919443,
+        "edge_iota_over_nfp": 0.30046082924426193,
+        "vacuum_well": -0.7949586699110935,
+        "evaluation_fidelity": "low",
+        "failure_reason": ""
+      },
+      "high_fidelity": {
+        "evaluation_failed": false,
+        "constraints_satisfied": true,
+        "p1_score": 0.2920325118884466,
+        "p1_feasibility": 0.0,
+        "max_elongation": 7.37170739300398,
+        "aspect_ratio": 3.2870514531062405,
+        "average_triangularity": -0.5002923204919443,
+        "edge_iota_over_nfp": 0.300057398146058,
+        "vacuum_well": -0.7963320784471227,
+        "evaluation_fidelity": "high",
+        "failure_reason": ""
+      },
+      "comparison": {
+        "low_high_feasibility_match": true,
+        "feasibility_delta": 0.0,
+        "score_delta": 0.0003730011051702453,
+        "ranking_compatibility": "match",
+        "low_fidelity_stored_p1_score": 0.29165951078327634,
+        "low_fidelity_stored_p1_feasibility": 0.0,
+        "low_fidelity_snapshot": {
+          "missing_fields": [],
+          "drift_fields": {},
+          "mismatches": [],
+          "max_abs_drift": 0.0
+        }
+      }
+    }
+  ]
+}

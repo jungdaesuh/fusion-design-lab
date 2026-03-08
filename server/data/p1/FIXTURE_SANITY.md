@@ -1,6 +1,6 @@
 # P1 Fixture Sanity
 
-This folder now contains three low-fidelity-calibrated `P1` fixtures:
+This folder now contains three paired low-fidelity/high-fidelity `P1` fixtures:
 
 - `boundary_default_reset.json`
 - `bad_low_iota.json`
@@ -23,8 +23,24 @@ Current interpretation:
   - low-fidelity feasible local target
   - reachable from the default reset band with two intuitive knob increases
 
-What is still pending:
+Observed from paired run:
 
-- paired high-fidelity submit measurements for each tracked fixture
-- low-fi vs high-fi ranking comparison note
+- low-fi vs high-fi feasibility alignment and metric deltas are documented in `baselines/fixture_high_fidelity_pairs.json`.
 - decision on whether any reset seed should be changed from the current default
+
+Current paired summary (`baselines/fixture_high_fidelity_pairs.json`):
+
+- `bad_low_iota.json`:
+  - both fidelities infeasible
+  - low/high feasibility match: `true`
+  - low/high score match: both `0.0`
+
+- `boundary_default_reset.json`:
+  - both fidelities infeasible
+  - low/high feasibility match: `true`
+  - low/high score match: both `0.0`
+
+- `lowfi_feasible_local.json`:
+  - both fidelities feasible
+  - low/high feasibility match: `true`
+  - high-fidelity score improved slightly: `0.29165951078327634` → `0.2920325118884466`
