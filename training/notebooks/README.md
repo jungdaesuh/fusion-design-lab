@@ -14,7 +14,8 @@ Recommended split:
 
 ## Status
 
-- [ ] Northflank smoke notebook note saved
+- [x] Northflank smoke notebook note saved
+- [x] runnable Northflank smoke script saved
 - [ ] manual-playtest notebook or trace notebook saved
 - [ ] thin public Colab notebook saved
 
@@ -31,5 +32,10 @@ Northflank smoke gate:
 - generate one rotating-ellipse boundary
 - run one low-fidelity verifier call
 - write one artifact to persistent storage
+
+Runnable repo path:
+
+- `uv run python training/notebooks/northflank_smoke.py --output-dir <mounted-persistent-storage-path>`
+- note: `training/notebooks/NORTHFLANK_SMOKE_NOTE.md`
 
 The notebooks are supporting evidence for the environment, not the primary product.
