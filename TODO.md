@@ -7,6 +7,7 @@ Use this file for day-of build progress. Use the linked docs for rationale, sequ
 - [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md)
 - [Deliverables Map](docs/FUSION_DELIVERABLES_MAP.md)
 - [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md)
+- [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 - [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
 - [Repo Guardrails](AGENTS.md)
 
@@ -26,6 +27,12 @@ Priority source:
 - [x] repo docs call out the low-fi/high-fi `constellaration` split honestly
 - [x] post-terminal guard in `step()`
 - [x] `constellaration` verifier wiring
+- [x] verify the current 3-knob family against the real low-fidelity verifier
+- [ ] repair the low-dimensional parameterization so triangularity is controllable
+- [ ] split boundary building from boundary evaluation
+- [ ] update the action schema from 3 knobs to the repaired low-dimensional family
+- [ ] add explicit VMEC failure semantics
+- [ ] label low-fi vs high-fi truth in the observation/task surface
 - [ ] tracked `P1` fixtures
 - [ ] manual playtest log
 - [x] settle the non-submit terminal reward policy
@@ -39,7 +46,8 @@ flowchart TD
     A["Northflank Smoke Test"] --> E["Fixture Checks"]
     B["P1 Contract Lock"] --> D["P1 Models + Environment"]
     C["constellaration Physics Wiring"] --> D
-    D --> E["Fixture Checks"]
+    D --> P["Parameterization Repair"]
+    P --> E["Fixture Checks"]
     E --> F["Manual Playtest"]
     F --> G["Reward V1"]
     G --> H["Baselines"]
@@ -57,11 +65,18 @@ flowchart TD
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 
-- [ ] Pass the Northflank smoke test
+- [x] Pass the Northflank smoke test
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md),
   [training/notebooks/README.md](training/notebooks/README.md)
+
+- [x] Verify that the current 3-knob family can or cannot approach P1 feasibility
+  Goal:
+  decide whether parameterization repair is a blocker before more reward work
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md),
+  [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
 
 ## Fresh Wiring
 
@@ -93,14 +108,58 @@ flowchart TD
   [server/app.py](server/app.py),
   [README.md](README.md)
 
+- [ ] Repair the low-dimensional boundary family
+  Goal:
+  add an explicit triangularity control knob or equivalent low-dimensional control so the environment can actually approach P1 feasibility
+  Files:
+  [server/physics.py](server/physics.py),
+  [fusion_lab/models.py](fusion_lab/models.py),
+  [server/environment.py](server/environment.py),
+  [server/app.py](server/app.py)
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
+
+- [ ] Split boundary construction from boundary evaluation
+  Goal:
+  make the verifier boundary-based and keep parameterization-specific logic in the environment adapter layer
+  Files:
+  [server/physics.py](server/physics.py)
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
+
+- [ ] Add explicit VMEC failure semantics
+  Goal:
+  failed evaluations must cost budget, return a visible failure observation, and apply a documented penalty without silent fallback
+  Files:
+  [server/physics.py](server/physics.py),
+  [server/environment.py](server/environment.py)
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
+
+- [ ] Label low-fi vs high-fi truth in the observation/task surface
+  Goal:
+  make it obvious whether a metric came from a low-fidelity `run` step or a high-fidelity `submit`
+  Files:
+  [fusion_lab/models.py](fusion_lab/models.py),
+  [server/environment.py](server/environment.py),
+  [server/app.py](server/app.py)
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
+
 ## Validation and Reward
+
+- [ ] Run a small measured sweep on the repaired low-dimensional family
+  Goal:
+  choose useful parameter ranges, step deltas, and reset seeds from the repaired action family instead of guessing them from prose
+  Related:
+  [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 
 - [ ] Add 1-2 tracked `P1` fixtures
   Files:
   [server/data/p1/README.md](server/data/p1/README.md),
   [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
   Note:
-  the default baseline params are not near-feasible on the real verifier path, so they are not enough for the fixture set by themselves
+  add fixtures only after the parameterization repair produces a meaningful near-boundary region
 
 - [ ] Run fixture sanity checks
   Goal:
@@ -188,6 +247,8 @@ flowchart TD
 ## Guardrails
 
 - [ ] Do not reopen `P1 + rotating-ellipse` strategy without a real blocker
+- [ ] Do not pretend the current 3-knob family is sufficient for P1 after the verified triangularity blocker
+- [ ] Do not guess repaired-family ranges, deltas, or budget changes without measurement
 - [ ] Do not port the old `ai-sci-feasible-designs` harness
 - [ ] Do not let notebook or demo work outrun environment evidence
 - [ ] Do not add training-first complexity before manual playtesting

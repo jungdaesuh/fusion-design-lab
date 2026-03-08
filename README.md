@@ -41,6 +41,8 @@ Implementation status:
 - [ ] Add a custom low-dimensional boundary builder with an explicit triangularity control knob
 - [ ] Split boundary construction from boundary evaluation in `server/physics.py`
 - [ ] Update the action contract from 3 knobs to the repaired low-dimensional family
+- [ ] Add explicit VMEC failure semantics to the environment contract
+- [ ] Label low-fi `run` truth vs high-fi `submit` truth in observations and task docs
 - [ ] Add tracked `P1` fixtures under `server/data/p1/`
 - [ ] Run manual playtesting and record the first reward pathology
 - [ ] Refresh the heuristic baseline for the real verifier path
@@ -50,7 +52,9 @@ Implementation status:
 
 - The current 3-knob family is structurally blocked on P1 triangularity with the real verifier path. A sampled low-fidelity sweep kept `average_triangularity` at roughly `+0.004975` and `p1_feasibility` at roughly `1.00995`, with zero feasible samples. That means reward tuning is secondary until the parameterization is repaired.
 - `BASELINE_PARAMS` is not a near-feasible anchor on the real verifier path. The current low-fidelity measurement is roughly `p1_feasibility=1.01`, `average_triangularity=+0.005`, and `edge_iota_over_nfp=0.059`, so fixture discovery has to happen after parameterization repair, not before.
+- The repaired low-dimensional family still needs measured ranges and deltas. Do not narrate guessed `rotational_transform` bounds, `triangularity_scale` deltas, or a larger budget as validated facts until they are measured on the repaired environment.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
+- The environment still needs explicit VMEC failure semantics. Failed evaluations should cost budget, produce a visible failure observation, and apply a documented penalty; they should not be silently swallowed.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after the repaired parameterization and manual playtesting.
 
@@ -112,13 +116,15 @@ uv sync --extra notebooks
 
 1. Repair the low-dimensional boundary parameterization so it can actually move P1 triangularity.
 2. Split boundary construction from boundary evaluation in `server/physics.py`.
-3. Update the environment contract to the repaired low-dimensional family and label low-fi vs high-fi truth clearly in observations.
-4. Add tracked `P1` fixtures under `server/data/p1`.
-5. Run manual playtest episodes and record the first real reward pathology, if any.
-6. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
-7. Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
-8. Deploy the environment to HF Space.
-9. Add the Colab notebook under `training/notebooks`.
+3. Add explicit VMEC failure semantics to the environment loop.
+4. Update the environment contract to the repaired low-dimensional family and label low-fi vs high-fi truth clearly in observations.
+5. Run a small measured sweep on the repaired family to choose useful ranges, deltas, and reset seeds.
+6. Add tracked `P1` fixtures under `server/data/p1`.
+7. Run manual playtest episodes and record the first real reward pathology, if any.
+8. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
+9. Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
+10. Deploy the environment to HF Space.
+11. Add the Colab notebook under `training/notebooks`.
 
 These are implementation steps, not another planning phase.
 

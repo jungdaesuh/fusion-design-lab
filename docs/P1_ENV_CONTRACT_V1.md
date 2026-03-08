@@ -72,6 +72,7 @@ The verifier layer should own:
 - official `P1` feasibility semantics
 - official `P1` objective direction
 - score ordering
+- explicit failure results when VMEC or forward-model evaluation fails
 
 The verifier layer should not own:
 
@@ -90,6 +91,12 @@ Target controllable knobs:
 - `elongation`
 - `rotational_transform`
 - `triangularity_scale`
+
+Current measurement rule:
+
+- do not lock exact repaired-family ranges or deltas from prose alone
+- measure them on the repaired boundary family before presenting them as defaults
+- especially treat `rotational_transform` bounds, `triangularity_scale` deltas, and budget changes as open until measured
 
 Important naming rule:
 
@@ -168,6 +175,8 @@ Do not add:
 - bonuses for matching a known winner
 - hand-coded constraint tricks to hide a blocked action family
 
+Do not use reward complexity to compensate for missing action expressivity or missing crash semantics.
+
 ## Reset Strategy
 
 Start with frozen exact seeds, not jitter.
@@ -209,9 +218,11 @@ before tuning reward further
 3. Update the action and state schema in [fusion_lab/models.py](../fusion_lab/models.py).
 4. Update the episode loop and observation labeling in [server/environment.py](../server/environment.py).
 5. Update the task summary in [server/app.py](../server/app.py).
-6. Freeze 1-2 repaired low-dimensional fixtures.
-7. Run manual playtesting.
-8. Refresh the heuristic baseline only after that evidence exists.
+6. Add explicit VMEC failure semantics in [server/environment.py](../server/environment.py).
+7. Run a small measured sweep to choose ranges, deltas, and reset seeds.
+8. Freeze 1-2 repaired low-dimensional fixtures.
+9. Run manual playtesting.
+10. Refresh the heuristic baseline only after that evidence exists.
 
 ## Out of Scope
 
