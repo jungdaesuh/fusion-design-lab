@@ -169,6 +169,7 @@ Current repo state:
 
 - the live observation surface now exposes evaluation fidelity and failure state
 - the exact naming can still be refined after playtesting, but low-fi vs high-fi is no longer implicit
+- terminal reward/reporting is now fidelity-consistent: `submit` compares against high-fi reference state instead of low-fi rollout score state
 
 ## Reward V0
 
@@ -196,6 +197,11 @@ Do not add:
 - hand-coded constraint tricks to hide a blocked action family
 
 Do not use reward complexity to compensate for missing action expressivity or missing crash semantics.
+
+Additional fidelity rule:
+
+- do not compare a high-fidelity submit score against low-fidelity `initial_score` or `best_score` state
+- terminal reward and submit summaries should use a fidelity-consistent basis
 
 ## Reset Strategy
 

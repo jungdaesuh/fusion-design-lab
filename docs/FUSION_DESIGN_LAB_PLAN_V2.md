@@ -18,6 +18,7 @@
 - [x] parameterization repair is implemented so triangularity is controllable
 - [x] explicit VMEC failure semantics are implemented
 - [x] low-fi `run` truth vs high-fi `submit` truth is labeled clearly in the environment surface
+- [x] terminal scoring/reporting is fidelity-consistent between low-fi rollout state and high-fi submit truth
 - [ ] tracked `P1` fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
@@ -26,6 +27,7 @@
 Current caution:
 
 - the repaired family is now live, but the exact ranges, deltas, and reset seeds still need a measured sweep before they should be treated as stable defaults
+- terminal scoring/reporting now uses a fidelity-consistent basis at episode end: high-fi `submit` comparisons are no longer anchored to low-fi rollout score state
 
 ## 1. Submission Thesis
 
@@ -347,6 +349,7 @@ Current execution note:
 - once parameterization is repaired, keep `Reward V0` scalar and feasibility-first
 - clearly distinguish low-fidelity step-time metrics from high-fidelity submit-time truth in the observation contract and docs
 - do not use reward complexity to compensate for missing action expressivity or missing VMEC failure semantics
+- keep terminal reward and reporting fidelity-consistent; do not compare high-fi submit scores against low-fi best/initial score state
 
 ### Reward V0 Failure Modes To Test
 
@@ -555,6 +558,7 @@ The repo should make the environment easy to understand:
 
 - local modify -> verify -> observe loop works
 - at least one end-to-end episode is stable
+- submit-time reward/reporting does not mix low-fi and high-fi score state
 
 ### Gate 5: Reward V1
 
@@ -752,11 +756,8 @@ That last line is intentionally conservative. It is strong enough without claimi
 
 ## 21. Immediate Next Actions
 
-1. Repair the low-dimensional boundary parameterization so triangularity is controllable.
-2. Split boundary construction from official boundary evaluation.
-3. Add explicit VMEC failure semantics and clear low-fi vs high-fi labeling.
-4. Run a small measured sweep before locking ranges, deltas, or budget changes.
-5. Freeze fixtures and run manual playtests before heavy training work.
-6. Mark the current reward as `V0`.
-7. Log the first real pathology and reward revision.
-8. Do not let notebook or video work outrun the environment evidence.
+1. Run a small measured sweep before locking ranges, deltas, or budget changes.
+2. Freeze fixtures and run manual playtests before heavy training work.
+3. Mark the current reward as `V0`.
+4. Log the first real pathology and reward revision.
+5. Do not let notebook or video work outrun the environment evidence.
