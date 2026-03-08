@@ -14,14 +14,35 @@ Training is supporting evidence. The environment is the product.
 
 ## Current Status
 
-This repository is the clean hackathon workspace. The detailed planning docs live in [docs/FUSION_DESIGN_LAB_PLAN_V2.md](/Users/suhjungdae/code/fusion-design-lab/docs/FUSION_DESIGN_LAB_PLAN_V2.md), [docs/FUSION_DELIVERABLES_MAP.md](/Users/suhjungdae/code/fusion-design-lab/docs/FUSION_DELIVERABLES_MAP.md), and [docs/FUSION_NEXT_12_HOURS_CHECKLIST.md](/Users/suhjungdae/code/fusion-design-lab/docs/FUSION_NEXT_12_HOURS_CHECKLIST.md).
+This repository is the clean hackathon workspace. The detailed planning docs live in `docs/FUSION_DESIGN_LAB_PLAN_V2.md`, `docs/FUSION_DELIVERABLES_MAP.md`, and `docs/FUSION_NEXT_12_HOURS_CHECKLIST.md`.
 
 Implementation status:
 
 - `P1` is locked as the benchmark task
 - docs are aligned to fresh `P1` wiring in this repo
-- shared models and server/client entry points exist
-- the runtime environment still needs to be rewired from the old toy scaffold to the real `P1` contract
+- shared models, baselines, and server/client entry points now reflect the locked `P1` contract
+- the current environment uses a synthetic `P1` evaluator; the next runtime step is swapping in `constellaration` as the verifier of record
+
+## Execution Status
+
+- [x] Lock the `P1` contract in code
+- [x] Rewrite shared models to the rotating-ellipse `P1` schema
+- [x] Rewrite the environment loop to the rotating-ellipse `P1` schema
+- [x] Update the API/task surface to match `P1`
+- [x] Update baseline agents to the `P1` contract
+- [x] Add a post-terminal guard so `step()` is a no-op after `done=True`
+- [x] Run an initial baseline comparison on the current synthetic `P1` branch state
+- [ ] Replace the synthetic evaluator with `constellaration`
+- [ ] Add tracked `P1` fixtures under `server/data/p1/`
+- [ ] Run manual playtesting and record the first reward pathology
+- [ ] Deploy the real environment to HF Space
+
+## Known Gaps
+
+- The current evaluator in `server/physics.py` is a synthetic proxy for `P1`, not the official `constellaration` verifier yet.
+- `BASELINE_PARAMS` is intentionally repairable but currently infeasible at reset; do not describe it as a feasible anchor.
+- Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
+- The first local baseline run is only a synthetic-proxy sanity check; heuristic beat random on 20/20 seeded episodes, but this should be re-run after `constellaration` wiring.
 
 Current mode:
 
@@ -84,11 +105,10 @@ uv sync --extra notebooks
    - import `constellaration`
    - run one rotating-ellipse generation plus one low-fidelity verifier call
    - write an artifact to persistent storage
-3. Rewrite [server/environment.py](/Users/suhjungdae/code/fusion-design-lab/server/environment.py) to the locked `P1` contract.
-4. Rewrite [server/physics.py](/Users/suhjungdae/code/fusion-design-lab/server/physics.py) to use `constellaration`-based `P1` verification.
-5. Add tracked `P1` fixtures under [server/data/p1](/Users/suhjungdae/code/fusion-design-lab/server/data/p1).
-6. Add the Colab notebook under [training/notebooks](/Users/suhjungdae/code/fusion-design-lab/training/notebooks).
-7. Run manual playtest episodes before heavy training work.
+3. Replace the synthetic evaluator in `server/physics.py` with `constellaration`-based `P1` verification.
+4. Add tracked `P1` fixtures under `server/data/p1`.
+5. Add the Colab notebook under `training/notebooks`.
+6. Run manual playtest episodes before heavy training work.
 
 These are implementation steps, not another planning phase.
 

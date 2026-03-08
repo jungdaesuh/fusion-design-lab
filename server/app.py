@@ -4,10 +4,11 @@ from openenv.core import create_fastapi_app
 
 from fusion_lab.models import StellaratorAction, StellaratorObservation
 from server.environment import (
-    ASPECT_RATIO_RANGE,
+    ASPECT_RATIO_MAX,
+    AVERAGE_TRIANGULARITY_MAX,
     BUDGET,
-    IOTA_EDGE_RANGE,
-    VOLUME_MIN,
+    EDGE_IOTA_OVER_NFP_MIN,
+    N_FIELD_PERIODS,
     StellaratorEnvironment,
 )
 
@@ -21,18 +22,18 @@ app = create_fastapi_app(
 @app.get("/task")
 def task_summary() -> dict[str, object]:
     return {
-        "description": "Minimize quasi-symmetry error for a 2-period quasi-helical stellarator.",
+        "description": "Optimize the P1 benchmark with a rotating-ellipse parameterization.",
         "constraints": {
-            "aspect_ratio": list(ASPECT_RATIO_RANGE),
-            "rotational_transform_edge": list(IOTA_EDGE_RANGE),
-            "volume_min": VOLUME_MIN,
+            "aspect_ratio_max": ASPECT_RATIO_MAX,
+            "average_triangularity_max": AVERAGE_TRIANGULARITY_MAX,
+            "edge_iota_over_nfp_min": EDGE_IOTA_OVER_NFP_MIN,
         },
+        "n_field_periods": N_FIELD_PERIODS,
         "budget": BUDGET,
         "actions": ["run", "submit", "restore_best"],
-        "operators": ["tune_rc10", "tune_rc11", "tune_zs11", "tune_zs12"],
+        "parameters": ["aspect_ratio", "elongation", "rotational_transform"],
         "directions": ["increase", "decrease"],
         "magnitudes": ["small", "medium", "large"],
-        "restart_modes": ["hot", "cold"],
     }
 
 

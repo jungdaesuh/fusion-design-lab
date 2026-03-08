@@ -220,7 +220,7 @@ If constellaration deployment fails (Docker build, HF Spaces issues):
 
 Start with 1-2 rotating-ellipse configurations for sanity checks and expand only if the implementation needs more coverage:
 
-1. **Near-feasible anchor:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — expected to be close to P1 boundary
+1. **Repairable baseline anchor:** aspect_ratio=3.5, elongation=1.5, rotational_transform=0.4 — intentionally infeasible at reset but close enough to support short repair/improvement episodes
 2. **Infeasible reference:** aspect_ratio=5.0, elongation=3.0, rotational_transform=0.2 — expected to violate constraints
 3. **Baseline comparison:** add only if manual playtesting shows a second start state is useful
 

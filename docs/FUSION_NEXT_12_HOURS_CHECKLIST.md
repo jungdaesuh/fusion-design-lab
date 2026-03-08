@@ -6,6 +6,15 @@ This checklist turns the updated deliverables map and Plan V2 into concrete exec
 
 Do not expand scope beyond one stable task. Training is supporting evidence, not the main story.
 
+## Current Branch Status
+
+- [x] `P1` task is locked
+- [x] rotating-ellipse `P1` contract is implemented in the working tree
+- [x] baselines and API surface have been moved to the `P1` contract
+- [x] add a post-terminal guard in `step()`
+- [ ] replace the synthetic evaluator with `constellaration`
+- [ ] add tracked fixtures and manual playtest evidence
+
 ## Plan V2 Inheritance
 
 Carry these rules through the whole checklist:

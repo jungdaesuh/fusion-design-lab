@@ -8,10 +8,9 @@ import sys
 from fusion_lab.models import StellaratorAction
 from server.environment import StellaratorEnvironment
 
-OPERATORS = ["tune_rc10", "tune_rc11", "tune_zs11", "tune_zs12"]
+PARAMETERS = ["aspect_ratio", "elongation", "rotational_transform"]
 DIRECTIONS = ["increase", "decrease"]
 MAGNITUDES = ["small", "medium", "large"]
-RESTARTS = ["hot", "cold"]
 
 
 def random_episode(
@@ -20,7 +19,7 @@ def random_episode(
     rng = random.Random(seed)
     obs = env.reset(seed=seed)
     total_reward = 0.0
-    trace: list[dict[str, object]] = [{"step": 0, "qs": obs.quasi_symmetry_residual}]
+    trace: list[dict[str, object]] = [{"step": 0, "score": obs.p1_score}]
 
     while not obs.done:
         if obs.budget_remaining <= 0:
@@ -28,10 +27,9 @@ def random_episode(
         else:
             action = StellaratorAction(
                 intent="run",
-                operator=rng.choice(OPERATORS),
+                parameter=rng.choice(PARAMETERS),
                 direction=rng.choice(DIRECTIONS),
                 magnitude=rng.choice(MAGNITUDES),
-                restart=rng.choice(RESTARTS),
             )
         obs = env.step(action)
         total_reward += obs.reward or 0.0
@@ -39,8 +37,8 @@ def random_episode(
             {
                 "step": len(trace),
                 "action": action.intent,
-                "qs": obs.quasi_symmetry_residual,
-                "best_qs": obs.best_qs_residual,
+                "score": obs.p1_score,
+                "best_score": obs.best_score,
                 "reward": obs.reward,
             }
         )
@@ -58,7 +56,7 @@ def main(n_episodes: int = 20) -> None:
         rewards.append(total_reward)
         print(
             f"Episode {i:3d}: steps={len(trace) - 1}  "
-            f"final_qs={final['qs']:.6f}  best_qs={final['best_qs']:.6f}  "
+            f"final_score={final['score']:.6f}  best_score={final['best_score']:.6f}  "
             f"reward={total_reward:+.4f}"
         )
 

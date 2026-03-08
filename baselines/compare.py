@@ -14,27 +14,27 @@ def main(n_episodes: int = 20) -> None:
 
     random_rewards: list[float] = []
     heuristic_rewards: list[float] = []
-    random_best_qs: list[float] = []
-    heuristic_best_qs: list[float] = []
+    random_best_scores: list[float] = []
+    heuristic_best_scores: list[float] = []
 
     for i in range(n_episodes):
         rr, rt = random_episode(env, seed=i)
         random_rewards.append(rr)
-        random_best_qs.append(rt[-1]["best_qs"])
+        random_best_scores.append(rt[-1]["best_score"])
 
         hr, ht = heuristic_episode(env, seed=i)
         heuristic_rewards.append(hr)
-        heuristic_best_qs.append(ht[-1]["best_qs"])
+        heuristic_best_scores.append(ht[-1]["best_score"])
 
     r_mean = sum(random_rewards) / len(random_rewards)
     h_mean = sum(heuristic_rewards) / len(heuristic_rewards)
-    r_qs = sum(random_best_qs) / len(random_best_qs)
-    h_qs = sum(heuristic_best_qs) / len(heuristic_best_qs)
+    r_score = sum(random_best_scores) / len(random_best_scores)
+    h_score = sum(heuristic_best_scores) / len(heuristic_best_scores)
 
     print(f"{'Metric':<25} {'Random':>12} {'Heuristic':>12}")
     print("-" * 51)
     print(f"{'Mean reward':<25} {r_mean:>+12.4f} {h_mean:>+12.4f}")
-    print(f"{'Mean best QS residual':<25} {r_qs:>12.6f} {h_qs:>12.6f}")
+    print(f"{'Mean best P1 score':<25} {r_score:>12.6f} {h_score:>12.6f}")
     print(f"{'Episodes':<25} {n_episodes:>12d} {n_episodes:>12d}")
     print()
 

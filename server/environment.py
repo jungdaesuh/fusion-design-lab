@@ -1,37 +1,52 @@
 from __future__ import annotations
 
+from random import Random
 from typing import Any, Final, Optional
 
 from openenv.core import Environment as BaseEnvironment
 
 from fusion_lab.models import (
+    RotatingEllipseParams,
     StellaratorAction,
     StellaratorObservation,
     StellaratorState,
 )
-from server.physics import Diagnostics, PhysicsEngine
-
-BUDGET: Final[int] = 6
-
-ASPECT_RATIO_RANGE: Final[tuple[float, float]] = (4.5, 7.0)
-IOTA_EDGE_RANGE: Final[tuple[float, float]] = (0.3, 0.6)
-VOLUME_MIN: Final[float] = 0.5
-
-TARGET_SPEC: Final[str] = (
-    "Minimize quasi-symmetry residual for a 2-period quasi-helical stellarator. "
-    "Constraints: aspect ratio in [4.5, 7.0], edge iota in [0.3, 0.6], volume > 0.5 m³. "
-    "Budget: 6 evaluations."
+from server.physics import (
+    ASPECT_RATIO_MAX,
+    AVERAGE_TRIANGULARITY_MAX,
+    EDGE_IOTA_OVER_NFP_MIN,
+    FEASIBILITY_TOLERANCE,
+    EvaluationMetrics,
+    evaluate_params,
 )
 
+BUDGET: Final[int] = 6
+N_FIELD_PERIODS: Final[int] = 3
 
-def check_constraints(diag: Diagnostics) -> bool:
-    ar_lo, ar_hi = ASPECT_RATIO_RANGE
-    iota_lo, iota_hi = IOTA_EDGE_RANGE
-    return (
-        ar_lo <= diag.aspect_ratio <= ar_hi
-        and iota_lo <= diag.iota_edge <= iota_hi
-        and diag.volume >= VOLUME_MIN
-    )
+PARAMETER_RANGES: Final[dict[str, tuple[float, float]]] = {
+    "aspect_ratio": (2.0, 8.0),
+    "elongation": (1.0, 5.0),
+    "rotational_transform": (0.1, 1.0),
+}
+
+PARAMETER_DELTAS: Final[dict[str, dict[str, float]]] = {
+    "aspect_ratio": {"small": 0.1, "medium": 0.3, "large": 0.8},
+    "elongation": {"small": 0.1, "medium": 0.3, "large": 0.8},
+    "rotational_transform": {"small": 0.02, "medium": 0.05, "large": 0.15},
+}
+
+BASELINE_PARAMS: Final[RotatingEllipseParams] = RotatingEllipseParams(
+    aspect_ratio=3.5,
+    elongation=1.5,
+    rotational_transform=0.4,
+)
+
+TARGET_SPEC: Final[str] = (
+    "Optimize the P1 benchmark using a rotating-ellipse parameterization. "
+    "Constraints: aspect ratio <= 4.0, average triangularity <= -0.5, "
+    "edge rotational transform / n_field_periods >= 0.3. "
+    "Budget: 6 evaluations."
+)
 
 
 class StellaratorEnvironment(
@@ -39,9 +54,9 @@ class StellaratorEnvironment(
 ):
     def __init__(self) -> None:
         super().__init__()
-        self._engine = PhysicsEngine()
         self._state = StellaratorState()
-        self._last_diag: Diagnostics | None = None
+        self._last_metrics: EvaluationMetrics | None = None
+        self._rng = Random()
 
     def reset(
         self,
@@ -49,22 +64,27 @@ class StellaratorEnvironment(
         episode_id: Optional[str] = None,
         **kwargs: Any,
     ) -> StellaratorObservation:
-        diag = self._engine.reset(seed)
-        satisfied = check_constraints(diag)
+        self._rng = Random(seed)
+        params = self._initial_params(seed)
+        metrics = evaluate_params(params)
         self._state = StellaratorState(
             episode_id=episode_id,
             step_count=0,
-            initial_qs=diag.qs_residual,
-            current_qs=diag.qs_residual,
-            prev_qs=diag.qs_residual,
-            best_qs=diag.qs_residual,
+            current_params=params,
+            best_params=params,
+            initial_score=metrics.p1_score,
+            best_score=metrics.p1_score,
+            current_feasibility=metrics.p1_feasibility,
+            best_feasibility=metrics.p1_feasibility,
             budget_total=BUDGET,
             budget_remaining=BUDGET,
-            constraints_satisfied=satisfied,
+            episode_done=False,
+            constraints_satisfied=metrics.constraints_satisfied,
         )
-        self._last_diag = diag
+        self._last_metrics = metrics
         return self._build_observation(
-            diag, satisfied, action_summary="Episode started. Baseline design loaded."
+            metrics,
+            action_summary="Episode started from the rotating-ellipse baseline.",
         )
 
     def step(
@@ -73,7 +93,15 @@ class StellaratorEnvironment(
         timeout_s: Optional[float] = None,
         **kwargs: Any,
     ) -> StellaratorObservation:
-        self._state.prev_qs = self._state.current_qs
+        if self._state.episode_done or self._state.budget_remaining <= 0:
+            metrics = self._last_metrics or evaluate_params(self._state.current_params)
+            return self._build_observation(
+                metrics,
+                action_summary=("Episode already ended. Call reset() before sending more actions."),
+                reward=0.0,
+                done=True,
+            )
+
         self._state.step_count += 1
 
         if action.intent == "submit":
@@ -91,108 +119,131 @@ class StellaratorEnvironment(
     # ------------------------------------------------------------------
 
     def _handle_run(self, action: StellaratorAction) -> StellaratorObservation:
-        if not all([action.operator, action.direction, action.magnitude]):
+        if not all([action.parameter, action.direction, action.magnitude]):
             return self._handle_invalid_run()
 
         self._state.budget_remaining -= 1
-
-        diag = self._engine.modify_and_run(
-            operator=action.operator,
+        params = self._apply_action(
+            params=self._state.current_params,
+            parameter=action.parameter,
             direction=action.direction,
             magnitude=action.magnitude,
-            restart=action.restart or "hot",
         )
-
-        satisfied = check_constraints(diag) if diag.converged else self._state.constraints_satisfied
-
-        if diag.converged:
-            self._state.current_qs = diag.qs_residual
-            if diag.qs_residual < self._state.best_qs:
-                self._state.best_qs = diag.qs_residual
-            self._state.constraints_satisfied = satisfied
+        metrics = evaluate_params(params)
+        self._state.current_params = params
+        self._state.current_feasibility = metrics.p1_feasibility
+        self._state.constraints_satisfied = metrics.constraints_satisfied
+        self._update_best(params, metrics)
 
         done = self._state.budget_remaining <= 0
-        reward = self._compute_reward(diag, action.intent, done)
-        summary = self._summary_run(action, diag)
+        reward = self._compute_reward(metrics, action.intent, done)
+        summary = self._summary_run(action, metrics)
         self._state.history.append(summary)
-        self._last_diag = diag
+        self._last_metrics = metrics
+        self._state.episode_done = done
 
         return self._build_observation(
-            diag, satisfied, action_summary=summary, reward=reward, done=done
+            metrics,
+            action_summary=summary,
+            reward=reward,
+            done=done,
         )
 
     def _handle_submit(self) -> StellaratorObservation:
-        diag = self._last_diag or self._engine.restore_best()
-        satisfied = check_constraints(diag)
-        reward = self._compute_reward(diag, "submit", done=True)
-        summary = self._summary_submit(satisfied)
+        metrics = self._last_metrics or evaluate_params(self._state.current_params)
+        reward = self._compute_reward(metrics, "submit", done=True)
+        summary = self._summary_submit(metrics)
         self._state.history.append(summary)
+        self._state.episode_done = True
 
         return self._build_observation(
-            diag, satisfied, action_summary=summary, reward=reward, done=True
+            metrics,
+            action_summary=summary,
+            reward=reward,
+            done=True,
         )
 
     def _handle_restore(self) -> StellaratorObservation:
         self._state.budget_remaining -= 1
-
-        diag = self._engine.restore_best()
-        self._state.current_qs = diag.qs_residual
-        satisfied = check_constraints(diag)
-        self._state.constraints_satisfied = satisfied
+        self._state.current_params = self._state.best_params
+        metrics = evaluate_params(self._state.current_params)
+        self._state.current_feasibility = metrics.p1_feasibility
+        self._state.constraints_satisfied = metrics.constraints_satisfied
 
         done = self._state.budget_remaining <= 0
-        reward = self._compute_reward(diag, "restore_best", done)
-        summary = f"Restored best design. QS residual: {diag.qs_residual:.6f}."
+        reward = self._compute_reward(metrics, "restore_best", done)
+        summary = (
+            "Restored the best-known design. "
+            f"Score={metrics.p1_score:.6f}, feasibility={metrics.p1_feasibility:.6f}."
+        )
         self._state.history.append(summary)
-        self._last_diag = diag
+        self._last_metrics = metrics
+        self._state.episode_done = done
 
         return self._build_observation(
-            diag, satisfied, action_summary=summary, reward=reward, done=done
+            metrics,
+            action_summary=summary,
+            reward=reward,
+            done=done,
         )
 
     def _handle_invalid_run(self) -> StellaratorObservation:
         self._state.budget_remaining -= 1
-        diag = self._last_diag or self._engine.restore_best()
-        satisfied = check_constraints(diag)
+        metrics = self._last_metrics or evaluate_params(self._state.current_params)
         done = self._state.budget_remaining <= 0
-        summary = "Invalid run action: operator, direction, and magnitude are required."
+        summary = "Invalid run action: parameter, direction, and magnitude are required."
         self._state.history.append(summary)
+        self._state.episode_done = done
         return self._build_observation(
-            diag, satisfied, action_summary=summary, reward=-1.0, done=done
+            metrics,
+            action_summary=summary,
+            reward=-1.0,
+            done=done,
         )
 
     # ------------------------------------------------------------------
     # Reward V0
     # ------------------------------------------------------------------
 
-    def _compute_reward(self, diag: Diagnostics, intent: str, done: bool) -> float:
+    def _compute_reward(
+        self,
+        metrics: EvaluationMetrics,
+        intent: str,
+        done: bool,
+    ) -> float:
+        previous_metrics = self._last_metrics or metrics
         reward = 0.0
 
-        if diag.converged and self._state.prev_qs < float("inf"):
-            improvement = self._state.prev_qs - diag.qs_residual
-            reward += improvement * 500.0
+        if metrics.constraints_satisfied and not previous_metrics.constraints_satisfied:
+            reward += 3.0
+        if previous_metrics.constraints_satisfied and not metrics.constraints_satisfied:
+            reward -= 3.0
 
-        if diag.converged and not check_constraints(diag):
-            reward -= 2.0
-
-        if not diag.converged:
-            reward -= 1.5
+        if metrics.constraints_satisfied:
+            reward += (previous_metrics.max_elongation - metrics.max_elongation) * 10.0
+        else:
+            reward += (previous_metrics.p1_feasibility - metrics.p1_feasibility) * 5.0
 
         if intent != "submit":
             reward -= 0.1
 
         if intent == "submit":
-            if self._state.best_qs < self._state.initial_qs:
-                ratio = 1.0 - (self._state.best_qs / max(self._state.initial_qs, 1e-9))
-                reward += 5.0 * ratio
-                reward += 1.0 * (self._state.budget_remaining / self._state.budget_total)
+            if metrics.constraints_satisfied and self._state.best_score > self._state.initial_score:
+                improvement_ratio = (self._state.best_score - self._state.initial_score) / max(
+                    1.0 - self._state.initial_score, 1e-6
+                )
+                budget_efficiency = self._state.budget_remaining / self._state.budget_total
+                reward += 5.0 * improvement_ratio + budget_efficiency
             else:
                 reward -= 1.0
-
-        if done and intent != "submit":
-            if self._state.best_qs < self._state.initial_qs:
-                ratio = 1.0 - (self._state.best_qs / max(self._state.initial_qs, 1e-9))
-                reward += 2.0 * ratio
+        elif done:
+            if metrics.constraints_satisfied and self._state.best_score > self._state.initial_score:
+                improvement_ratio = (self._state.best_score - self._state.initial_score) / max(
+                    1.0 - self._state.initial_score, 1e-6
+                )
+                reward += 2.0 * improvement_ratio
+            else:
+                reward -= 0.5
 
         return round(reward, 4)
 
@@ -202,8 +253,7 @@ class StellaratorEnvironment(
 
     def _build_observation(
         self,
-        diag: Diagnostics,
-        satisfied: bool,
+        metrics: EvaluationMetrics,
         action_summary: str,
         reward: float | None = None,
         done: bool = False,
@@ -211,29 +261,30 @@ class StellaratorEnvironment(
         text_lines = [
             action_summary,
             "",
-            f"QS Residual: {diag.qs_residual:.6f}  |  Best: {self._state.best_qs:.6f}",
-            f"Aspect Ratio: {diag.aspect_ratio:.4f}  [4.5, 7.0]",
-            f"Edge Iota: {diag.iota_edge:.4f}  [0.3, 0.6]",
-            f"Volume: {diag.volume:.4f} m³  (min 0.5)",
-            f"Magnetic Well: {diag.magnetic_well_depth:.4f}",
-            f"VMEC Converged: {diag.converged}",
-            f"Constraints: {'SATISFIED' if satisfied else 'VIOLATED'}",
-            f"Step: {self._state.step_count}  |  Budget: {self._state.budget_remaining}/{self._state.budget_total}",
+            f"max_elongation={metrics.max_elongation:.4f}  |  best_score={self._state.best_score:.6f}",
+            f"aspect_ratio={metrics.aspect_ratio:.4f}  (<= {ASPECT_RATIO_MAX:.1f})",
+            f"average_triangularity={metrics.average_triangularity:.4f}  (<= {AVERAGE_TRIANGULARITY_MAX:.1f})",
+            f"edge_iota_over_nfp={metrics.edge_iota_over_nfp:.4f}  (>= {EDGE_IOTA_OVER_NFP_MIN:.1f})",
+            f"feasibility={metrics.p1_feasibility:.6f}  |  best_feasibility={self._state.best_feasibility:.6f}",
+            f"vacuum_well={metrics.vacuum_well:.4f}",
+            f"constraints={'SATISFIED' if metrics.constraints_satisfied else 'VIOLATED'}",
+            f"step={self._state.step_count}  |  budget={self._state.budget_remaining}/{self._state.budget_total}",
         ]
 
         return StellaratorObservation(
             diagnostics_text="\n".join(text_lines),
-            quasi_symmetry_residual=diag.qs_residual,
-            aspect_ratio=diag.aspect_ratio,
-            rotational_transform_axis=diag.iota_axis,
-            rotational_transform_edge=diag.iota_edge,
-            magnetic_well_depth=diag.magnetic_well_depth,
-            volume=diag.volume,
-            vmec_converged=diag.converged,
+            max_elongation=metrics.max_elongation,
+            aspect_ratio=metrics.aspect_ratio,
+            average_triangularity=metrics.average_triangularity,
+            edge_iota_over_nfp=metrics.edge_iota_over_nfp,
+            p1_score=metrics.p1_score,
+            p1_feasibility=metrics.p1_feasibility,
+            vacuum_well=metrics.vacuum_well,
             step_number=self._state.step_count,
             budget_remaining=self._state.budget_remaining,
-            best_qs_residual=self._state.best_qs,
-            constraints_satisfied=satisfied,
+            best_score=self._state.best_score,
+            best_feasibility=self._state.best_feasibility,
+            constraints_satisfied=metrics.constraints_satisfied,
             target_spec=TARGET_SPEC,
             reward=reward,
             done=done,
@@ -243,20 +294,85 @@ class StellaratorEnvironment(
     # Action summaries
     # ------------------------------------------------------------------
 
-    def _summary_run(self, action: StellaratorAction, diag: Diagnostics) -> str:
-        restart_note = f" ({action.restart} restart)" if action.restart else ""
-        header = f"Applied {action.operator} {action.direction} {action.magnitude}{restart_note}."
-
-        if diag.converged:
-            delta = self._state.prev_qs - diag.qs_residual
-            direction = "improved" if delta > 0 else "worsened" if delta < 0 else "unchanged"
-            return f"{header} VMEC converged. QS {direction}: {self._state.prev_qs:.6f} -> {diag.qs_residual:.6f}."
-        return f"{header} VMEC failed to converge. Change reverted."
-
-    def _summary_submit(self, satisfied: bool) -> str:
-        status = "Constraints satisfied." if satisfied else "Constraints VIOLATED."
-        improvement = self._state.initial_qs - self._state.best_qs
+    def _summary_run(self, action: StellaratorAction, metrics: EvaluationMetrics) -> str:
+        assert action.parameter is not None
+        assert action.direction is not None
+        assert action.magnitude is not None
+        previous_metrics = self._last_metrics or metrics
+        if metrics.constraints_satisfied:
+            delta = previous_metrics.max_elongation - metrics.max_elongation
+            objective_summary = (
+                f"max_elongation changed by {delta:+.4f} to {metrics.max_elongation:.4f}."
+            )
+        else:
+            delta = previous_metrics.p1_feasibility - metrics.p1_feasibility
+            objective_summary = (
+                f"feasibility changed by {delta:+.6f} to {metrics.p1_feasibility:.6f}."
+            )
         return (
-            f"Design submitted. Best QS residual: {self._state.best_qs:.6f} "
-            f"(improved by {improvement:.6f} from initial). {status}"
+            f"Applied {action.parameter} {action.direction} {action.magnitude}. {objective_summary}"
         )
+
+    def _summary_submit(self, metrics: EvaluationMetrics) -> str:
+        return (
+            f"Submitted design with best_score={self._state.best_score:.6f}, "
+            f"best_feasibility={self._state.best_feasibility:.6f}, "
+            f"constraints={'SATISFIED' if metrics.constraints_satisfied else 'VIOLATED'}."
+        )
+
+    def _initial_params(self, seed: int | None) -> RotatingEllipseParams:
+        if seed is None:
+            return BASELINE_PARAMS
+        rng = Random(seed)
+        return RotatingEllipseParams(
+            aspect_ratio=self._clamp(
+                BASELINE_PARAMS.aspect_ratio + rng.uniform(-0.1, 0.1),
+                parameter="aspect_ratio",
+            ),
+            elongation=self._clamp(
+                BASELINE_PARAMS.elongation + rng.uniform(-0.1, 0.1),
+                parameter="elongation",
+            ),
+            rotational_transform=self._clamp(
+                BASELINE_PARAMS.rotational_transform + rng.uniform(-0.015, 0.015),
+                parameter="rotational_transform",
+            ),
+        )
+
+    def _apply_action(
+        self,
+        params: RotatingEllipseParams,
+        parameter: str,
+        direction: str,
+        magnitude: str,
+    ) -> RotatingEllipseParams:
+        delta = PARAMETER_DELTAS[parameter][magnitude]
+        signed_delta = delta if direction == "increase" else -delta
+
+        next_values = params.model_dump()
+        next_values[parameter] = self._clamp(
+            next_values[parameter] + signed_delta,
+            parameter=parameter,
+        )
+        return RotatingEllipseParams.model_validate(next_values)
+
+    def _clamp(self, value: float, *, parameter: str) -> float:
+        lower, upper = PARAMETER_RANGES[parameter]
+        return min(max(value, lower), upper)
+
+    def _update_best(self, params: RotatingEllipseParams, metrics: EvaluationMetrics) -> None:
+        current_rank = self._candidate_rank(metrics)
+        best_rank = (
+            (1, self._state.best_score)
+            if self._state.best_feasibility <= FEASIBILITY_TOLERANCE
+            else (0, -self._state.best_feasibility)
+        )
+        if current_rank > best_rank:
+            self._state.best_params = params
+            self._state.best_score = metrics.p1_score
+            self._state.best_feasibility = metrics.p1_feasibility
+
+    def _candidate_rank(self, metrics: EvaluationMetrics) -> tuple[int, float]:
+        if metrics.constraints_satisfied:
+            return (1, metrics.p1_score)
+        return (0, -metrics.p1_feasibility)
