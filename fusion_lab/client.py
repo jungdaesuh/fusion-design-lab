@@ -13,11 +13,14 @@ class FusionLabClient(EnvClient[StellaratorAction, StellaratorObservation, Stell
         return action.model_dump(exclude_none=True)
 
     def _parse_result(self, payload: dict[str, object]) -> StepResult[StellaratorObservation]:
-        observation = StellaratorObservation.model_validate(payload)
+        observation_payload = dict(payload.get("observation", {}))
+        observation_payload["reward"] = payload.get("reward")
+        observation_payload["done"] = payload.get("done", False)
+        observation = StellaratorObservation.model_validate(observation_payload)
         return StepResult(
             observation=observation,
-            reward=observation.reward,
-            done=observation.done,
+            reward=payload.get("reward"),
+            done=payload.get("done", False),
         )
 
     def _parse_state(self, payload: dict[str, object]) -> StellaratorState:
