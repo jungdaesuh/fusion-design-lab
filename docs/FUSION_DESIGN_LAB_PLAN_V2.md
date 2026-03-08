@@ -4,6 +4,19 @@
 **Track:** Statement 3.1 (World Modeling — Professional Tasks)
 **Status:** Judge-aligned plan with `P1` locked
 
+## 0. Current Branch Status
+
+- [x] `P1` task family is locked
+- [x] rotating-ellipse `P1` contract is implemented in code
+- [x] real `constellaration` verifier wiring is in place
+- [x] low-fidelity `run` plus high-fidelity `submit` split is documented
+- [x] post-terminal `step()` guard is in place
+- [x] baseline comparison has been rerun on the real verifier path
+- [ ] tracked `P1` fixtures are added
+- [ ] manual playtest evidence is recorded
+- [ ] heuristic baseline is refreshed for the real verifier path
+- [ ] HF Space deployment evidence is recorded
+
 ## 1. Submission Thesis
 
 We are not primarily submitting "a trained model for fusion."
@@ -154,7 +167,7 @@ Allowed reuse:
 
 Implementation handoff:
 
-- the remaining work is now wiring, smoke validation, manual playtesting, baselines, and deployment
+- the remaining work is now fixture coverage, manual playtesting, heuristic refresh, smoke validation, and deployment
 - do not treat supporting decision notes as a new planning backlog
 
 ## 8.1 Compute Surfaces
@@ -295,6 +308,10 @@ We should expect at least some of these:
 - the agent overuses `restore_best`
 
 The reward is only acceptable after we test for those behaviors.
+
+Important execution rule:
+
+- if manual playtesting does not reveal a real pathology, keep `Reward V0` and document that outcome rather than forcing a `Reward V1`
 
 ## 12. Verifier and Reward Fixture Checks
 

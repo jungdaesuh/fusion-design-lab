@@ -1,5 +1,14 @@
 Random and heuristic baselines will live here.
 
+## Status
+
+- [x] random baseline exists
+- [x] heuristic baseline exists
+- [x] baseline comparison script exists
+- [x] baseline comparison rerun completed on the real verifier path
+- [ ] heuristic refreshed after the real-verifier rerun
+- [ ] presentation-ready comparison trace exported
+
 The first baseline milestone is:
 
 - one random agent
