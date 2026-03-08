@@ -51,6 +51,7 @@ Do not leave silent divergence.
 - `SSOT`: keep one canonical definition for the environment contract, reward semantics, and task wording.
 - `SOLID`: keep modules focused, interfaces clear, and responsibilities separated.
 - `Occam's Razor`: when two approaches work, prefer the one with fewer moving parts and fewer assumptions.
+- `No Fallout`: keep refactors atomic. Do not leave stale schemas, stale consumers, or half-migrated task terms behind.
 
 ## Working Rules
 
@@ -62,6 +63,8 @@ Do not leave silent divergence.
 - Do not optimize notebook/training work ahead of local environment stability, remote environment stability, and baseline comparisons.
 - Do not create new planning loops around decisions that are already locked in the SSOT docs unless a hard blocker appears.
 - Treat supporting decision records as rationale, not as a fresh task queue.
+- Do not leave fallout after contract changes. If a schema, action, reward, or task term changes, update dependent files in the same task so the repo stays coherent.
+- Do not leave stale consumers behind after refactors. Task summaries, baselines, notebooks, and docs must either match the new contract or be deliberately updated.
 
 ## Environment Contract Rules
 
@@ -108,6 +111,12 @@ If a human cannot act coherently from the observation, fix the environment contr
 ## Validation
 
 For scoped changes, prefer the smallest relevant checks first.
+
+## Environment and Tooling
+
+- This repo uses `uv` as the package and environment manager.
+- Prefer `uv sync`, `uv run`, and `uv lock` for local work, Northflank, and HF Space builds.
+- Do not introduce `conda`-specific setup into this repo unless a real blocker forces it and the change is documented.
 
 Current useful commands:
 
