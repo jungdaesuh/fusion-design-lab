@@ -1,7 +1,7 @@
 # P1 Parameterization Deep-Dive
 
 **Date:** 2026-03-07
-**Status:** Findings complete. Implementation pending.
+**Status:** Findings complete. Partial implementation exists; parameterization repair pending.
 
 This document records the investigation into why the current 3-knob rotating-ellipse
 environment cannot produce P1-feasible designs, what the original winning session
@@ -136,7 +136,7 @@ n_field_periods = 3
 mpol = 3, ntor = 3
 ```
 
-**Result (reproduced twice):**
+**Result from the recorded sweep:**
 
 ```
 Total configs: 256
@@ -305,7 +305,8 @@ constraint-satisfaction and basic optimization, not a path to the leaderboard.
 
 ### Agreed anti-overfitting levers
 
-1. **Multiple reset seeds** (3-10 starting configurations with bounded jitter)
+1. **Multiple frozen reset seeds first** (start with exact seeds; add bounded jitter only
+   if memorization becomes a real problem)
 2. **Held-out evaluation seeds** (test generalization, not memorization)
 3. **Reward based on official scalars only** (feasibility + objective, not per-constraint)
 4. **Domain knowledge in initial state, not reward** (good baseline params in `reset()`,
@@ -357,7 +358,7 @@ This plan was cross-validated with an independent agent that:
 
 | Pushback | Verdict | Resolution |
 |----------|---------|------------|
-| "10/228 feasible is unverified" | **Refuted.** Reproduced exactly twice in live execution. | 256 total, 228 evaluated, 10 feasible. |
+| "10/228 feasible is unverified" | **Partially addressed.** The recorded sweep found feasible points in the repaired 4-knob family, but this exact count should be treated as an artifact-backed result, not a free-floating fact. | Keep the sweep note, and link or preserve the underlying artifact if this exact count will be cited elsewhere. |
 | "rt=1.8 comfortably feasible is too strong" | **Partially valid.** 44% crash rate at 1.8. | rt=1.6 is the true sweet spot: 0% crashes, 6 feasible. |
 | "Delta values are design proposals, not facts" | **Valid.** | Defer to post-build playtesting. |
 | "Seed pool not empirically validated" | **Valid.** | Methodology sound, execution pending. |
@@ -396,6 +397,7 @@ The 4-knob boundary construction, as implemented in the original
 ```python
 from constellaration.initial_guess import generate_rotating_ellipse
 from constellaration.geometry import surface_rz_fourier
+from constellaration.geometry.surface_rz_fourier import SurfaceRZFourier
 import numpy as np
 
 def build_boundary(aspect_ratio, elongation, rotational_transform, tri_scale, nfp=3):

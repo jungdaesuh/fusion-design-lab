@@ -1,6 +1,6 @@
 # P1 Environment Contract V1
 
-**Status:** Technical implementation plan
+**Status:** Technical revision plan over a partial implementation
 **Role:** Supporting spec for the `P1` environment contract
 **SSOT relationship:** This file refines [FUSION_DESIGN_LAB_PLAN_V2.md](FUSION_DESIGN_LAB_PLAN_V2.md). If this file conflicts with the planning SSOT, update both in the same task.
 
@@ -17,6 +17,7 @@ The central change is now explicit:
 
 - the current upstream 3-knob rotating-ellipse family is blocked on P1 triangularity under the real verifier path
 - the next environment contract must repair parameterization before more reward iteration or heuristic work
+- the current repo still exposes the old 3-knob surface and needs to be revised to this 4-knob target
 
 ## Verified Blocker
 
@@ -58,6 +59,12 @@ Keep three layers separate:
 ## Verifier Plan
 
 `server/physics.py` should expose a boundary-based verifier surface.
+
+Current repo state:
+
+- the live code still exposes `evaluate_params(...)`
+- boundary construction and evaluation are not yet split cleanly
+- the verifier rewrite in this file is still pending
 
 Target functions:
 
@@ -120,6 +127,14 @@ For `run`, the controllable parameter should be one of:
 
 This keeps the environment human-playable and aligned with the historical low-dimensional P1 path.
 
+Current repo state:
+
+- the live action schema still exposes only:
+  - `aspect_ratio`
+  - `elongation`
+  - `rotational_transform`
+- the fourth low-dimensional control is still pending
+
 ## Observation Contract
 
 The observation should stay metric-centered and human-readable.
@@ -149,6 +164,11 @@ This can be done either by:
 - explicit fidelity labels in `diagnostics_text`
 
 The minimum requirement is that a reader can tell whether a metric came from low-fi `run` or high-fi `submit`.
+
+Current repo state:
+
+- the live observation surface still presents a single `p1_score` / `p1_feasibility` view
+- the environment and `/task` surface still need an explicit low-fi vs high-fi distinction
 
 ## Reward V0
 
@@ -217,7 +237,7 @@ before tuning reward further
 2. Split boundary construction from official boundary evaluation in [server/physics.py](../server/physics.py).
 3. Update the action and state schema in [fusion_lab/models.py](../fusion_lab/models.py).
 4. Update the episode loop and observation labeling in [server/environment.py](../server/environment.py).
-5. Update the task summary in [server/app.py](../server/app.py).
+5. Update the task summary and public action description in [server/app.py](../server/app.py).
 6. Add explicit VMEC failure semantics in [server/environment.py](../server/environment.py).
 7. Run a small measured sweep to choose ranges, deltas, and reset seeds.
 8. Freeze 1-2 repaired low-dimensional fixtures.
