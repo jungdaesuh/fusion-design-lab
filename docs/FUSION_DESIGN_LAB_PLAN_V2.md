@@ -138,7 +138,7 @@ The environment contract must stay narrow and legible:
 - low-fidelity verifier for normal steps
 - high-fidelity verifier for `submit`
 - readable observation surface with explicit fidelity labeling
-- `Reward V0` kept simple and feasibility-first until playtesting proves a real pathology
+- `Reward V1` kept verifier-native and repair-first, with official normalized violation telemetry
 
 The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V1.md), not here.
 

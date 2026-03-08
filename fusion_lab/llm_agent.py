@@ -45,7 +45,7 @@ Action rules:
 Constraint directions:
 - aspect_ratio <= 4.0
 - average_triangularity <= -0.5
-- edge_iota_over_nfp >= 0.3"""
+- abs(edge_iota_over_nfp) >= 0.3"""
 
 
 def _extract_json_array(text: str) -> str | None:
@@ -143,7 +143,11 @@ def format_observation(observation: StellaratorObservation) -> str:
         f"- average_triangularity: {observation.average_triangularity:.6f} "
         "(must stay <= -0.5)\n"
         f"- edge_iota_over_nfp: {observation.edge_iota_over_nfp:.4f} "
-        "(must stay >= 0.3)\n"
+        "(must satisfy abs(.) >= 0.3)\n"
+        f"- aspect_ratio_violation: {observation.aspect_ratio_violation:.6f}\n"
+        f"- triangularity_violation: {observation.triangularity_violation:.6f}\n"
+        f"- iota_violation: {observation.iota_violation:.6f}\n"
+        f"- dominant_constraint: {observation.dominant_constraint}\n"
         f"- p1_score: {observation.p1_score:.4f}\n"
         f"- p1_feasibility: {observation.p1_feasibility:.6f}\n"
         f"- constraints_satisfied: {observation.constraints_satisfied}\n"

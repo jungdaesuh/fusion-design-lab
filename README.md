@@ -13,7 +13,7 @@ An RL environment where agents optimize stellarator fusion reactor designs by ad
 |---|---|
 | `aspect_ratio` | ≤ 4.0 |
 | `average_triangularity` | ≤ -0.5 |
-| `edge_iota_over_nfp` | ≥ 0.3 |
+| `abs(edge_iota_over_nfp)` | ≥ 0.3 |
 
 The environment uses [`constellaration`](https://pypi.org/project/constellaration/) as the physics verifier — low-fidelity (~0.6s) for the RL inner loop, high-fidelity (~4s) for terminal submit. The live environment still exposes **26 discrete actions** (4 parameters × 2 directions × 3 magnitudes + restore_best + submit), but the standard GRPO notebook and `training/llm_rollout.py` `monitor` / `evaluate` workflows stay on the low-fidelity `run` surface and ignore `submit` by default.
 
@@ -66,7 +66,7 @@ The environment uses [`constellaration`](https://pypi.org/project/constellaratio
 - Historical blocker note: the old 3-knob family was structurally blocked on P1 triangularity with the real verifier path. A sampled low-fidelity sweep kept `average_triangularity` at roughly `+0.004975` and `p1_feasibility` at roughly `1.00995`, with zero feasible samples. That blocker motivated the repaired 4-knob runtime that is now live.
 - The repaired family now has a first coarse measured sweep note in [docs/P1_MEASURED_SWEEP_NOTE.md](docs/P1_MEASURED_SWEEP_NOTE.md), but reset-seed changes and any budget changes should still wait for paired high-fidelity fixture checks.
 - The paired low-fi/high-fi fixture snapshots are now written into each fixture JSON and summarized in `baselines/fixture_high_fidelity_pairs.json`.
-- `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
+- `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `from_boundary_resolution`; do not present step-time metrics as final submission metrics.
 - The standard LLM training and evaluation workflow is now low-fidelity-only: the repo notebook and `training/llm_rollout.py` `monitor` / `evaluate` ignore `submit` by default. Reserve `submit` for explicit replay/debug work, paired fixture checks, submit-side traces, and final evidence.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
 - Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.

@@ -37,7 +37,7 @@ Observed behavior:
 
 `generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` does not meaningfully expose the Fourier mode that controls triangularity.
 
-The historical `rotational_transform` range was also too low to reach the `edge_iota_over_nfp >= 0.3` requirement reliably.
+The historical `rotational_transform` range was also too low to reach the `abs(edge_iota_over_nfp) >= 0.3` requirement reliably.
 
 ## 2. Original Winning Session
 

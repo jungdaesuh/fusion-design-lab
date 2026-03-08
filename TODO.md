@@ -72,7 +72,7 @@ flowchart TD
 
 - [x] Lock the exact `P1` environment contract
   Goal:
-  freeze observation schema, action schema, episode loop, terminal conditions, and `Reward V0`
+  freeze observation schema, action schema, episode loop, terminal conditions, and the live reward contract
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
@@ -213,16 +213,16 @@ flowchart TD
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
   [Deliverables Map](docs/archive/FUSION_DELIVERABLES_MAP.md)
 
-- [ ] Update reward from `V0` to `V1` if playtesting reveals a real pathology
+- [x] Update reward from `V0` to `V1` after playtesting exposed a real repair-path pathology
   Goal:
   keep a short exploit -> fix -> behavior improvement story
   Related:
   [AGENTS.md](AGENTS.md),
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md)
 
-- [ ] Write down whether `Reward V0` survives unchanged
+- [x] Write down why `Reward V0` did not survive unchanged
   Goal:
-  if playtesting does not reveal a real pathology, record that outcome explicitly instead of forcing a `V1`
+  document the concrete pathology: pure `Δ official_feasibility` hid useful non-dominant repairs because official feasibility is a max over normalized constraint violations
   Related:
   [README.md](README.md),
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md)
@@ -294,4 +294,6 @@ flowchart TD
 - [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
 - [x] Do not compare high-fidelity submit scores against low-fidelity best/initial score state in the final story
 - [ ] Do not describe the current baseline reset state as feasible or near-feasible
-- [ ] Do not force a `Reward V1` story if `Reward V0` survives manual playtesting
+- [x] Do not force a `Reward V1` story if `Reward V0` survives manual playtesting
+  Note:
+  completed by recording the concrete `Reward V0` pathology and only then moving to `Reward V1`

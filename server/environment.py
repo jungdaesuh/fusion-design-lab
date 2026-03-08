@@ -8,6 +8,7 @@ from fusion_lab.models import (
     ActionMonitor,
     ActionIntent,
     LowDimBoundaryParams,
+    MagnitudeName,
     RewardBreakdown,
     StellaratorAction,
     StellaratorObservation,
@@ -43,12 +44,22 @@ PARAMETER_DELTAS: Final[dict[str, dict[str, float]]] = {
 TARGET_SPEC: Final[str] = (
     "Optimize the P1 benchmark using a custom low-dimensional boundary family derived "
     "from a rotating-ellipse seed. Constraints: aspect ratio <= 4.0, average "
-    "triangularity <= -0.5, edge rotational transform / n_field_periods >= 0.3. "
+    "triangularity <= -0.5, abs(edge rotational transform / n_field_periods) >= 0.3. "
     "Run actions use low-fidelity verification. Submit uses high-fidelity verification. "
     "Budget: 6 evaluations."
 )
 
 FAILURE_PENALTY: Final[float] = -2.0
+FEASIBILITY_DELTA_WEIGHT: Final[float] = 2.0
+TRIANGULARITY_REPAIR_WEIGHT: Final[float] = 2.0
+ASPECT_RATIO_REPAIR_WEIGHT: Final[float] = 1.0
+IOTA_REPAIR_WEIGHT: Final[float] = 1.0
+STEP_COST_BY_MAGNITUDE: Final[dict[MagnitudeName, float]] = {
+    "small": -0.05,
+    "medium": -0.1,
+    "large": -0.2,
+}
+RESTORE_STEP_COST: Final[float] = -0.1
 
 
 class StellaratorEnvironment(
@@ -150,7 +161,12 @@ class StellaratorEnvironment(
         self._update_best(params, metrics)
 
         done = self._state.budget_remaining <= 0
-        reward_breakdown = self._compute_reward_breakdown(metrics, action.intent, done)
+        reward_breakdown = self._compute_reward_breakdown(
+            metrics,
+            action.intent,
+            done,
+            magnitude=action.magnitude,
+        )
         reward = reward_breakdown.total
         summary = self._summary_run(action, metrics, action_monitor)
         self._state.history.append(summary)
@@ -265,6 +281,7 @@ class StellaratorEnvironment(
         metrics: EvaluationMetrics,
         intent: ActionIntent,
         done: bool,
+        magnitude: MagnitudeName | None = None,
         initial_reference_score: float | None = None,
     ) -> RewardBreakdown:
         recovered_from_failure = self._recovered_from_failed_evaluation(metrics)
@@ -282,7 +299,7 @@ class StellaratorEnvironment(
         if metrics.evaluation_failed:
             breakdown.failure_penalty = FAILURE_PENALTY
             if intent != "submit":
-                breakdown.step_cost = -0.1
+                breakdown.step_cost = self._step_cost(intent=intent, magnitude=magnitude)
             if intent == "submit":
                 breakdown.failure_submit_penalty = -1.0
             elif done:
@@ -302,10 +319,19 @@ class StellaratorEnvironment(
         else:
             breakdown.feasibility_delta_reward = (
                 previous_metrics.p1_feasibility - metrics.p1_feasibility
-            ) * 5.0
+            ) * FEASIBILITY_DELTA_WEIGHT
+            breakdown.triangularity_repair_reward = (
+                previous_metrics.triangularity_violation - metrics.triangularity_violation
+            ) * TRIANGULARITY_REPAIR_WEIGHT
+            breakdown.aspect_ratio_repair_reward = (
+                previous_metrics.aspect_ratio_violation - metrics.aspect_ratio_violation
+            ) * ASPECT_RATIO_REPAIR_WEIGHT
+            breakdown.iota_repair_reward = (
+                previous_metrics.iota_violation - metrics.iota_violation
+            ) * IOTA_REPAIR_WEIGHT
 
         if intent != "submit":
-            breakdown.step_cost = -0.1
+            breakdown.step_cost = self._step_cost(intent=intent, magnitude=magnitude)
 
         if recovered_from_failure:
             breakdown.recovery_bonus = 1.0
@@ -365,8 +391,15 @@ class StellaratorEnvironment(
                 f"max_elongation={metrics.max_elongation:.4f}",
                 f"aspect_ratio={metrics.aspect_ratio:.4f}  (<= {ASPECT_RATIO_MAX:.1f})",
                 f"average_triangularity={metrics.average_triangularity:.4f}  (<= {AVERAGE_TRIANGULARITY_MAX:.1f})",
-                f"edge_iota_over_nfp={metrics.edge_iota_over_nfp:.4f}  (>= {EDGE_IOTA_OVER_NFP_MIN:.1f})",
+                (
+                    "edge_iota_over_nfp="
+                    f"{metrics.edge_iota_over_nfp:.4f}  (abs(.) >= {EDGE_IOTA_OVER_NFP_MIN:.1f})"
+                ),
                 f"feasibility={metrics.p1_feasibility:.6f}",
+                f"aspect_ratio_violation={metrics.aspect_ratio_violation:.6f}",
+                f"triangularity_violation={metrics.triangularity_violation:.6f}",
+                f"iota_violation={metrics.iota_violation:.6f}",
+                f"dominant_constraint={metrics.dominant_constraint}",
                 f"best_low_fidelity_score={best_low_fidelity_score:.6f}",
                 f"best_low_fidelity_feasibility={best_low_fidelity_feasibility:.6f}",
                 (
@@ -394,6 +427,10 @@ class StellaratorEnvironment(
             aspect_ratio=metrics.aspect_ratio,
             average_triangularity=metrics.average_triangularity,
             edge_iota_over_nfp=metrics.edge_iota_over_nfp,
+            aspect_ratio_violation=metrics.aspect_ratio_violation,
+            triangularity_violation=metrics.triangularity_violation,
+            iota_violation=metrics.iota_violation,
+            dominant_constraint=metrics.dominant_constraint,
             p1_score=metrics.p1_score,
             p1_feasibility=metrics.p1_feasibility,
             vacuum_well=metrics.vacuum_well,
@@ -450,7 +487,8 @@ class StellaratorEnvironment(
         else:
             delta = previous_metrics.p1_feasibility - metrics.p1_feasibility
             objective_summary = (
-                f"feasibility changed by {delta:+.6f} to {metrics.p1_feasibility:.6f}."
+                f"feasibility changed by {delta:+.6f} to {metrics.p1_feasibility:.6f}; "
+                f"dominant_constraint={metrics.dominant_constraint}."
             )
         return (
             f"Applied {action.parameter} {action.direction} {action.magnitude}. "
@@ -606,6 +644,13 @@ class StellaratorEnvironment(
             return "The requested move was clipped to stay inside the allowed parameter range. "
         return ""
 
+    def _step_cost(self, *, intent: ActionIntent, magnitude: MagnitudeName | None) -> float:
+        if intent == "restore_best":
+            return RESTORE_STEP_COST
+        if magnitude is None:
+            return STEP_COST_BY_MAGNITUDE["medium"]
+        return STEP_COST_BY_MAGNITUDE[magnitude]
+
     def _reward_total(self, breakdown: RewardBreakdown) -> float:
         total = (
             breakdown.invalid_action_penalty
@@ -615,6 +660,9 @@ class StellaratorEnvironment(
             + breakdown.feasibility_crossing_bonus
             + breakdown.feasibility_regression_penalty
             + breakdown.feasibility_delta_reward
+            + breakdown.aspect_ratio_repair_reward
+            + breakdown.triangularity_repair_reward
+            + breakdown.iota_repair_reward
             + breakdown.objective_delta_reward
             + breakdown.step_cost
             + breakdown.recovery_bonus
@@ -633,6 +681,9 @@ class StellaratorEnvironment(
             ("feasibility_crossing_bonus", breakdown.feasibility_crossing_bonus),
             ("feasibility_regression_penalty", breakdown.feasibility_regression_penalty),
             ("feasibility_delta_reward", breakdown.feasibility_delta_reward),
+            ("aspect_ratio_repair_reward", breakdown.aspect_ratio_repair_reward),
+            ("triangularity_repair_reward", breakdown.triangularity_repair_reward),
+            ("iota_repair_reward", breakdown.iota_repair_reward),
             ("objective_delta_reward", breakdown.objective_delta_reward),
             ("step_cost", breakdown.step_cost),
             ("recovery_bonus", breakdown.recovery_bonus),

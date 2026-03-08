@@ -3,7 +3,7 @@
   "status": "low_fidelity_calibrated",
   "notes": [
     "Local repair target reached from the default reset band by increasing rotational_transform and triangularity_scale.",
-    "Useful as a low-fidelity feasibility reference for Reward V0 sanity checks.",
+    "Useful as a low-fidelity feasibility reference for reward sanity checks.",
     "High-fidelity submit spot check is complete."
   ],
   "params": {
