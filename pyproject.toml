@@ -1,10 +1,11 @@
 [project]
 name = "fusion-design-lab"
 version = "0.1.0"
-description = "OpenEnv environment for budget-constrained stellarator design"
+description = "OpenEnv P1 environment for constrained stellarator design with constellaration"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+  "constellaration",
   "fastapi>=0.115.0",
   "numpy>=2.0.0",
   "openenv-core[core]>=0.2.1",
@@ -13,9 +14,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-physics = [
-  "simsopt",
-  "vmecpp",
+notebooks = [
+  "ipykernel>=6.29.0",
+  "jupyterlab>=4.3.0",
 ]
 dev = [
   "pre-commit>=4.0.0",
@@ -23,12 +24,15 @@ dev = [
   "ruff>=0.11.0",
 ]
 
+[project.scripts]
+server = "server.app:main"
+
 [build-system]
 requires = ["setuptools>=69.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["fusion_lab", "server"]
+packages = ["baselines", "fusion_lab", "server"]
 
 [tool.ruff]
 line-length = 100
