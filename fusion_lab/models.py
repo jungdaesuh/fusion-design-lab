@@ -59,7 +59,6 @@ class StellaratorState(State):
     )
     initial_score: float = 0.0
     best_score: float = 0.0
-    current_feasibility: float = float("inf")
     best_feasibility: float = float("inf")
     budget_total: int = 6
     budget_remaining: int = 6

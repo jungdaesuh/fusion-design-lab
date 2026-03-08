@@ -56,7 +56,6 @@ class StellaratorEnvironment(
         super().__init__()
         self._state = StellaratorState()
         self._last_metrics: EvaluationMetrics | None = None
-        self._rng = Random()
 
     def reset(
         self,
@@ -64,9 +63,12 @@ class StellaratorEnvironment(
         episode_id: Optional[str] = None,
         **kwargs: Any,
     ) -> StellaratorObservation:
-        self._rng = Random(seed)
         params = self._initial_params(seed)
-        metrics = evaluate_params(params)
+        metrics = evaluate_params(
+            params,
+            n_field_periods=N_FIELD_PERIODS,
+            fidelity="low",
+        )
         self._state = StellaratorState(
             episode_id=episode_id,
             step_count=0,
@@ -74,7 +76,6 @@ class StellaratorEnvironment(
             best_params=params,
             initial_score=metrics.p1_score,
             best_score=metrics.p1_score,
-            current_feasibility=metrics.p1_feasibility,
             best_feasibility=metrics.p1_feasibility,
             budget_total=BUDGET,
             budget_remaining=BUDGET,
@@ -94,7 +95,11 @@ class StellaratorEnvironment(
         **kwargs: Any,
     ) -> StellaratorObservation:
         if self._state.episode_done or self._state.budget_remaining <= 0:
-            metrics = self._last_metrics or evaluate_params(self._state.current_params)
+            metrics = self._last_metrics or evaluate_params(
+                self._state.current_params,
+                n_field_periods=N_FIELD_PERIODS,
+                fidelity="low",
+            )
             return self._build_observation(
                 metrics,
                 action_summary=("Episode already ended. Call reset() before sending more actions."),
@@ -129,9 +134,12 @@ class StellaratorEnvironment(
             direction=action.direction,
             magnitude=action.magnitude,
         )
-        metrics = evaluate_params(params)
+        metrics = evaluate_params(
+            params,
+            n_field_periods=N_FIELD_PERIODS,
+            fidelity="low",
+        )
         self._state.current_params = params
-        self._state.current_feasibility = metrics.p1_feasibility
         self._state.constraints_satisfied = metrics.constraints_satisfied
         self._update_best(params, metrics)
 
@@ -150,11 +158,16 @@ class StellaratorEnvironment(
         )
 
     def _handle_submit(self) -> StellaratorObservation:
-        metrics = self._last_metrics or evaluate_params(self._state.current_params)
+        metrics = evaluate_params(
+            self._state.current_params,
+            n_field_periods=N_FIELD_PERIODS,
+            fidelity="high",
+        )
         reward = self._compute_reward(metrics, "submit", done=True)
         summary = self._summary_submit(metrics)
         self._state.history.append(summary)
         self._state.episode_done = True
+        self._last_metrics = metrics
 
         return self._build_observation(
             metrics,
@@ -166,8 +179,11 @@ class StellaratorEnvironment(
     def _handle_restore(self) -> StellaratorObservation:
         self._state.budget_remaining -= 1
         self._state.current_params = self._state.best_params
-        metrics = evaluate_params(self._state.current_params)
-        self._state.current_feasibility = metrics.p1_feasibility
+        metrics = evaluate_params(
+            self._state.current_params,
+            n_field_periods=N_FIELD_PERIODS,
+            fidelity="low",
+        )
         self._state.constraints_satisfied = metrics.constraints_satisfied
 
         done = self._state.budget_remaining <= 0
@@ -189,7 +205,11 @@ class StellaratorEnvironment(
 
     def _handle_invalid_run(self) -> StellaratorObservation:
         self._state.budget_remaining -= 1
-        metrics = self._last_metrics or evaluate_params(self._state.current_params)
+        metrics = self._last_metrics or evaluate_params(
+            self._state.current_params,
+            n_field_periods=N_FIELD_PERIODS,
+            fidelity="low",
+        )
         done = self._state.budget_remaining <= 0
         summary = "Invalid run action: parameter, direction, and magnitude are required."
         self._state.history.append(summary)
@@ -219,7 +239,7 @@ class StellaratorEnvironment(
         if previous_metrics.constraints_satisfied and not metrics.constraints_satisfied:
             reward -= 3.0
 
-        if metrics.constraints_satisfied:
+        if metrics.constraints_satisfied and previous_metrics.constraints_satisfied:
             reward += (previous_metrics.max_elongation - metrics.max_elongation) * 10.0
         else:
             reward += (previous_metrics.p1_feasibility - metrics.p1_feasibility) * 5.0
@@ -227,23 +247,20 @@ class StellaratorEnvironment(
         if intent != "submit":
             reward -= 0.1
 
-        if intent == "submit":
-            if metrics.constraints_satisfied and self._state.best_score > self._state.initial_score:
-                improvement_ratio = (self._state.best_score - self._state.initial_score) / max(
+        if intent == "submit" or done:
+            improved = (
+                metrics.constraints_satisfied and metrics.p1_score > self._state.initial_score
+            )
+            if improved:
+                ratio = (metrics.p1_score - self._state.initial_score) / max(
                     1.0 - self._state.initial_score, 1e-6
                 )
-                budget_efficiency = self._state.budget_remaining / self._state.budget_total
-                reward += 5.0 * improvement_ratio + budget_efficiency
+                if intent == "submit":
+                    reward += 5.0 * ratio + self._state.budget_remaining / self._state.budget_total
+                else:
+                    reward += 2.0 * ratio
             else:
-                reward -= 1.0
-        elif done:
-            if metrics.constraints_satisfied and self._state.best_score > self._state.initial_score:
-                improvement_ratio = (self._state.best_score - self._state.initial_score) / max(
-                    1.0 - self._state.initial_score, 1e-6
-                )
-                reward += 2.0 * improvement_ratio
-            else:
-                reward -= 0.5
+                reward -= 1.0 if intent == "submit" else 0.5
 
         return round(reward, 4)
 
@@ -315,7 +332,8 @@ class StellaratorEnvironment(
 
     def _summary_submit(self, metrics: EvaluationMetrics) -> str:
         return (
-            f"Submitted design with best_score={self._state.best_score:.6f}, "
+            f"Submitted current_score={metrics.p1_score:.6f}, "
+            f"best_seen_score={self._state.best_score:.6f}, "
             f"best_feasibility={self._state.best_feasibility:.6f}, "
             f"constraints={'SATISFIED' if metrics.constraints_satisfied else 'VIOLATED'}."
         )
@@ -361,18 +379,15 @@ class StellaratorEnvironment(
         return min(max(value, lower), upper)
 
     def _update_best(self, params: RotatingEllipseParams, metrics: EvaluationMetrics) -> None:
-        current_rank = self._candidate_rank(metrics)
-        best_rank = (
+        current = (
+            (1, metrics.p1_score) if metrics.constraints_satisfied else (0, -metrics.p1_feasibility)
+        )
+        best = (
             (1, self._state.best_score)
             if self._state.best_feasibility <= FEASIBILITY_TOLERANCE
             else (0, -self._state.best_feasibility)
         )
-        if current_rank > best_rank:
+        if current > best:
             self._state.best_params = params
             self._state.best_score = metrics.p1_score
             self._state.best_feasibility = metrics.p1_feasibility
-
-    def _candidate_rank(self, metrics: EvaluationMetrics) -> tuple[int, float]:
-        if metrics.constraints_satisfied:
-            return (1, metrics.p1_score)
-        return (0, -metrics.p1_feasibility)

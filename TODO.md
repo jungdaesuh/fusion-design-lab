@@ -23,13 +23,14 @@ Priority source:
 - [x] environment loop reflects the rotating-ellipse `P1` contract
 - [x] API/task surface reflects `P1`
 - [x] baselines reflect the `P1` contract
-- [x] repo docs call out the synthetic evaluator honestly
+- [x] repo docs call out the low-fi/high-fi `constellaration` split honestly
 - [x] post-terminal guard in `step()`
-- [ ] `constellaration` verifier wiring
+- [x] `constellaration` verifier wiring
 - [ ] tracked `P1` fixtures
 - [ ] manual playtest log
 - [x] settle the non-submit terminal reward policy
-- [x] baseline comparison has been run once on the current synthetic `P1` branch state
+- [x] baseline comparison has been re-run on the `constellaration` branch state
+- [ ] refresh the heuristic baseline for the real verifier path
 
 ## Execution Graph
 
@@ -81,7 +82,7 @@ flowchart TD
   Goal:
   reject or no-op any `step()` call after terminal state so budget and step count do not drift past episode end
 
-- [ ] Replace the synthetic physics path with `constellaration` wiring
+- [x] Replace the synthetic physics path with `constellaration` wiring
   Files:
   [server/physics.py](server/physics.py),
   [server/Dockerfile](server/Dockerfile),
@@ -139,9 +140,13 @@ flowchart TD
   [baselines/heuristic_agent.py](baselines/heuristic_agent.py),
   [baselines/compare.py](baselines/compare.py)
 
-- [x] Run the baseline comparison on the current `P1` branch state
+- [x] Run the baseline comparison on the current `constellaration` branch state
   Files:
   [baselines/compare.py](baselines/compare.py)
+
+- [ ] Refresh the heuristic baseline after the `constellaration` rerun
+  Goal:
+  the old synthetic-path heuristic no longer gives a useful anchor on the real verifier path; redesign it after manual playtesting
 
 - [ ] Save one comparison trace that is presentation-ready
   Goal:
@@ -177,5 +182,5 @@ flowchart TD
 - [ ] Do not port the old `ai-sci-feasible-designs` harness
 - [ ] Do not let notebook or demo work outrun environment evidence
 - [ ] Do not add training-first complexity before manual playtesting
-- [ ] Do not describe the current synthetic evaluator as the official verifier integration
+- [ ] Do not describe low-fidelity `run` metrics as equivalent to high-fidelity `submit` results
 - [ ] Do not describe the current baseline reset state as already feasible

@@ -12,7 +12,7 @@ Do not expand scope beyond one stable task. Training is supporting evidence, not
 - [x] rotating-ellipse `P1` contract is implemented in the working tree
 - [x] baselines and API surface have been moved to the `P1` contract
 - [x] add a post-terminal guard in `step()`
-- [ ] replace the synthetic evaluator with `constellaration`
+- [x] replace the synthetic evaluator with `constellaration`
 - [ ] add tracked fixtures and manual playtest evidence
 
 ## Plan V2 Inheritance
