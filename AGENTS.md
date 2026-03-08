@@ -18,15 +18,15 @@ Training is supporting evidence. Do not let the repo drift into training-first w
 
 ## Source of Truth
 
-Use these docs as the planning SSOT:
+Use these docs as the repo documentation SSOT:
 
-- `docs/FUSION_DESIGN_LAB_PLAN_V2.md`
-- `docs/FUSION_DELIVERABLES_MAP.md`
-- `docs/FUSION_NEXT_12_HOURS_CHECKLIST.md`
+- `docs/FUSION_DESIGN_LAB_PLAN_V2.md` for planning and execution order
+- `docs/P1_ENV_CONTRACT_V1.md` for the live technical contract
+- `docs/P1_PARAMETERIZATION_DEEPDIVE.md` for blocker evidence and supporting rationale
 
-`docs/PIVOT_P1_ROTATING_ELLIPSE.md` is a supporting decision record, not a planning SSOT. If it disagrees with the three docs above, the three SSOT docs win.
+Legacy planning docs are archived under `docs/archive/`. They are not active SSOT surfaces.
 
-`docs/P1_ENV_CONTRACT_V1.md` is a supporting technical spec for the current implementation phase. It should refine the SSOT docs, not silently diverge from them.
+`docs/archive/PIVOT_P1_ROTATING_ELLIPSE.md` is a short supporting decision record, not a planning SSOT.
 
 If code and docs disagree, either:
 

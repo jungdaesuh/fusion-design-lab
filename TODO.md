@@ -2,19 +2,24 @@
 
 This is the execution tracker for the hackathon repo.
 
-Use this file for day-of build progress. Use the linked docs for rationale, sequencing, and submission framing:
+Use this file for day-of build progress. Use the linked docs for rationale, contract truth, and submission framing:
 
 - [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md)
-- [Deliverables Map](docs/FUSION_DELIVERABLES_MAP.md)
-- [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 - [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
-- [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
+- [P1 Parameterization Deep-Dive](docs/P1_PARAMETERIZATION_DEEPDIVE.md)
 - [Repo Guardrails](AGENTS.md)
+
+Archived legacy references:
+
+- [P1 Pivot Record](docs/archive/PIVOT_P1_ROTATING_ELLIPSE.md)
+- [Deliverables Map](docs/archive/FUSION_DELIVERABLES_MAP.md)
+- [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 
 Priority source:
 
 - [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md) is the planning SSOT
-- [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md) is the execution order SSOT
+- [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md) is the technical contract SSOT
+- [P1 Parameterization Deep-Dive](docs/P1_PARAMETERIZATION_DEEPDIVE.md) is the evidence and rationale record
 - this file should track execution progress only
 
 ## Current State
@@ -34,8 +39,8 @@ Priority source:
 - [x] add explicit VMEC failure semantics
 - [x] label low-fi vs high-fi truth in the observation/task surface
 - [x] separate high-fi submit scoring/reporting from low-fi rollout score state
-- [ ] tracked `P1` fixtures
-- [ ] manual playtest log
+- [x] tracked `P1` fixtures
+- [x] manual playtest log
 - [x] settle the non-submit terminal reward policy
 - [x] baseline comparison has been re-run on the `constellaration` branch state
 - [ ] refresh the heuristic baseline for the real verifier path
@@ -64,12 +69,12 @@ flowchart TD
   freeze observation schema, action schema, episode loop, terminal conditions, and `Reward V0`
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
-  [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md)
+  [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 
 - [x] Pass the Northflank smoke test
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
-  [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md),
+  [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md),
   [training/notebooks/README.md](training/notebooks/README.md)
 
 - [x] Verify that the current 3-knob family can or cannot approach P1 feasibility
@@ -77,7 +82,7 @@ flowchart TD
   resolve the historical gating question about whether parameterization repair was required before more reward work
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md),
-  [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
+  [P1 Pivot Record](docs/archive/PIVOT_P1_ROTATING_ELLIPSE.md)
 
 ## Fresh Wiring
 
@@ -90,7 +95,7 @@ flowchart TD
   Files:
   [server/environment.py](server/environment.py),
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
-  [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
+  [P1 Pivot Record](docs/archive/PIVOT_P1_ROTATING_ELLIPSE.md)
 
 - [x] Add a post-terminal guard to the environment loop
   Files:
@@ -158,7 +163,7 @@ flowchart TD
 
 ## Validation and Reward
 
-- [ ] Run a small measured sweep on the repaired low-dimensional family
+- [x] Run a small measured sweep on the repaired low-dimensional family
   Goal:
   choose useful parameter ranges, step deltas, and reset seeds from the repaired action family instead of guessing them from prose
   Related:
@@ -170,26 +175,26 @@ flowchart TD
   Related:
   [P1 Environment Contract](docs/P1_ENV_CONTRACT_V1.md)
 
-- [ ] Add 1-2 tracked `P1` fixtures
+- [x] Add 1-2 tracked `P1` fixtures
   Files:
   [server/data/p1/README.md](server/data/p1/README.md),
-  [P1 Pivot Record](docs/PIVOT_P1_ROTATING_ELLIPSE.md)
+  [P1 Pivot Record](docs/archive/PIVOT_P1_ROTATING_ELLIPSE.md)
   Note:
-  add fixtures only after the repaired family is calibrated into a meaningful near-boundary region
+  first tracked fixtures are low-fidelity-calibrated; add paired high-fidelity submit checks next
 
 - [ ] Run fixture sanity checks
   Goal:
-  confirm verifier outputs, objective direction, and reward ordering
+  confirm paired low-fi/high-fi verifier outputs, objective direction, and reward ordering
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
-  [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md)
+  [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 
 - [ ] Manual-playtest 5-10 episodes
   Goal:
-  verify a human can act coherently and surface at least one pathology or ambiguity
+  expand the initial low-fidelity playtest note into 5-10 episodes and surface at least one pathology or ambiguity
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
-  [Deliverables Map](docs/FUSION_DELIVERABLES_MAP.md)
+  [Deliverables Map](docs/archive/FUSION_DELIVERABLES_MAP.md)
 
 - [ ] Update reward from `V0` to `V1` if playtesting reveals a real pathology
   Goal:
@@ -240,7 +245,7 @@ flowchart TD
 
 - [ ] Deploy the environment to HF Space
   Related:
-  [Deliverables Map](docs/FUSION_DELIVERABLES_MAP.md),
+  [Deliverables Map](docs/archive/FUSION_DELIVERABLES_MAP.md),
   [README.md](README.md)
 
 - [ ] Create the thin public Colab notebook
@@ -258,7 +263,7 @@ flowchart TD
 - [ ] Only add training evidence if it is actually persuasive
   Related:
   [Plan V2](docs/FUSION_DESIGN_LAB_PLAN_V2.md),
-  [Next 12 Hours Checklist](docs/FUSION_NEXT_12_HOURS_CHECKLIST.md)
+  [Next 12 Hours Checklist](docs/archive/FUSION_NEXT_12_HOURS_CHECKLIST.md)
 
 ## Guardrails
 

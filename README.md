@@ -16,7 +16,11 @@ A trained model is optional for this repo's submission story. A public Colab not
 
 ## Current Status
 
-This repository is the clean hackathon workspace. The detailed planning docs live in `docs/FUSION_DESIGN_LAB_PLAN_V2.md`, `docs/FUSION_DELIVERABLES_MAP.md`, and `docs/FUSION_NEXT_12_HOURS_CHECKLIST.md`.
+This repository is the clean hackathon workspace. The live docs now split cleanly by role:
+
+- planning and execution: `docs/FUSION_DESIGN_LAB_PLAN_V2.md`
+- technical contract: `docs/P1_ENV_CONTRACT_V1.md`
+- blocker and sweep evidence: `docs/P1_PARAMETERIZATION_DEEPDIVE.md`
 
 Implementation status:
 
@@ -25,7 +29,8 @@ Implementation status:
 - shared models, baselines, and server/client entry points now reflect the locked `P1` contract
 - the current environment uses `constellaration` for low-fidelity `run` steps and high-fidelity `submit` evaluation
 - the repaired 4-knob low-dimensional family is now wired into the runtime path
-- the next runtime work is measured sweep validation, fixtures, manual playtesting, heuristic refresh, and deployment evidence
+- the first measured sweep note, tracked low-fidelity fixtures, and an initial low-fidelity manual playtest note now exist
+- the next runtime work is paired high-fidelity fixture checks, submit-side manual playtesting, heuristic refresh, and deployment evidence
 
 ## Execution Status
 
@@ -46,7 +51,7 @@ Implementation status:
 - [x] Add explicit VMEC failure semantics to the environment contract
 - [x] Label low-fi `run` truth vs high-fi `submit` truth in observations and task docs
 - [x] Separate high-fidelity submit scoring/reporting from low-fidelity rollout score state
-- [ ] Add tracked `P1` fixtures under `server/data/p1/`
+- [x] Add tracked `P1` fixtures under `server/data/p1/`
 - [ ] Run manual playtesting and record the first reward pathology
 - [ ] Refresh the heuristic baseline for the real verifier path
 - [ ] Deploy the real environment to HF Space
@@ -54,19 +59,20 @@ Implementation status:
 ## Known Gaps
 
 - Historical blocker note: the old 3-knob family was structurally blocked on P1 triangularity with the real verifier path. A sampled low-fidelity sweep kept `average_triangularity` at roughly `+0.004975` and `p1_feasibility` at roughly `1.00995`, with zero feasible samples. That blocker motivated the repaired 4-knob runtime that is now live.
-- The repaired family now uses frozen exact seeds with explicit triangularity control. Those seeds are near-boundary references, not yet tracked fixtures.
-- The repaired low-dimensional family still needs measured ranges and deltas. Do not narrate guessed `rotational_transform` bounds, `triangularity_scale` deltas, or a larger budget as validated facts until they are measured on the repaired environment.
+- The repaired family now has a first coarse measured sweep note in [docs/P1_MEASURED_SWEEP_NOTE.md](docs/P1_MEASURED_SWEEP_NOTE.md), but reset-seed changes and any budget changes should still wait for paired high-fidelity fixture checks.
+- The tracked fixtures in `server/data/p1/` are currently low-fidelity-calibrated. Do not narrate them as fully paired low-fi/high-fi references until the submit-side spot checks land.
 - `run` uses low-fidelity `constellaration` metrics, while `submit` re-evaluates the current design with high-fidelity `skip_qi`; do not present step-time metrics as final submission metrics.
 - VMEC failure semantics are now explicit in the runtime path. Failed evaluations cost budget, produce a visible failure observation, and apply a penalty.
 - Terminal reward/reporting now uses a fidelity-consistent basis: `submit` compares against high-fidelity reference state instead of low-fidelity rollout score state.
 - Observation best-state reporting is now split explicitly between low-fidelity rollout state and high-fidelity submit state; baseline traces and demo copy should use those explicit fields rather than infer a mixed best-state story.
 - Budget exhaustion now returns a smaller terminal reward than explicit `submit`; keep that asymmetry when tuning reward so agents still prefer deliberate submission.
 - The real-verifier baseline rerun showed the old heuristic is no longer useful as-is: over 5 seeded episodes, both agents stayed at `0.0` mean best score and the heuristic underperformed random on reward. The heuristic needs redesign after the repaired parameterization and manual playtesting.
+- The first low-fidelity manual playtest note is in [docs/P1_MANUAL_PLAYTEST_LOG.md](docs/P1_MANUAL_PLAYTEST_LOG.md). The next meaningful playtest step is a real `submit` trace, not more abstract reward debate.
 
 Current mode:
 
 - strategic task choice is already locked
-- the next work is measured sweep validation, then fixtures, manual playtesting, heuristic refresh, smoke validation, and deployment
+- the next work is paired high-fidelity fixture checks, submit-side manual playtesting, heuristic refresh, smoke validation, and deployment
 - new planning text should only appear when a real blocker forces a decision change
 
 ## Planned Repository Layout
@@ -120,14 +126,13 @@ uv sync --extra notebooks
 
 ## Immediate Next Steps
 
-1. Run a small measured sweep on the repaired family to choose useful ranges, deltas, and reset seeds.
-2. Verify that observation semantics are human-readable and that low-fi `run` versus high-fi `submit` best-state reporting is not ambiguous.
-3. Add tracked `P1` fixtures under `server/data/p1`.
-4. Run manual playtest episodes and record the first real reward pathology, if any.
-5. Refresh the heuristic baseline using manual playtest evidence, then save one comparison trace.
-6. Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
-7. Deploy the environment to HF Space.
-8. Add the Colab notebook under `training/notebooks`.
+- [ ] Pair the tracked low-fidelity fixtures with high-fidelity submit spot checks.
+- [ ] Decide whether any reset seed should move based on the measured sweep plus those paired checks.
+- [ ] Run submit-side manual playtest episodes and record the first real reward pathology, if any.
+- [ ] Refresh the heuristic baseline using measured sweep and playtest evidence, then save one comparison trace.
+- [ ] Use the passing Northflank H100 setup to produce remote traces and comparisons from the real verifier path.
+- [ ] Deploy the environment to HF Space.
+- [ ] Add the Colab notebook under `training/notebooks`.
 
 These are implementation steps, not another planning phase.
 

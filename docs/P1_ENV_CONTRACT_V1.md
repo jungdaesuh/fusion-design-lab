@@ -1,151 +1,92 @@
 # P1 Environment Contract V1
 
-**Status:** Technical contract with partial implementation now landed
-**Role:** Supporting spec for the `P1` environment contract
-**SSOT relationship:** This file refines [FUSION_DESIGN_LAB_PLAN_V2.md](FUSION_DESIGN_LAB_PLAN_V2.md). If this file conflicts with the planning SSOT, update both in the same task.
+**Role:** Live technical contract SSOT for the current implementation phase
+**Planning dependency:** [`FUSION_DESIGN_LAB_PLAN_V2.md`](FUSION_DESIGN_LAB_PLAN_V2.md)
+**Evidence dependency:** [`P1_PARAMETERIZATION_DEEPDIVE.md`](P1_PARAMETERIZATION_DEEPDIVE.md)
 
-## Purpose
+## 1. Scope
 
-This file captures the technical contract that should drive the next code changes in:
+This document defines the live technical contract for:
 
-- [server/physics.py](../server/physics.py)
-- [fusion_lab/models.py](../fusion_lab/models.py)
-- [server/environment.py](../server/environment.py)
-- [server/app.py](../server/app.py)
+- [`server/physics.py`](../server/physics.py)
+- [`fusion_lab/models.py`](../fusion_lab/models.py)
+- [`server/environment.py`](../server/environment.py)
+- [`server/app.py`](../server/app.py)
 
-The central change is now explicit:
+If the observation schema, action schema, episode flow, terminal conditions, or reward semantics change, update this file in the same task.
 
-- the historical upstream 3-knob rotating-ellipse family is blocked on P1 triangularity under the real verifier path
-- that blocker drove the repair to the current 4-knob low-dimensional runtime
-- the runtime now exposes the repaired 4-knob target, but measured sweep validation and fixture calibration are still pending
-
-## Historical Blocker
-
-This section records the resolved upstream blocker that motivated the current repair. It is not the live runtime state.
-
-Current verified facts:
-
-- upstream `generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` has no triangularity control
-- the historical 3-knob environment directly exposed only:
-  - `aspect_ratio`
-  - `elongation`
-  - `rotational_transform`
-- real low-fidelity samples on the current verifier path kept:
-  - `average_triangularity` at roughly `+0.004975`
-  - `p1_feasibility` at roughly `1.00995`
-  - feasible count at `0`
-
-Conclusion:
-
-- the historical 3-knob family was not a meaningful playtest or baseline environment for `P1`
-- the live runtime therefore moved to a repaired boundary family before further reward iteration
-
-## Design Split
+## 2. Design Split
 
 Keep three layers separate:
 
-1. **Boundary builder**
-   - low-dimensional parameterization
-   - rotating-ellipse seed generation
-   - optional triangularity control injection
-2. **Official verifier**
-   - boundary in
-   - metrics out
-   - feasibility, objective, and score semantics from `GeometricalProblem`
-3. **Environment**
-   - reset pool
-   - discrete actions
-   - episode flow
-   - reward shaping
+1. boundary builder
+2. official verifier
+3. environment
 
-## Verifier Plan
+Boundary builder owns:
 
-`server/physics.py` should expose a boundary-based verifier surface.
+- the repaired low-dimensional family
+- rotating-ellipse seed generation
+- explicit triangularity control injection
 
-Current repo state:
+Official verifier owns:
 
-- the live code now exposes a boundary builder plus boundary-based evaluator
-- explicit failure results are returned when VMEC evaluation fails
-- measured sweep validation is still pending
-
-Current live functions:
-
-- `build_boundary_from_params(...) -> SurfaceRZFourier`
-- `evaluate_boundary(boundary, fidelity) -> EvaluationMetrics`
-
-Current layering note:
-
-- discrete perturbation application lives in `server/environment.py`
-- there is no separate `apply_low_dim_perturbation(...)` helper in the live code
-
-The verifier layer should own:
-
-- low-fidelity step-time evaluation
-- high-fidelity submit-time evaluation
+- boundary in, metrics out
 - official `P1` feasibility semantics
-- official `P1` objective direction
-- score ordering
+- objective direction and score ordering
+- low-fidelity and high-fidelity evaluation modes
 - explicit failure results when VMEC or forward-model evaluation fails
 
-The verifier layer should not own:
+Environment owns:
 
+- reset pool
+- discrete actions
 - episode budget
-- action semantics
+- best-state tracking
 - reward shaping
-- “best so far” state
 
-## Low-Dimensional Boundary Plan
+## 3. Boundary Family
 
-Stay low-dimensional, not Fourier-first.
+The historical 3-knob upstream rotating-ellipse family is not the live contract.
 
-Target controllable knobs:
+The live controllable knobs are:
 
 - `aspect_ratio`
 - `elongation`
 - `rotational_transform`
 - `triangularity_scale`
 
-Current measurement rule:
+Rules:
 
-- do not lock exact repaired-family ranges or deltas from prose alone
-- measure them on the repaired boundary family before presenting them as defaults
-- especially treat `rotational_transform` bounds, `triangularity_scale` deltas, and budget changes as open until measured
+- stay low-dimensional and human-playable
+- treat the current family as rotating-ellipse-derived, not plain upstream rotating ellipse
+- the coarse measured sweep is now recorded, but reset-seed changes and any budget changes should still wait for paired high-fidelity fixture checks
 
-Important naming rule:
+## 4. Action Contract
 
-- once triangularity is injected explicitly, stop describing the family as plain upstream “rotating ellipse”
-- it becomes a custom low-dimensional boundary family derived from a rotating-ellipse seed
+`intent` is one of:
 
-## Action Contract
+- `run`
+- `submit`
+- `restore_best`
 
-Keep the discrete interaction style:
+For `run`, the action also includes:
 
-- `intent`: `run | submit | restore_best`
+- `parameter`: one of `aspect_ratio | elongation | rotational_transform | triangularity_scale`
 - `direction`: `increase | decrease`
 - `magnitude`: `small | medium | large`
 
-For `run`, the controllable parameter should be one of:
+Constraints:
 
-- `aspect_ratio`
-- `elongation`
-- `rotational_transform`
-- `triangularity_scale`
+- keep the discrete interaction style
+- do not expose the full Fourier action space as the primary environment
+- do not use action complexity to compensate for missing clarity elsewhere
 
-This keeps the environment human-playable and aligned with the historical low-dimensional P1 path.
+## 5. Observation Contract
 
-Current repo state:
+The observation must stay metric-centered and human-readable.
 
-- the live action schema now exposes:
-  - `aspect_ratio`
-  - `elongation`
-  - `rotational_transform`
-  - `triangularity_scale`
-
-## Observation Contract
-
-The observation should stay metric-centered and human-readable.
-
-Keep:
+Required fields:
 
 - `max_elongation`
 - `aspect_ratio`
@@ -167,113 +108,114 @@ Keep:
 - `target_spec`
 - `diagnostics_text`
 
-Add clarity about fidelity:
+Interpretation rules:
 
-- low-fidelity step-time metrics should be labeled as such
-- high-fidelity submit-time metrics should be labeled as such
-- do not expose them as if they are the same truth surface
-- the live runtime should expose separate low-fidelity and high-fidelity best-state fields instead of overloading one generic best-state metric
+- low-fidelity `run` metrics must be labeled as low-fidelity
+- high-fidelity `submit` metrics must be labeled as high-fidelity
+- low-fidelity and high-fidelity best-state reporting must stay separate
+- the observation must be understandable without hidden state
 
-This can be done either by:
+## 6. Episode Flow
 
-- separate observation fields, or
-- explicit fidelity labels in `diagnostics_text`
+1. Reset from one frozen repaired-family seed or a small frozen seed set.
+2. Evaluate the initial state with low fidelity and return the first observation.
+3. On `run`, perturb one controllable parameter and re-evaluate with low fidelity.
+4. On `restore_best`, revert to the best known low-fidelity state, re-evaluate, and consume budget.
+5. On `submit`, end the episode and run the high-fidelity submit evaluation.
+6. End the episode on `submit` or budget exhaustion.
 
-The minimum requirement is that a reader can tell whether a metric came from low-fi `run` or high-fi `submit`.
+Failure semantics:
 
-Current repo state:
+- failed evaluations still consume budget
+- failed evaluations produce visible failure observations
+- failed evaluations apply a documented penalty
+- the environment must not silently convert failures into success paths
 
-- the live observation surface now exposes evaluation fidelity and failure state
-- the live observation surface now exposes separate low-fidelity and high-fidelity best-state fields
-- terminal reward/reporting is now fidelity-consistent: `submit` compares against high-fi reference state instead of low-fi rollout score state
+## 7. Terminal Contract
 
-## Reward V0
+At termination, the environment must provide:
 
-Keep reward mostly scalar and verifier-driven.
+- final best design metrics
+- final feasibility status
+- total reward
+- a short human-readable trajectory summary
 
-Target structure:
+Terminal reporting rules:
 
-- infeasible to feasible crossing:
-  - clear positive bonus
-- feasible to infeasible regression:
-  - clear negative penalty
-- both infeasible:
-  - reward reduction in official feasibility scalar
-- both feasible:
-  - reward lower `max_elongation`
-- non-submit step:
-  - small step cost
-- recovery after a failed evaluation:
-  - modest positive signal for returning to a valid verifier result
-  - do not compute this from the failed sentinel feasibility value
-- explicit `submit`:
-  - better than passive budget exhaustion when the design is improved
+- keep submit-time reporting fidelity-consistent
+- do not compare high-fidelity submit results against low-fidelity baseline state as if they were the same truth surface
 
-Do not add:
+## 8. Verifier Contract
 
-- reward terms tied to specific Fourier modes
-- bonuses for matching a known winner
-- hand-coded constraint tricks to hide a blocked action family
+The verifier of record is `constellaration.problems.GeometricalProblem`.
 
-Do not use reward complexity to compensate for missing action expressivity or missing crash semantics.
+The implementation must preserve:
 
-Additional fidelity rule:
+- objective direction
+- constraint direction
+- feasibility semantics
+- score ordering
 
-- do not compare a high-fidelity submit score against low-fidelity baseline state
-- terminal reward and submit summaries should use a fidelity-consistent basis
+The verifier should stay boundary-based:
 
-## Reset Strategy
+- `build_boundary_from_params(...) -> SurfaceRZFourier`
+- `evaluate_boundary(boundary, fidelity) -> EvaluationMetrics`
 
-Start with frozen exact seeds, not jitter.
+Do not treat parameterization-specific logic as verifier truth.
 
-Reset pool policy:
+## 9. Reward V0
 
-- `n_field_periods = 3`
-- small frozen seed set
-- each seed must be:
-  - reproducible
-  - near enough to the feasible boundary that 6 steps is worth testing
-  - not already solved
+`Reward V0` is the live reward contract until playtesting proves a concrete pathology.
 
-Add bounded jitter only if memorization becomes a real problem.
+Target behavior:
 
-## Manual Playtest Gate
+- infeasible to feasible crossing gets a clear positive bonus
+- feasible to infeasible regression gets a clear penalty
+- when both states are infeasible, reduced official feasibility violation should help
+- when both states are feasible, lower `max_elongation` should help
+- non-submit actions pay a small step cost
+- `submit` should be better than passive exhaustion when the design is genuinely improved
+- recovery after a failed evaluation may receive a modest bounded bonus
 
-Do not move to heuristic redesign or reward tuning until this gate is passed.
+Rules:
 
-Manual playtest questions:
+- keep reward scalar and verifier-driven
+- do not add mode-specific or parameter-specific reward shaping
+- do not use reward complexity to compensate for blocked parameterization, poor seeds, or unclear observations
 
-- can a human tell which constraint is currently blocking progress?
-- can a human choose a plausible next action?
-- can a human reach or approach feasibility within the budget?
-- does `submit` feel meaningfully different from passive exhaustion?
+## 10. Reset and Fixture Policy
 
-If the answer is no, fix:
+Reset policy:
 
-- the boundary family
-- the step magnitudes
-- the seed pool
-- the observation semantics around low-fi vs high-fi best-state reporting
+- start with exact frozen seeds
+- keep `n_field_periods = 3`
+- prefer a small reproducible seed set
 
-before tuning reward further
+Each seed should be:
 
-## Implementation Order
+- reproducible
+- near enough to the feasible boundary to make the budget meaningful
+- not already solved
 
-1. Repair the low-dimensional boundary builder in [server/physics.py](../server/physics.py).
-2. Split boundary construction from official boundary evaluation in [server/physics.py](../server/physics.py).
-3. Update the action and state schema in [fusion_lab/models.py](../fusion_lab/models.py).
-4. Update the episode loop and observation labeling in [server/environment.py](../server/environment.py).
-5. Update the task summary and public action description in [server/app.py](../server/app.py).
-6. Add explicit VMEC failure semantics in [server/environment.py](../server/environment.py).
-7. Run a small measured sweep to choose ranges, deltas, and reset seeds.
-8. Verify that observation semantics are human-readable and that low-fi versus high-fi best-state reporting is explicit.
-9. Freeze 1-2 repaired low-dimensional fixtures.
-10. Run manual playtesting.
-11. Refresh the heuristic baseline only after that evidence exists.
+Fixture policy:
 
-## Out of Scope
+- track good, boundary, and clearly bad references
+- use fixtures for verifier and reward sanity checks
+- do not turn fixture mining into a separate broad project
 
-- full Fourier-mode action space as the primary environment
+## 11. Open Measurements
+
+These items remain open until measured on the repaired family:
+
+- exact repaired-family range bounds
+- exact `triangularity_scale` deltas
+- exact `rotational_transform` bounds
+- exact reset seed pool
+- whether the budget should stay at 6 or change
+
+## 12. Out of Scope
+
 - porting the old `ai-sci-feasible-designs` harness
-- making reward more complex before the repaired low-dimensional family exists
-- building a full benchmark split protocol before the environment is even playable
+- broad Fourier-mode action space as the main environment
+- complicated reward shaping before playtest evidence
+- a wider task family than the single stellarator environment
