@@ -231,9 +231,10 @@ def run_episode_with_actions(
     step_traces: list[LLMStepTrace] = []
     total_reward = 0.0
 
-    for step_index, action in enumerate(actions[:BUDGET], start=1):
+    def _step_and_record(action: StellaratorAction, step_index: int) -> bool:
+        nonlocal observation, total_reward
         observation = environment.step(action)
-        reward = float(observation.reward or 0.0)
+        reward = float(observation.reward) if observation.reward is not None else 0.0
         total_reward += reward
         step_traces.append(
             LLMStepTrace(
@@ -253,8 +254,17 @@ def run_episode_with_actions(
                 diagnostics_text=observation.diagnostics_text,
             )
         )
-        if observation.done:
+        return bool(observation.done)
+
+    done = False
+    step_index = 0
+    for step_index, action in enumerate(actions[:BUDGET], start=1):
+        if _step_and_record(action, step_index):
+            done = True
             break
+
+    if not done:
+        _step_and_record(StellaratorAction(intent="submit"), step_index + 1)
 
     return LLMEpisodeTrace(
         seed=seed_idx,
