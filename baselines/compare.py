@@ -21,13 +21,13 @@ def main(n_episodes: int = 20) -> None:
 
     for i in range(n_episodes):
         rr, rt = random_episode(env, seed=i)
-        _require_submit_fidelity(rt[-1], baseline_name="random")
+        _require_successful_submit(rt[-1], baseline_name="random")
         random_rewards.append(rr)
         random_final_scores.append(rt[-1]["score"])
         random_feasible.append(1 if rt[-1]["constraints_satisfied"] else 0)
 
         hr, ht = heuristic_episode(env, seed=i)
-        _require_submit_fidelity(ht[-1], baseline_name="heuristic")
+        _require_successful_submit(ht[-1], baseline_name="heuristic")
         heuristic_rewards.append(hr)
         heuristic_final_scores.append(ht[-1]["score"])
         heuristic_feasible.append(1 if ht[-1]["constraints_satisfied"] else 0)
@@ -51,12 +51,14 @@ def main(n_episodes: int = 20) -> None:
     print(f"Heuristic wins: {wins}/{n_episodes} episodes ({100 * wins / n_episodes:.0f}%)")
 
 
-def _require_submit_fidelity(final_step: dict[str, object], *, baseline_name: str) -> None:
-    fidelity = final_step["evaluation_fidelity"]
-    if fidelity != "high":
+def _require_successful_submit(final_step: dict[str, object], *, baseline_name: str) -> None:
+    action = final_step.get("action")
+    if action != "submit":
         raise ValueError(
-            f"{baseline_name} baseline ended on {fidelity!r} instead of high-fidelity submit."
+            f"{baseline_name} baseline ended on {action!r} instead of an explicit submit."
         )
+    if bool(final_step.get("evaluation_failed")):
+        raise ValueError(f"{baseline_name} baseline submit ended in evaluation failure.")
 
 
 if __name__ == "__main__":

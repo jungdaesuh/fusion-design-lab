@@ -124,8 +124,6 @@ class StellaratorObservation(Observation):
     no_progress_steps: int = 0
     best_low_fidelity_score: float = 0.0
     best_low_fidelity_feasibility: float = float("inf")
-    best_high_fidelity_score: float | None = None
-    best_high_fidelity_feasibility: float | None = None
     constraints_satisfied: bool = True
     target_spec: str = ""
     reward_breakdown: RewardBreakdown = Field(default_factory=default_reward_breakdown)
@@ -141,8 +139,6 @@ class StellaratorState(State):
     initial_low_fidelity_score: float = 0.0
     best_low_fidelity_score: float = 0.0
     best_low_fidelity_feasibility: float = float("inf")
-    best_high_fidelity_score: float | None = None
-    best_high_fidelity_feasibility: float | None = None
     budget_total: int = 6
     budget_remaining: int = 6
     episode_done: bool = False

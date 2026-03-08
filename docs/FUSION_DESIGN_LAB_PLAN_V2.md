@@ -26,8 +26,8 @@ Completed:
 - `P1` is locked as the single benchmark task
 - the repaired 4-knob low-dimensional runtime is live in code
 - the official `constellaration` verifier path is wired
-- low-fidelity `run` and high-fidelity `submit` are separated clearly
-- terminal scoring and reporting are fidelity-consistent
+- the live environment is now unified onto one low-fidelity reward and verifier surface
+- `submit` remains an explicit terminal action on that same live contract
 - explicit VMEC failure semantics are implemented
 - the Northflank smoke workflow is committed
 - the Northflank smoke test passed on the team H100
@@ -45,15 +45,15 @@ Still open:
 - decision on whether reset-seed pool should change from paired checks
 - HF Space deployment evidence
 - public Colab mirror or notebook submission link, if the submission surface still requires it
-- before/after trained-policy evidence on the current low-fidelity-only workflow
+- before/after trained-policy evidence on the current unified low-fidelity workflow
 - demo and README polish after the artifacts are real
 
 Current caution:
 
 - do not present repaired-family ranges, deltas, or budget choices as settled defaults until the measured sweep is recorded
 - do not narrate low-fidelity rollout metrics as final submission truth
-- the standard notebook and `training/llm_rollout.py` `monitor` / `evaluate` paths now stay on low-fidelity `run` only and ignore `submit` by default
-- reserve VMEC-backed `submit` for replay/debug work, paired fixture checks, submit-side traces, and final evidence
+- the standard notebook and `training/llm_rollout.py` paths should stay on the same live low-fidelity contract as the environment, including explicit `submit`
+- reserve higher-fidelity validation for paired fixture checks, offline validation scripts, and final evidence
 
 ## 3. Locked Decisions
 
@@ -113,7 +113,7 @@ Compute surfaces:
 - Northflank is the main compute workspace for verifier-heavy work
 - HF Space is the hosted environment surface
 - the public notebook artifact should show trained-policy behavior against the live environment and can be mirrored to Colab if the submission form still requires it
-- trained-policy work should still iterate on low-fidelity `run`; use high-fidelity `submit` only for sparse checkpoint evaluation and final evidence
+- trained-policy work should iterate on the same live low-fidelity environment contract that will be demoed publicly
 
 Evidence order:
 
@@ -135,8 +135,7 @@ The environment contract must stay narrow and legible:
 
 - one repaired low-dimensional boundary family derived from a rotating-ellipse seed
 - discrete `run | submit | restore_best` interaction
-- low-fidelity verifier for normal steps
-- high-fidelity verifier for `submit`
+- one low-fidelity verifier surface for all live environment actions
 - readable observation surface with explicit fidelity labeling
 - `Reward V2` keeps the verifier-native `Reward V1` core and adds small best-so-far / anti-stagnation shaping for the low-fi repair loop
 
@@ -145,11 +144,11 @@ The live technical details belong in [`P1_ENV_CONTRACT_V1.md`](P1_ENV_CONTRACT_V
 ## 8. Execution Order
 
 - [x] Run a tiny low-fidelity PPO smoke pass and stop after a few trajectories once it reveals either readable behavior or one clear failure mode.
-- [x] Pair the tracked low-fidelity fixtures with high-fidelity submit checks immediately after the PPO smoke pass.
+- [x] Pair the tracked low-fidelity fixtures with higher-fidelity validation checks immediately after the PPO smoke pass.
 - [ ] Decide whether the reset pool should change based on the measured sweep plus those paired checks.
 - [x] Run at least one submit-side manual trace, then expand to 5 to 10 episodes and record the first real confusion point, exploit, or reward pathology.
-- [ ] Save one fixed-seed untrained baseline with the low-fidelity-only `training/llm_rollout.py evaluate` workflow.
-- [ ] Run one short H100 GRPO pass with the repository notebook on that same low-fidelity-only workflow.
+- [ ] Save one fixed-seed untrained baseline with the unified live `training/llm_rollout.py evaluate` workflow.
+- [ ] Run one short H100 GRPO pass with the repository notebook on that same unified low-fidelity workflow.
 - [ ] Re-run the same seeds after training and save one before/after artifact.
 - [ ] Adjust reward or penalties only if playtesting exposes a concrete problem.
 - [x] Refresh the heuristic baseline using the repaired-family evidence.
@@ -203,7 +202,7 @@ Gate 9: trained-policy evidence is real
 
 - one fixed-seed untrained baseline exists
 - one short low-fidelity training pass exists on the same workflow
-- the repo can show a before/after comparison on the same seeds without relying on `submit`
+- the repo can show a before/after comparison on the same seeds using the live environment contract, including `submit`
 
 ## 10. Fallback Rules
 
@@ -211,8 +210,8 @@ If training evidence is weak:
 
 - keep claims conservative about policy quality
 - still ship a trained-policy demonstration and document its limitations plainly
-- do not skip the paired high-fidelity checks or submit-side manual trace
-- do not swap back to submit-included reward traces and present them as the current GRPO path
+- do not skip the paired higher-fidelity validation artifacts
+- do not split the notebook back onto a different submit contract than the live environment
 
 If HF Space deployment is delayed:
 
@@ -239,7 +238,7 @@ If the repaired family is too easy:
 - [x] Check in tracked fixtures.
 - [x] Record the first manual playtest log.
 - [x] Run a tiny low-fidelity PPO smoke pass and save a few trajectories.
-- [x] Pair the tracked fixtures with high-fidelity submit checks.
+- [x] Pair the tracked fixtures with higher-fidelity validation checks.
 - [x] Record one submit-side manual trace.
 - [x] Refresh the heuristic baseline from that playtest evidence.
 - [ ] Save one fixed-seed untrained baseline with `training/llm_rollout.py evaluate`.

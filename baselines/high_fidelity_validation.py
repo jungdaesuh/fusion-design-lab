@@ -368,7 +368,7 @@ def _run_submit_trace(
 ) -> dict[str, Any]:
     env = StellaratorEnvironment()
     obs = env.reset(seed=seed)
-    initial_state = env.state
+    reset_params = env.state.current_params.model_dump()
     actions = _parse_submit_sequence(action_sequence)
 
     trace: list[dict[str, Any]] = [
@@ -387,7 +387,7 @@ def _run_submit_trace(
             "budget_remaining": obs.budget_remaining,
             "evaluation_fidelity": obs.evaluation_fidelity,
             "done": obs.done,
-            "params": initial_state.current_params.model_dump(),
+            "params": reset_params,
         }
     ]
 
@@ -442,8 +442,6 @@ def _run_submit_trace(
         "steps": trace,
         "final_best_low_fidelity_score": obs.best_low_fidelity_score,
         "final_best_low_fidelity_feasibility": obs.best_low_fidelity_feasibility,
-        "final_best_high_fidelity_score": obs.best_high_fidelity_score,
-        "final_best_high_fidelity_feasibility": obs.best_high_fidelity_feasibility,
         "final_diagnostics_text": obs.diagnostics_text,
     }
     _write_json(payload, trace_output)

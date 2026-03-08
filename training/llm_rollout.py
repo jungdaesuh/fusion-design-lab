@@ -138,7 +138,7 @@ def prompt_payload(seed: int) -> dict[str, object]:
 
 
 def parse_actions(
-    args: argparse.Namespace, *, allow_submit: bool = False
+    args: argparse.Namespace, *, allow_submit: bool = True
 ) -> tuple[str, list[StellaratorAction]]:
     if args.action_plan_file is not None:
         text = args.action_plan_file.read_text()
@@ -253,30 +253,29 @@ def _pearson_correlation(xs: list[float], ys: list[float]) -> float | None:
 
 def summarize_traces(traces: list[LLMEpisodeTrace]) -> dict[str, object]:
     feasible_count = sum(1 for trace in traces if trace.constraints_satisfied)
-    high_fidelity_traces = [trace for trace in traces if trace.final_evaluation_fidelity == "high"]
-    high_fidelity_count = len(high_fidelity_traces)
+    submitted_count = sum(
+        1
+        for trace in traces
+        if trace.steps and trace.steps[-1].reward_breakdown.get("intent") == "submit"
+    )
     failed_count = sum(1 for trace in traces if trace.evaluation_failed)
     total_rewards = [trace.total_reward for trace in traces]
     final_scores = [trace.final_score for trace in traces]
     final_feasibilities = [trace.final_feasibility for trace in traces]
-    high_fidelity_scores = [trace.final_score for trace in high_fidelity_traces]
-    high_fidelity_feasibilities = [trace.final_feasibility for trace in high_fidelity_traces]
     feasible_flags = [1.0 if trace.constraints_satisfied else 0.0 for trace in traces]
     episode_count = len(traces)
 
     return {
         "episode_count": episode_count,
         "feasible_episode_count": feasible_count,
-        "high_fidelity_episode_count": high_fidelity_count,
+        "submitted_episode_count": submitted_count,
         "evaluation_failed_episode_count": failed_count,
         "feasible_rate": _round_metric(feasible_count / episode_count),
-        "high_fidelity_rate": _round_metric(high_fidelity_count / episode_count),
+        "submitted_rate": _round_metric(submitted_count / episode_count),
         "evaluation_failed_rate": _round_metric(failed_count / episode_count),
         "mean_total_reward": _round_metric(_mean(total_rewards)),
         "mean_final_score": _round_metric(_mean(final_scores)),
         "mean_final_feasibility": _round_metric(_mean(final_feasibilities)),
-        "mean_high_fidelity_score": _round_metric(_mean(high_fidelity_scores)),
-        "mean_high_fidelity_feasibility": _round_metric(_mean(high_fidelity_feasibilities)),
         "reward_final_score_correlation": _round_metric(
             _pearson_correlation(total_rewards, final_scores)
         ),
@@ -370,10 +369,10 @@ def write_monitor_summary(payload: dict[str, object]) -> None:
     print(
         "episodes="
         f"{summary['episode_count']} feasible={summary['feasible_episode_count']} "
-        f"high_fidelity={summary['high_fidelity_episode_count']} "
+        f"submitted={summary['submitted_episode_count']} "
         f"failed={summary['evaluation_failed_episode_count']} "
         f"mean_total_reward={_format_metric(summary['mean_total_reward'], signed=True)} "
-        f"mean_high_fidelity_score={_format_metric(summary['mean_high_fidelity_score'], signed=True)} "
+        f"mean_final_score={_format_metric(summary['mean_final_score'], signed=True)} "
         f"reward_score_corr={summary['reward_final_score_correlation']}"
     )
     for episode in payload["episodes"]:

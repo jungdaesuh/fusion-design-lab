@@ -33,7 +33,7 @@ This keeps the baseline on the real verifier path instead of relying on the olde
 - heuristic mean reward: `+5.2825`
 - random mean final `P1` score: `0.000000`
 - heuristic mean final `P1` score: `0.291951`
-- feasible high-fidelity finals: `0/5` random vs `5/5` heuristic
+- feasible submitted finals: `0/5` random vs `5/5` heuristic
 - heuristic wins: `5/5`
 
 The first baseline milestone is:

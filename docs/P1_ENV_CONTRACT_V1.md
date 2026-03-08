@@ -34,7 +34,8 @@ Official verifier owns:
 - boundary in, metrics out
 - official `P1` feasibility semantics
 - objective direction and score ordering
-- low-fidelity and high-fidelity evaluation modes
+- low-fidelity live evaluation mode
+- optional higher-fidelity offline validation mode
 - explicit failure results when VMEC or forward-model evaluation fails
 
 Environment owns:
@@ -108,8 +109,6 @@ Required fields:
 - `no_progress_steps`
 - `best_low_fidelity_score`
 - `best_low_fidelity_feasibility`
-- `best_high_fidelity_score`
-- `best_high_fidelity_feasibility`
 - `target_spec`
 - `diagnostics_text`
 - `reward_breakdown`
@@ -119,9 +118,8 @@ Required fields:
 
 Interpretation rules:
 
-- low-fidelity `run` metrics must be labeled as low-fidelity
-- high-fidelity `submit` metrics must be labeled as high-fidelity
-- low-fidelity and high-fidelity best-state reporting must stay separate
+- live environment metrics must be labeled as low-fidelity
+- best-state reporting should reflect the single live reward surface
 - the observation must be understandable without hidden state
 - normalized constraint-violation telemetry must follow the official `P1` constraint scales
 - the dominant active constraint must be visible so a human can explain repair-phase rewards
@@ -135,7 +133,7 @@ Interpretation rules:
 2. Evaluate the initial state with low fidelity and return the first observation.
 3. On `run`, perturb one controllable parameter and re-evaluate with low fidelity.
 4. On `restore_best`, revert to the best known low-fidelity state, re-evaluate, and consume budget.
-5. On `submit`, end the episode and run the high-fidelity submit evaluation.
+5. On `submit`, re-evaluate the current state with low fidelity, consume budget, and end the episode.
 6. End the episode on `submit` or budget exhaustion.
 
 Failure semantics:
@@ -157,8 +155,8 @@ At termination, the environment must provide:
 
 Terminal reporting rules:
 
-- keep submit-time reporting fidelity-consistent
-- do not compare high-fidelity submit results against low-fidelity baseline state as if they were the same truth surface
+- keep submit-time reporting on the same live low-fidelity truth surface as the rest of the episode
+- keep any higher-fidelity validation artifacts explicitly outside the live environment observation contract
 
 ## 8. Verifier Contract
 
@@ -180,16 +178,16 @@ Do not treat parameterization-specific logic as verifier truth.
 
 VMEC preset mapping:
 
-- `run` steps use the `low_fidelity` VMEC preset (~0.6s, tolerant convergence)
-- `submit` uses the `from_boundary_resolution` VMEC preset (~4s, adaptive convergence matching boundary Fourier resolution)
+- `run`, `restore_best`, and `submit` use the `low_fidelity` VMEC preset (~0.6s, tolerant convergence)
+- higher-fidelity validation uses the `from_boundary_resolution` VMEC preset (~4s, adaptive convergence matching boundary Fourier resolution) outside the live environment loop
 - the `high_fidelity` VMEC preset (minimum 10 modes, strict convergence) is not used because it does not converge on the current `mpol=3, ntor=3` boundaries
 
 Training and evaluation rule:
 
-- use low-fidelity `run` as the RL inner-loop surface
-- the standard repository notebook and `training/llm_rollout.py` `monitor` / `evaluate` workflows stay on low-fidelity `run` only and ignore `submit` by default
-- keep higher-fidelity `submit` for terminal truth, explicit replay/debug work, paired fixture checks, and submit-side manual traces
-- do not move VMEC-backed submit evaluation into every training step unless the contract is deliberately redefined
+- use the live low-fidelity environment contract, including explicit `submit`, as the RL surface
+- the standard repository notebook and `training/llm_rollout.py` workflows should stay aligned to that same action and reward contract
+- keep higher-fidelity validation in offline scripts, paired fixture checks, and final evidence artifacts
+- do not reintroduce a separate high-fidelity submit path into the live environment unless the contract is deliberately redefined
 
 ## 9. Reward V2
 

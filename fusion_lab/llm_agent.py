@@ -39,8 +39,9 @@ Action rules:
 - each item must be either:
   - {"intent":"run","parameter":"<parameter>","direction":"increase|decrease","magnitude":"small|medium|large"}
   - {"intent":"restore_best"}
+  - {"intent":"submit"}
 - keep the plan short and within the remaining budget
-- do not output "submit"
+- use "submit" once when you want to stop and lock in the current design
 
 Constraint directions:
 - aspect_ratio <= 4.0
@@ -203,7 +204,7 @@ def _parse_action_item(item: object) -> StellaratorAction | None:
     )
 
 
-def parse_action_plan(text: str, *, allow_submit: bool = False) -> list[StellaratorAction]:
+def parse_action_plan(text: str, *, allow_submit: bool = True) -> list[StellaratorAction]:
     raw_plan = extract_json_plan(text)
     if raw_plan is None:
         return []
@@ -232,7 +233,7 @@ def run_episode_with_actions(
     *,
     seed_idx: int,
     auto_submit: bool = False,
-    allow_submit: bool = False,
+    allow_submit: bool = True,
 ) -> LLMEpisodeTrace:
     environment = StellaratorEnvironment()
     observation = environment.reset(seed=seed_idx)
@@ -267,6 +268,16 @@ def run_episode_with_actions(
     done = False
     step_index = 0
     rollout_actions = [action for action in actions if allow_submit or action.intent != "submit"]
+    if len(rollout_actions) > BUDGET:
+        submit_index = next(
+            (idx for idx, action in enumerate(rollout_actions) if action.intent == "submit"),
+            None,
+        )
+        if submit_index is not None and submit_index >= BUDGET:
+            # Keep terminal submit within the budget if the model over-runs plan length.
+            rollout_actions = rollout_actions[: BUDGET - 1] + [rollout_actions[submit_index]]
+        else:
+            rollout_actions = rollout_actions[:BUDGET]
     for step_index, action in enumerate(rollout_actions[:BUDGET], start=1):
         if _step_and_record(action, step_index):
             done = True

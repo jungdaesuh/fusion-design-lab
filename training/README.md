@@ -4,9 +4,9 @@ This repository treats notebooks and trained-policy runs as supporting evidence 
 
 Training policy:
 
-- train on the low-fidelity `run` surface for the normal RL inner loop
-- keep the standard `training/llm_rollout.py` monitor/evaluate workflow on low-fidelity `run` only
-- use high-fidelity `submit` only for explicit replay/debug work, paired fixture checks, submit-side traces, and final evidence
+- train on the live low-fidelity environment surface, including explicit `submit`
+- keep the standard `training/llm_rollout.py` monitor/evaluate workflow on the same live contract as the notebook
+- keep high-fidelity validation in offline tooling such as `baselines/high_fidelity_validation.py`
 
 ## Status
 
@@ -50,8 +50,8 @@ Use that module as the source of truth for:
 - local rollout replay
 - rollout telemetry structure used by the monitor command
 
-For `monitor` and `evaluate`, the rollout stays on low-fidelity `run` steps only and ignores `submit`.
-Use `replay` when you explicitly want to exercise the full environment path including terminal `submit`.
+For `prompt`, `monitor`, `evaluate`, and the notebook, the shared helper contract now includes the live `submit` action.
+Use offline validation scripts when you explicitly want high-fidelity checks outside the environment loop.
 
 For `evaluate`, the completion command reads the prompt from `stdin` and writes a raw completion to `stdout`.
 The current seed is exposed as the `FUSION_LAB_SEED` environment variable so the same command can be used

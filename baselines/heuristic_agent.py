@@ -50,7 +50,7 @@ def heuristic_episode(
                 "average_triangularity": obs.average_triangularity,
                 "edge_iota_over_nfp": obs.edge_iota_over_nfp,
                 "reward": obs.reward,
-                "failure": obs.evaluation_failed,
+                "evaluation_failed": obs.evaluation_failed,
             }
         )
 

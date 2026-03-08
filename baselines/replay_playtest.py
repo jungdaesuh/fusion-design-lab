@@ -180,7 +180,7 @@ EPISODE_5 = (
         _run("rotational_transform", "increase", "medium"),  # rt 1.5→1.6 (setup)
         _run("triangularity_scale", "increase", "medium"),  # tri 0.55→0.60 → cross feasibility
         _run("elongation", "decrease", "small"),  # feasible-side objective move
-        _submit(),  # explicit high-fidelity submit from feasible state
+        _submit(),  # explicit terminal submit from feasible state
     ],
 )
 
