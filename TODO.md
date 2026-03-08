@@ -112,7 +112,7 @@ flowchart TD
 - [x] Replace the synthetic physics path with `constellaration` wiring
   Files:
   [server/physics.py](server/physics.py),
-  [server/Dockerfile](server/Dockerfile),
+  [Dockerfile](Dockerfile),
   [pyproject.toml](pyproject.toml)
 
 - [x] Update the API/task surface to match `P1`
