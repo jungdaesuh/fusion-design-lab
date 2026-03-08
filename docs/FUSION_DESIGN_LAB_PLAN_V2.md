@@ -7,13 +7,15 @@
 ## 0. Current Branch Status
 
 - [x] `P1` task family is locked
-- [x] rotating-ellipse `P1` contract is implemented in code
+- [x] 3-knob rotating-ellipse `P1` contract is implemented in code
 - [x] real `constellaration` verifier wiring is in place
 - [x] low-fidelity `run` plus high-fidelity `submit` split is documented
 - [x] post-terminal `step()` guard is in place
 - [x] baseline comparison has been rerun on the real verifier path
 - [x] Northflank smoke workflow and note are committed
 - [x] Northflank smoke test has passed on the team H100
+- [x] current 3-knob family has been checked against the real low-fidelity verifier
+- [ ] parameterization repair is implemented so triangularity is controllable
 - [ ] tracked `P1` fixtures are added
 - [ ] manual playtest evidence is recorded
 - [ ] heuristic baseline is refreshed for the real verifier path
@@ -21,7 +23,7 @@
 
 Current caution:
 
-- the default baseline params are not currently a near-feasible playtest anchor on the real verifier path, so fixture discovery is a real prerequisite for meaningful manual playtesting
+- the current 3-knob family is structurally blocked on the official triangularity constraint under the real verifier path, so parameterization repair is now the first blocker before fixture discovery or manual playtesting
 
 ## 1. Submission Thesis
 
@@ -117,7 +119,7 @@ But the evidence order is:
 We intentionally narrow the scope to one environment family:
 
 - `P1` geometrical benchmark
-- rotating-ellipse, low-dimensional design space
+- repaired low-dimensional boundary family derived from rotating-ellipse seeds
 - official `constellaration` verifier
 - low-fidelity evaluation for ordinary interaction
 - optional high-fidelity verification for final checks or `submit`
@@ -173,7 +175,7 @@ Allowed reuse:
 
 Implementation handoff:
 
-- the remaining work is now fixture coverage, manual playtesting, heuristic refresh, smoke validation, and deployment
+- the remaining work is now parameterization repair, then fixture coverage, manual playtesting, heuristic refresh, smoke validation, and deployment
 - do not treat supporting decision notes as a new planning backlog
 
 ## 8.1 Compute Surfaces
@@ -212,6 +214,12 @@ Auth stance:
 
 The environment contract must be frozen before meaningful evaluation.
 
+Current verified blocker:
+
+- the current upstream 3-knob `generate_rotating_ellipse(aspect_ratio, elongation, rotational_transform, n_field_periods)` family does not expose triangularity control
+- on the real low-fidelity verifier path, sampled points stayed at roughly `average_triangularity=+0.004975` and `p1_feasibility=1.00995`
+- so the next contract revision must repair parameterization before reward iteration becomes meaningful
+
 ### Observation
 
 The observation should expose:
@@ -231,7 +239,9 @@ The observation must be interpretable by a human without additional hidden state
 
 ### Action Space
 
-The action space stays intentionally small and discrete:
+The action space stays intentionally small and discrete, but the current 3-knob version is no longer enough. The next contract revision should keep low-dimensional actions while adding an explicit control that can move triangularity.
+
+Near-term target:
 
 - `run`
 - `submit`
@@ -243,10 +253,11 @@ For `run`, the controllable fields are:
   - `aspect_ratio`
   - `elongation`
   - `rotational_transform`
+  - `triangularity_scale` or equivalent low-dimensional triangularity control
 - direction: increase or decrease
 - magnitude: small, medium, large
 
-This is not trying to expose the full Fourier-boundary space. The goal is a legible environment, not maximal realism.
+This is not trying to expose the full Fourier-boundary space. The goal is a legible environment, not maximal realism. The verifier should stay official; the custom logic belongs in the low-dimensional boundary builder, not in reward semantics.
 
 ### Episode Flow
 
@@ -282,6 +293,18 @@ The environment must preserve:
 
 The environment may add reward shaping, but it must not redefine what `P1` means.
 
+Implementation split:
+
+- boundary builder or parameterization adapter:
+  - custom low-dimensional family construction
+  - rotating-ellipse seed creation
+  - triangularity control injection, if used
+- official verifier:
+  - boundary in
+  - `GeometricalProblem` semantics out
+
+The verifier should be boundary-based. Parameterization-specific logic should not be treated as verifier truth.
+
 ## 11. Reward V0
 
 The reward in this document is not the final reward. It is `Reward V0`.
@@ -301,6 +324,12 @@ The initial scoring idea should be feasibility-first:
 - hostile to obvious degenerate behavior
 - simple enough to debug from trajectories
 - aligned with official `P1` semantics
+
+Current execution note:
+
+- do not tune reward further until the repaired low-dimensional family can actually approach P1 feasibility
+- once parameterization is repaired, keep `Reward V0` scalar and feasibility-first
+- clearly distinguish low-fidelity step-time metrics from high-fidelity submit-time truth in the observation contract and docs
 
 ### Reward V0 Failure Modes To Test
 
@@ -344,7 +373,7 @@ This is calibration, not training.
 These are still hypotheses until manually or empirically checked:
 
 - six steps are enough to create non-trivial decision pressure
-- the rotating-ellipse action space is expressive enough for a meaningful `P1` task
+- the repaired low-dimensional action family is expressive enough for a meaningful `P1` task
 - `restore_best` is useful without becoming an exploit
 - heuristic should beat random on mean episode reward
 - low-fidelity interaction is predictive enough for useful policy learning
