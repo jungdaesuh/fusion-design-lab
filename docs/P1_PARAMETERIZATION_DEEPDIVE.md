@@ -216,10 +216,10 @@ is approximately `rot_transform ≥ 2.0` combined with `tri_scale ≥ 0.7`.
    - `average_triangularity ≤ -0.5`
    - `edge_rotational_transform / n_field_periods ≥ 0.3`
 
-### What needs to change
+### Current implementation
 
-- `evaluate_params` currently takes `RotatingEllipseParams` and calls
-  `generate_rotating_ellipse` directly. It should be split into:
+- The old `evaluate_params` helper has been retired.
+- The runtime is now split into:
   - `build_boundary_from_params(...)` → `SurfaceRZFourier` (handles mode expansion + tri_scale injection)
   - `evaluate_boundary(boundary, fidelity)` → `EvaluationMetrics` (pure evaluation, no parameterization knowledge)
 
@@ -234,6 +234,7 @@ Feasibility transition:      ±3.0 on crossing the feasible/infeasible boundary
 Dual-track step shaping:
   feasible + feasible     →  (prev_elongation - curr_elongation) * 10.0
   otherwise               →  (prev_feasibility - curr_feasibility) * 5.0
+Post-failure recovery:       +1.0 on the first successful step after a failed evaluation
 Per-step cost:               -0.1 for non-submit actions
 Terminal bonus (submit):      5.0 * improvement_ratio + budget_efficiency
 Terminal bonus (exhaust):     2.0 * improvement_ratio
@@ -242,9 +243,14 @@ Not improved penalty:        -1.0 (submit) / -0.5 (exhaust)
 
 ### Assessment
 
-**The reward is well-designed and should stay unchanged.** It only uses two scalars
+**The reward is still simple and should stay close to unchanged.** It mostly uses two scalars
 from the verifier: `feasibility` and `objective (max_elongation)`. These are
 problem-agnostic quantities that `GeometricalProblem` provides for any problem variant.
+
+One small exception is now explicit: recovery from a failed VMEC evaluation gets a
+modest fixed bonus instead of comparing against the failure sentinel. The previous
+behavior could erase recovery signal by comparing a successful step against itself,
+while a naive sentinel comparison would explode the reward into an unbounded spike.
 
 Things the reward correctly avoids:
 - Per-constraint shaping (would overfit to P1's specific constraint structure)

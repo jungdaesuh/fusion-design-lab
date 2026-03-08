@@ -10,6 +10,7 @@ from fusion_lab.models import (
     StellaratorObservation,
     StellaratorState,
 )
+from server.contract import N_FIELD_PERIODS, RESET_SEEDS
 from server.physics import (
     ASPECT_RATIO_MAX,
     AVERAGE_TRIANGULARITY_MAX,
@@ -21,7 +22,6 @@ from server.physics import (
 )
 
 BUDGET: Final[int] = 6
-N_FIELD_PERIODS: Final[int] = 3
 
 PARAMETER_RANGES: Final[dict[str, tuple[float, float]]] = {
     "aspect_ratio": (3.2, 3.8),
@@ -36,27 +36,6 @@ PARAMETER_DELTAS: Final[dict[str, dict[str, float]]] = {
     "rotational_transform": {"small": 0.05, "medium": 0.1, "large": 0.2},
     "triangularity_scale": {"small": 0.02, "medium": 0.05, "large": 0.1},
 }
-
-RESET_SEEDS: Final[tuple[LowDimBoundaryParams, ...]] = (
-    LowDimBoundaryParams(
-        aspect_ratio=3.6,
-        elongation=1.4,
-        rotational_transform=1.5,
-        triangularity_scale=0.55,
-    ),
-    LowDimBoundaryParams(
-        aspect_ratio=3.4,
-        elongation=1.4,
-        rotational_transform=1.6,
-        triangularity_scale=0.55,
-    ),
-    LowDimBoundaryParams(
-        aspect_ratio=3.8,
-        elongation=1.4,
-        rotational_transform=1.5,
-        triangularity_scale=0.55,
-    ),
-)
 
 TARGET_SPEC: Final[str] = (
     "Optimize the P1 benchmark using a custom low-dimensional boundary family derived "
@@ -240,6 +219,7 @@ class StellaratorEnvironment(
         done: bool,
         initial_reference_score: float | None = None,
     ) -> float:
+        recovered_from_failure = self._recovered_from_failed_evaluation(metrics)
         previous_metrics = self._reference_metrics(metrics)
         if metrics.evaluation_failed:
             reward = FAILURE_PENALTY
@@ -265,6 +245,9 @@ class StellaratorEnvironment(
 
         if intent != "submit":
             reward -= 0.1
+
+        if recovered_from_failure:
+            reward += 1.0
 
         if intent == "submit" or done:
             base_score = (
@@ -345,6 +328,13 @@ class StellaratorEnvironment(
             return (
                 f"Applied {action.parameter} {action.direction} {action.magnitude}. "
                 f"Low-fidelity evaluation failed: {metrics.failure_reason}"
+            )
+
+        if self._recovered_from_failed_evaluation(metrics):
+            return (
+                f"Applied {action.parameter} {action.direction} {action.magnitude}. "
+                "Low-fidelity evaluation recovered from the previous failed evaluation. "
+                f"feasibility={metrics.p1_feasibility:.6f}."
             )
 
         previous_metrics = self._reference_metrics(metrics)
@@ -429,6 +419,13 @@ class StellaratorEnvironment(
         if self._last_successful_metrics is not None:
             return self._last_successful_metrics
         return fallback
+
+    def _recovered_from_failed_evaluation(self, metrics: EvaluationMetrics) -> bool:
+        return (
+            not metrics.evaluation_failed
+            and self._last_metrics is not None
+            and self._last_metrics.evaluation_failed
+        )
 
     def _initial_high_fidelity_metrics(self) -> EvaluationMetrics:
         if self._state.initial_high_fidelity_score is not None:

@@ -201,6 +201,9 @@ Target structure:
   - reward lower `max_elongation`
 - non-submit step:
   - small step cost
+- recovery after a failed evaluation:
+  - modest positive signal for returning to a valid verifier result
+  - do not compute this from the failed sentinel feasibility value
 - explicit `submit`:
   - better than passive budget exhaustion when the design is improved
 
@@ -248,6 +251,7 @@ If the answer is no, fix:
 - the boundary family
 - the step magnitudes
 - the seed pool
+- the observation semantics around low-fi vs high-fi best-state reporting
 
 before tuning reward further
 
@@ -260,9 +264,10 @@ before tuning reward further
 5. Update the task summary and public action description in [server/app.py](../server/app.py).
 6. Add explicit VMEC failure semantics in [server/environment.py](../server/environment.py).
 7. Run a small measured sweep to choose ranges, deltas, and reset seeds.
-8. Freeze 1-2 repaired low-dimensional fixtures.
-9. Run manual playtesting.
-10. Refresh the heuristic baseline only after that evidence exists.
+8. Verify that observation semantics are human-readable and that low-fi versus high-fi best-state reporting is explicit.
+9. Freeze 1-2 repaired low-dimensional fixtures.
+10. Run manual playtesting.
+11. Refresh the heuristic baseline only after that evidence exists.
 
 ## Out of Scope
 
